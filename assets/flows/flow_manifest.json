@@ -1,0 +1,16 @@
+{
+  "_comment": "Master manifest — maps every flow ID and audio ID to its asset path. Loaded once at startup. Add new flows and audio files here.",
+  "flows": {
+    "onboarding_student": "assets/flows/onboarding/student_onboarding.json",
+    "login_flow":         "assets/flows/auth/login_flow.json",
+    "course_main":        "assets/flows/course/course_flow.json"
+  },
+  "activities": {
+    "_comment": "Add each activity ID and its manifest entry key here",
+    "activity_001": "assets/flows/activity/activity_manifest.json#activity_001"
+  },
+  "audio": {
+    "_comment": "Map audio IDs to their file paths in assets/audio/",
+    "audio_welcome": "assets/audio/welcome.mp3"
+  }
+}

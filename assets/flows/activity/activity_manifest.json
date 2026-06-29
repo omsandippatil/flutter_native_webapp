@@ -1,0 +1,19 @@
+{
+  "_comment": "Per-activity slot data. Each key is an activity ID. activity_service loads the template + the matching entry here and merges them into an ActivityInstance.",
+  "activity_001": {
+    "introAudioId":  "audio_act_001_intro",
+    "introContent":  { "en": "Let us watch a short video." },
+    "videoId":       "video_act_001",
+    "quizData": {
+      "question":    { "en": "What did you learn from the video?" },
+      "options":     [
+        { "id": "a", "text": { "en": "Option A" } },
+        { "id": "b", "text": { "en": "Option B" } }
+      ],
+      "correctId":   "a"
+    },
+    "submissionConfig": { "type": "text", "prompt": { "en": "Write what you understood." } },
+    "outroAudioId":  "audio_act_001_outro",
+    "outroContent":  { "en": "Great work! Let us move on." }
+  }
+}

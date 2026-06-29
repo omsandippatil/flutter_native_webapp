@@ -1,0 +1,20 @@
+{
+  "_comment": "Main course flow. Linear sequence. Step type 'activity' pauses this flow, runs the named activity by ID via activity_service, then resumes at the next step. Add as many steps as needed.",
+  "id": "course_main",
+  "version": 1,
+  "steps": [
+    {
+      "id": "course_step_001",
+      "type": "message",
+      "audioId": "audio_welcome",
+      "content": { "en": "Let us begin today's lesson." },
+      "next": "course_step_002"
+    },
+    {
+      "id": "course_step_002",
+      "type": "activity",
+      "activityId": "activity_001",
+      "next": "course_step_003"
+    }
+  ]
+}

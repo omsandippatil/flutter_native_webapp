@@ -1,0 +1,21 @@
+# wrangler.toml
+# Cloudflare Worker configuration.
+# name: your worker name — change before deploy.
+# main: entry point is src/worker.js.
+# D1 database: bound as DB — holds users, profiles, progress tables.
+# KV namespace: bound as KV — holds OTPs (short TTL) and token blacklist.
+# Set SMS provider secrets via: wrangler secret put SMS_API_KEY
+
+name = "your-worker-name"
+main = "src/worker.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding  = "DB"
+database_name = "your-db-name"
+database_id   = "your-d1-database-id"
+
+[[kv_namespaces]]
+binding    = "KV"
+id         = "your-kv-namespace-id"
+preview_id = "your-kv-preview-id"
