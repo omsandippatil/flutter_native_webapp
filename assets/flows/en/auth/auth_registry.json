@@ -1,0 +1,35 @@
+{
+  "registry_id": "auth_registry",
+  "version": "1.0.0",
+  "language": "en",
+  "component_bindings": [
+    {
+      "step_id": "AU-PROFILE-SELECT",
+      "component": "ProfileSelectCard",
+      "source": "backend_profiles_lookup",
+      "path": "profiles_for_number",
+      "fields": ["profile_id", "name", "avatar_url", "course_display"]
+    },
+    {
+      "step_id": "AU-PASSWORD-LOGIN",
+      "component": "PasswordInput",
+      "source": "component_config",
+      "path": "password_input",
+      "fields": ["mode", "mask_input", "show_forgot_option"]
+    },
+    {
+      "step_id": "AU-VERIFY-PHONE",
+      "component": "OtpInput",
+      "source": "component_config",
+      "path": "otp_input",
+      "fields": ["code_length", "resend_wait_seconds"]
+    },
+    {
+      "step_id": "AU-SET-PASSWORD",
+      "component": "PasswordInput",
+      "source": "component_config",
+      "path": "password_input",
+      "fields": ["mode", "mask_input", "min_length", "confirm_required"]
+    }
+  ]
+}

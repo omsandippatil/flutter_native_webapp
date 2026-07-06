@@ -1,0 +1,70 @@
+{
+  "registry_id": "activity_registry",
+  "version": "3.0.0",
+  "language": "en",
+  "component_bindings": [
+    {
+      "step_id": "AF-004",
+      "component": "VideoPlayer",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].video",
+      "fields": ["video_id", "description", "url", "points"]
+    },
+    {
+      "step_id": "AF-007",
+      "component": "SubmissionCard",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].submission",
+      "fields": ["submission_id", "type", "prompt", "points"]
+    },
+    {
+      "step_id": "AF-QUIZ-QUESTION",
+      "component": "QuizQuestion",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].quiz.questions[{quiz_index}]",
+      "fields": ["question_id", "prompt", "options", "correct_option_id"]
+    },
+    {
+      "step_id": "AF-QUIZ-CORRECT",
+      "component": "QuizCorrectFeedback",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.correct",
+      "fields": ["display_text", "voice_text"]
+    },
+    {
+      "step_id": "AF-QUIZ-WRONG",
+      "component": "QuizFeedback",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.wrong",
+      "fields": ["consolation", "cheer_up_audio_id", "hint", "explanation"]
+    },
+    {
+      "step_id": "AF-QUIZ-MOTIVATE",
+      "component": "QuizMotivate",
+      "source": "courses/{course_id}.json",
+      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.motivate_next",
+      "fields": ["display_text", "voice_text"]
+    },
+    {
+      "step_id": "AF-012",
+      "component": "SubmissionReview",
+      "source": "review_result",
+      "path": "current",
+      "fields": ["display_text", "voice_text"]
+    },
+    {
+      "step_id": "AF-014",
+      "component": "ScoreSummary",
+      "source": "session_state",
+      "path": null,
+      "fields": ["quiz_score", "submission_points", "video_points", "total_today"]
+    },
+    {
+      "step_id": "AF-NEXT-UNIT",
+      "component": "UnitPreviewCard",
+      "source": "courses/{course_id}.json",
+      "path": "units[{next_unit_index}]",
+      "fields": ["unit_id", "unit_name"]
+    }
+  ]
+}
