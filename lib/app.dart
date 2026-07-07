@@ -1,8 +1,17 @@
-// app.dart
-// Root widget of the Flutter app.
-// Wraps MaterialApp.router with:
-//   - GoRouter from router.dart
-//   - Theme from app_theme.dart
-//   - Locale from locale_provider.dart
-//   - l10n delegates for en, hi, mr, kn
-// ProviderScope is set up in main.dart above this.
+import 'package:flutter/material.dart';
+import 'core/router/router.dart';
+import 'core/theme/app_theme.dart';
+
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'TAP Academy',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.themeData,
+      routerConfig: AppRoutes.router,
+    );
+  }
+}
