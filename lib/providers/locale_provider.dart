@@ -1,6 +1,15 @@
-// locale_provider.dart
-// Riverpod StateNotifier for the app locale.
-// Supported: en, hi, mr, kn.
-// Loads saved locale from SharedPreferences on init (defaults to device locale).
-// setLocale(code): saves to SharedPreferences + updates the MaterialApp locale.
-// Consumed by settings_screen.dart for the language selector UI.
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class LocaleNotifier extends Notifier<Locale> {
+  @override
+  Locale build() => const Locale('en');
+
+  void setLocale(String languageCode) {
+    state = Locale(languageCode);
+  }
+}
+
+final localeProvider = NotifierProvider<LocaleNotifier, Locale>(() {
+  return LocaleNotifier();
+});

@@ -3,7 +3,6 @@
   "version": "3.0.0",
   "language": "en",
   "steps": [
-
     {
       "step_id": "OF-001",
       "type": "static",
@@ -15,7 +14,6 @@
       "next_step": "OF-002",
       "back_step": null
     },
-
     {
       "step_id": "OF-002",
       "type": "static",
@@ -25,16 +23,33 @@
       "display_text": "Which course do you want to enroll in? Pick one below 👇",
       "voice_text": "So, which course are you thinking of joining? Take a look below and pick whichever one feels right.",
       "options": [
-        { "label": "🔬 Science", "value": "science", "next_step": "OF-003" },
-        { "label": "💻 Coding", "value": "coding", "next_step": "OF-003" },
-        { "label": "📈 Financial Verticals", "value": "financial-verticals", "next_step": "OF-003" },
-        { "label": "🎨 Visual Arts", "value": "visual-arts", "next_step": "OF-003" }
+        {
+          "label": "🔬 Science",
+          "value": "science",
+          "next_step": "OF-003"
+        },
+        {
+          "label": "💻 Coding",
+          "value": "coding",
+          "next_step": "OF-003"
+        },
+        {
+          "label": "📈 Financial Verticals",
+          "value": "financial-verticals",
+          "next_step": "OF-003"
+        },
+        {
+          "label": "🎨 Visual Arts",
+          "value": "visual-arts",
+          "next_step": "OF-003"
+        }
       ],
-      "cache_fields": ["selected_course"],
+      "cache_fields": [
+        "selected_course"
+      ],
       "back_step": "OF-001",
       "fallback_guide": "Hey, just tap one of the four course buttons above — that's all you need to do! 😊"
     },
-
     {
       "step_id": "OF-003",
       "type": "static",
@@ -60,13 +75,20 @@
         }
       },
       "options": [
-        { "label": "✅ Yes, I'm sure!", "value": "confirm", "next_step": "OF-004" },
-        { "label": "🔄 Let me re-pick", "value": "repick", "next_step": "OF-002" }
+        {
+          "label": "✅ Yes, I'm sure!",
+          "value": "confirm",
+          "next_step": "OF-004"
+        },
+        {
+          "label": "🔄 Let me re-pick",
+          "value": "repick",
+          "next_step": "OF-002"
+        }
       ],
       "back_step": "OF-002",
       "fallback_guide": "Tap '✅ Yes, I'm sure!' to confirm your course or '🔄 Let me re-pick' to go back — it's that simple!"
     },
-
     {
       "step_id": "OF-004",
       "type": "static",
@@ -78,7 +100,6 @@
       "next_step": "OF-005",
       "back_step": null
     },
-
     {
       "step_id": "OF-005",
       "type": "dynamic",
@@ -90,16 +111,30 @@
       "voice_text": "Alright, let's just double check your details are correct.",
       "content_ref": {
         "source": "student_profile",
-        "fields": ["name", "phone", "language", "school", "class", "subject"]
+        "fields": [
+          "name",
+          "phone",
+          "language",
+          "school",
+          "class",
+          "subject"
+        ]
       },
       "options": [
-        { "label": "Looks good 👍", "value": "confirm", "next_step": "OF-006" },
-        { "label": "✏️ Something's wrong", "value": "edit", "next_step": "OF-005-EDIT" }
+        {
+          "label": "Looks good 👍",
+          "value": "confirm",
+          "next_step": "OF-006"
+        },
+        {
+          "label": "✏️ Something's wrong",
+          "value": "edit",
+          "next_step": "OF-005-EDIT"
+        }
       ],
       "back_step": "OF-004",
       "fallback_guide": "Tap 'Looks good 👍' if everything is correct, or '✏️ Something's wrong' to flag a fix."
     },
-
     {
       "step_id": "OF-005-EDIT",
       "type": "static",
@@ -109,15 +144,30 @@
       "display_text": "No worries! Which detail should we fix?",
       "voice_text": "No worries at all, happens to everyone. Which detail should we fix?",
       "options": [
-        { "label": "Name", "value": "edit_name", "next_step": "OF-005-EDIT-NAME" },
-        { "label": "Phone", "value": "edit_phone", "next_step": "OF-005-EDIT-PHONE" },
-        { "label": "Language", "value": "edit_language", "next_step": "OF-005-EDIT-LANG" },
-        { "label": "School / Class / Subject", "value": "edit_academic", "next_step": "OF-005-EDIT-ACADEMIC" }
+        {
+          "label": "Name",
+          "value": "edit_name",
+          "next_step": "OF-005-EDIT-NAME"
+        },
+        {
+          "label": "Phone",
+          "value": "edit_phone",
+          "next_step": "OF-005-EDIT-PHONE"
+        },
+        {
+          "label": "Language",
+          "value": "edit_language",
+          "next_step": "OF-005-EDIT-LANG"
+        },
+        {
+          "label": "School / Class / Subject",
+          "value": "edit_academic",
+          "next_step": "OF-005-EDIT-ACADEMIC"
+        }
       ],
       "back_step": "OF-005",
       "fallback_guide": "Pick one of the fields above to fix it."
     },
-
     {
       "step_id": "OF-005-EDIT-NAME",
       "type": "static",
@@ -126,12 +176,13 @@
       "audio_id": "aud_of_005_edit_name",
       "display_text": "What should I call you instead? Just type the correct name below 😊",
       "voice_text": "What should I call you instead? Go ahead and type the correct name below.",
-      "cache_fields": ["name"],
+      "cache_fields": [
+        "name"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": null
     },
-
     {
       "step_id": "OF-005-EDIT-PHONE",
       "type": "static",
@@ -141,12 +192,13 @@
       "display_text": "What's the correct phone number?",
       "voice_text": "What's the correct phone number?",
       "validation": "phone",
-      "cache_fields": ["phone"],
+      "cache_fields": [
+        "phone"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Please enter a valid phone number."
     },
-
     {
       "step_id": "OF-005-EDIT-LANG",
       "type": "static",
@@ -156,17 +208,38 @@
       "display_text": "Pick your preferred language 🌐",
       "voice_text": "Pick your preferred language from the options below.",
       "options": [
-        { "label": "English", "value": "English", "next_step": "OF-005" },
-        { "label": "Hindi", "value": "Hindi", "next_step": "OF-005" },
-        { "label": "Marathi", "value": "Marathi", "next_step": "OF-005" },
-        { "label": "Punjabi", "value": "Punjabi", "next_step": "OF-005" },
-        { "label": "Kannada", "value": "Kannada", "next_step": "OF-005" }
+        {
+          "label": "English",
+          "value": "English",
+          "next_step": "OF-005"
+        },
+        {
+          "label": "Hindi",
+          "value": "Hindi",
+          "next_step": "OF-005"
+        },
+        {
+          "label": "Marathi",
+          "value": "Marathi",
+          "next_step": "OF-005"
+        },
+        {
+          "label": "Punjabi",
+          "value": "Punjabi",
+          "next_step": "OF-005"
+        },
+        {
+          "label": "Kannada",
+          "value": "Kannada",
+          "next_step": "OF-005"
+        }
       ],
-      "cache_fields": ["language"],
+      "cache_fields": [
+        "language"
+      ],
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Tap your preferred language from the buttons above."
     },
-
     {
       "step_id": "OF-005-EDIT-ACADEMIC",
       "type": "static",
@@ -198,12 +271,15 @@
           "pre_fill_from_cache": true
         }
       ],
-      "cache_fields": ["school", "class", "subject"],
+      "cache_fields": [
+        "school",
+        "class",
+        "subject"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Update the fields above and hit submit!"
     },
-
     {
       "step_id": "OF-006",
       "type": "static",
@@ -213,14 +289,23 @@
       "display_text": "Do you have a sibling? 👫",
       "voice_text": "Quick question — do you have a sibling?",
       "options": [
-        { "label": "Yes", "value": "yes", "next_step": "OF-007" },
-        { "label": "No", "value": "no", "next_step": "OF-007" }
+        {
+          "label": "Yes",
+          "value": "yes",
+          "next_step": "OF-007"
+        },
+        {
+          "label": "No",
+          "value": "no",
+          "next_step": "OF-007"
+        }
       ],
-      "cache_fields": ["has_sibling"],
+      "cache_fields": [
+        "has_sibling"
+      ],
       "back_step": "OF-005",
       "fallback_guide": "Tap Yes or No — just one tap!"
     },
-
     {
       "step_id": "OF-007",
       "type": "static",
@@ -233,7 +318,6 @@
       "next_step": "OF-008",
       "back_step": null
     },
-
     {
       "step_id": "OF-008",
       "type": "static",
@@ -243,11 +327,15 @@
       "display_text": "You can check your points anytime on the Passport tab 🛂✨ Now — are you ready to start learning?",
       "voice_text": "By the way, you can check your points anytime on the Passport tab. Now then — are you ready to start learning?",
       "options": [
-        { "label": "🚀 Start Learning", "value": "start_learning", "next_flow": "activity_flow", "next_step": "AF-001" }
+        {
+          "label": "🚀 Start Learning",
+          "value": "start_learning",
+          "next_flow": "activity_flow",
+          "next_step": "AF-001"
+        }
       ],
       "back_step": null,
       "fallback_guide": "Tap 'Start Learning' and let's go! 💪"
     }
-
   ]
 }

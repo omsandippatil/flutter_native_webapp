@@ -1,6 +1,19 @@
-// auth_provider.dart
-// Riverpod StateNotifier for authentication state.
-// States: unauthenticated → otpSent → otpVerified → passwordRequired → authenticated.
-// Methods: requestOtp, verifyOtp, setPassword, loginWithPassword, logout.
-// Delegates to auth_service.dart for all logic.
-// On authenticated: triggers profile_provider to fetch profiles.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class AuthState {
+  final bool isAuthenticated;
+  AuthState({required this.isAuthenticated});
+}
+
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() => AuthState(isAuthenticated: true);
+
+  void logout() {
+    state = AuthState(isAuthenticated: false);
+  }
+}
+
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {
+  return AuthNotifier();
+});
