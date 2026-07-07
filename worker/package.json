@@ -1,11 +1,10 @@
 {
-  "name": "your-worker-name",
+  "name": "tapapp-proxy",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev":    "wrangler dev",
-    "deploy": "wrangler deploy",
-    "db:migrate": "wrangler d1 execute DB --file=schema.sql"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"

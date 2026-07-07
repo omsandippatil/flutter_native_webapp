@@ -1,9 +1,27 @@
-// worker.js
-// Cloudflare Worker entry point.
-// Handles all incoming fetch events.
-// Pipeline for every request:
-//   1. cors.js — apply CORS headers; handle preflight OPTIONS.
-//   2. ratelimit.js — check request rate per IP; return 429 if exceeded.
-//   3. routes.js — match method + path to the correct handler.
-// All route handlers live in routes.js.
-// DB and KV bindings are passed from env into handlers via routes.js.
+import { applyCors, handlePreflight } from "./cors.js";
+import { checkLimit, rateLimitResponse } from "./ratelimit.js";
+import { routeRequest } from "./routes.js";
+
+export default {
+  async fetch(request, env, ctx) {
+    if (request.method === "OPTIONS") {
+      return handlePreflight(request);
+    }
+
+    const limitResult = await checkLimit(request, env);
+    if (!limitResult.allowed) {
+      return applyCors(rateLimitResponse(limitResult), request);
+    }
+
+    try {
+      const response = await routeRequest(request, env);
+      return applyCors(response, request);
+    } catch (err) {
+      const errorResponse = new Response(
+        JSON.stringify({ success: false, error: "internal_error" }),
+        { status: 500, headers: { "Content-Type": "application/json" } }
+      );
+      return applyCors(errorResponse, request);
+    }
+  },
+};
