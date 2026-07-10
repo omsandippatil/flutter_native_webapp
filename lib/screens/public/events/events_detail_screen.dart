@@ -237,20 +237,19 @@ class _EventsDetailScreenState extends State<EventsDetailScreen> {
                                   await Future.delayed(
                                     const Duration(milliseconds: 1000),
                                   );
+                                  if (!context.mounted) return;
                                   setState(() {
                                     _registering = false;
                                     _registered = true;
                                   });
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Registered successfully! 🎉 Check your dashboard for details.',
-                                        ),
-                                        backgroundColor: Colors.green,
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Registered successfully! 🎉 Check your dashboard for details.',
                                       ),
-                                    );
-                                  }
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _registered
