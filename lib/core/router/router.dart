@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import '../../screens/splash/splash_screen.dart';
 import '../../screens/error/error_screen.dart';
-import '../../screens/onboarding/conversational_onboarding_screen.dart';
+import '../../screens/auth/auth_check_screen.dart';
 import '../../screens/onboarding/welcome_back_screen.dart';
 import '../../screens/home/home_screen.dart';
 import '../../screens/class/class_screen.dart';
@@ -50,12 +50,15 @@ class AppRoutes {
       ),
       GoRoute(
         path: login,
-        pageBuilder: (context, state) =>
-            _page(const ConversationalOnboardingScreen()),
+        pageBuilder: (context, state) => _page(const AuthCheckScreen()),
       ),
       GoRoute(
         path: welcomeBack,
-        pageBuilder: (context, state) => _page(const WelcomeBackScreen()),
+        pageBuilder: (context, state) => _page(
+          WelcomeBackScreen(
+            studentName: state.uri.queryParameters['name'] ?? 'Aarav',
+          ),
+        ),
       ),
       GoRoute(
         path: home,

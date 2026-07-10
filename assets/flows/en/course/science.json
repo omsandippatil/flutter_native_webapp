@@ -108,7 +108,10 @@
             "prompt": "A gas has no fixed shape and no fixed volume. Why?",
             "options": [
               { "option_id": "a", "text": "Its particles are tightly packed" },
-              { "option_id": "b", "text": "Its particles move freely and spread to fill any space" },
+              {
+                "option_id": "b",
+                "text": "Its particles move freely and spread to fill any space"
+              },
               { "option_id": "c", "text": "Its particles never move" }
             ],
             "correct_option_id": "b",

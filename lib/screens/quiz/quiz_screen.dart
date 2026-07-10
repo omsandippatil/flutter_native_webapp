@@ -290,7 +290,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                 ),
               ),
             ),
-            if (trailingIcon != null) trailingIcon,
+            ?trailingIcon,
           ],
         ),
       ),

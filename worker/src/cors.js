@@ -1,25 +1,25 @@
 const ALLOWED_ORIGINS = new Set([
-  "https://yourapp.example.com",
-  "http://localhost:3000",
-  "http://localhost:8080",
+  'https://yourapp.example.com',
+  'http://localhost:3000',
+  'http://localhost:8080',
 ]);
 
 function resolveOrigin(request) {
-  const origin = request.headers.get("Origin");
-  if (!origin) return "*";
+  const origin = request.headers.get('Origin');
+  if (!origin) return '*';
   return ALLOWED_ORIGINS.has(origin) ? origin : null;
 }
 
 export function corsHeaders(request) {
   const origin = resolveOrigin(request);
   const headers = {
-    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Flutter-Authorization",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Flutter-Authorization',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin',
   };
   if (origin) {
-    headers["Access-Control-Allow-Origin"] = origin;
+    headers['Access-Control-Allow-Origin'] = origin;
   }
   return headers;
 }

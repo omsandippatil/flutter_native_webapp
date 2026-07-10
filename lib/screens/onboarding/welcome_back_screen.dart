@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/router.dart';
 
 class WelcomeBackScreen extends StatelessWidget {
-  const WelcomeBackScreen({super.key});
+  final String studentName;
+
+  const WelcomeBackScreen({super.key, this.studentName = 'Aarav'});
 
   @override
   Widget build(BuildContext context) {
@@ -27,13 +29,15 @@ class WelcomeBackScreen extends StatelessWidget {
                     'assets/logos/gov-logo.png',
                     height: isDesktop ? 64 : 54,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                   Image.asset(
                     'assets/logos/tap_logo.png',
                     height: isDesktop ? 48 : 38,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -58,7 +62,8 @@ class WelcomeBackScreen extends StatelessWidget {
                         child: Image.asset(
                           'assets/onboarding/hello_welcome.png',
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
                             Icons.person,
                             size: 100,
                             color: Color(0xFF5B5BD6),
@@ -67,12 +72,12 @@ class WelcomeBackScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 32),
 
                   // Title & Subtitle
                   Text(
-                    'Welcome Back, Aarav!',
+                    'Welcome Back, $studentName!',
                     style: GoogleFonts.inter(
                       fontSize: isDesktop ? 32 : 26,
                       fontWeight: FontWeight.w700,

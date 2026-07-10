@@ -302,17 +302,16 @@ class _SubmissionScreenState extends ConsumerState<SubmissionScreen> {
                             : () async {
                                 setState(() => _submitting = true);
                                 await Future.delayed(const Duration(milliseconds: 1200));
+                                if (!context.mounted) return;
                                 ref.read(learningDashboardProvider.notifier).submitProject();
-                                if (mounted) {
-                                  setState(() => _submitting = false);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Project submitted successfully! 🚀'),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                  context.go(AppRoutes.home);
-                                }
+                                setState(() => _submitting = false);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Project submitted successfully! 🚀'),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                                context.go(AppRoutes.home);
                               },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.buttonColor,

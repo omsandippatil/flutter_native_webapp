@@ -281,20 +281,19 @@ class _VideoScreenState extends ConsumerState<VideoScreen> {
                               : () async {
                                   setState(() => _marking = true);
                                   await Future.delayed(const Duration(milliseconds: 1000));
+                                  if (!context.mounted) return;
                                   ref.read(learningDashboardProvider.notifier).completeVideo();
-                                  if (mounted) {
-                                    setState(() {
-                                      _marking = false;
-                                      _watched = true;
-                                    });
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Video completed! Earned points 🌟'),
-                                        backgroundColor: Colors.green,
-                                      ),
-                                    );
-                                    context.go(AppRoutes.home);
-                                  }
+                                  setState(() {
+                                    _marking = false;
+                                    _watched = true;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Video completed! Earned points 🌟'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  context.go(AppRoutes.home);
                                 },
                           icon: _marking
                               ? const SizedBox(

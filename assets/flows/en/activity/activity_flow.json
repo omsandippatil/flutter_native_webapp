@@ -3,7 +3,6 @@
   "version": "3.0.0",
   "language": "en",
   "steps": [
-
     {
       "step_id": "AF-001",
       "type": "static",
@@ -256,9 +255,7 @@
       "audio_id": "aud_af_013",
       "display_text": "You did so well today {{name}} 🥳 Want to know your score?",
       "voice_text": "You did so well today. Want to know your score?",
-      "options": [
-        { "label": "Yes yes yes! 🙌🙌🙌", "value": "show_score", "next_step": "AF-014" }
-      ],
+      "options": [{ "label": "Yes yes yes! 🙌🙌🙌", "value": "show_score", "next_step": "AF-014" }],
       "back_step": null,
       "fallback_guide": "Tap 'Yes yes yes!' to see your score! 🙌"
     },
@@ -324,6 +321,5 @@
       "next_step": null,
       "back_step": null
     }
-
   ]
 }
