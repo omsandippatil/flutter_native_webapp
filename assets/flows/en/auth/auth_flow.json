@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "language": "en",
   "steps": [
-
     {
       "step_id": "AU-001",
       "type": "static",
@@ -204,7 +203,11 @@
       "display_text": "Quick one before we continue — is this number already used by a sibling's profile on here? 👫",
       "voice_text": "Quick question before we continue — is this number already being used by a sibling's profile here?",
       "options": [
-        { "label": "Yes, my sibling uses this number", "value": "yes", "next_step": "AU-SIBLING-CONFIRM" },
+        {
+          "label": "Yes, my sibling uses this number",
+          "value": "yes",
+          "next_step": "AU-SIBLING-CONFIRM"
+        },
         { "label": "No, this is just for me", "value": "no", "next_step": "AU-SET-PASSWORD" }
       ],
       "cache_fields": ["shares_number_with_sibling"],
@@ -301,6 +304,5 @@
       "next_flow_step": "OF-001",
       "back_step": null
     }
-
   ]
 }

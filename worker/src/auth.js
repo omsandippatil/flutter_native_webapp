@@ -1,24 +1,30 @@
-import { verify, signAccessToken, signRegistrationToken, signResetToken, extractBearerToken } from "./jwt.js";
+import {
+  verify,
+  signAccessToken,
+  signRegistrationToken,
+  signResetToken,
+  extractBearerToken,
+} from './jwt.js';
 
 export async function validateAccessToken(request, env, expectedPhone) {
   const token = extractBearerToken(request);
   if (!token) {
-    return { valid: false, error: "missing_token" };
+    return { valid: false, error: 'missing_token' };
   }
 
   let payload;
   try {
     payload = await verify(token, env.JWT_SECRET);
   } catch (err) {
-    return { valid: false, error: "invalid_or_expired_token" };
+    return { valid: false, error: 'invalid_or_expired_token' };
   }
 
-  if (payload.type !== "access") {
-    return { valid: false, error: "invalid_token_type" };
+  if (payload.type !== 'access') {
+    return { valid: false, error: 'invalid_token_type' };
   }
 
   if (expectedPhone && payload.phone !== expectedPhone) {
-    return { valid: false, error: "token_phone_mismatch" };
+    return { valid: false, error: 'token_phone_mismatch' };
   }
 
   return { valid: true, payload };
@@ -27,22 +33,22 @@ export async function validateAccessToken(request, env, expectedPhone) {
 export async function validateRegistrationToken(request, env, expectedPhone) {
   const token = extractBearerToken(request);
   if (!token) {
-    return { valid: false, error: "missing_token" };
+    return { valid: false, error: 'missing_token' };
   }
 
   let payload;
   try {
     payload = await verify(token, env.JWT_SECRET);
   } catch (err) {
-    return { valid: false, error: "invalid_or_expired_token" };
+    return { valid: false, error: 'invalid_or_expired_token' };
   }
 
-  if (payload.type !== "registration") {
-    return { valid: false, error: "invalid_token_type" };
+  if (payload.type !== 'registration') {
+    return { valid: false, error: 'invalid_token_type' };
   }
 
   if (expectedPhone && payload.phone !== expectedPhone) {
-    return { valid: false, error: "token_phone_mismatch" };
+    return { valid: false, error: 'token_phone_mismatch' };
   }
 
   return { valid: true, payload };
@@ -51,22 +57,22 @@ export async function validateRegistrationToken(request, env, expectedPhone) {
 export async function validateResetToken(request, env, expectedPhone) {
   const token = extractBearerToken(request);
   if (!token) {
-    return { valid: false, error: "missing_token" };
+    return { valid: false, error: 'missing_token' };
   }
 
   let payload;
   try {
     payload = await verify(token, env.JWT_SECRET);
   } catch (err) {
-    return { valid: false, error: "invalid_or_expired_token" };
+    return { valid: false, error: 'invalid_or_expired_token' };
   }
 
-  if (payload.type !== "reset") {
-    return { valid: false, error: "invalid_token_type" };
+  if (payload.type !== 'reset') {
+    return { valid: false, error: 'invalid_token_type' };
   }
 
   if (expectedPhone && payload.phone !== expectedPhone) {
-    return { valid: false, error: "token_phone_mismatch" };
+    return { valid: false, error: 'token_phone_mismatch' };
   }
 
   return { valid: true, payload };
@@ -95,6 +101,6 @@ export async function issueResetToken(phone, env) {
 export function unauthorizedResponse(error) {
   return new Response(JSON.stringify({ success: false, error }), {
     status: 401,
-    headers: { "Content-Type": "application/json" },
+    headers: { 'Content-Type': 'application/json' },
   });
 }

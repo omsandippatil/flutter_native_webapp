@@ -1,10 +1,10 @@
-import { applyCors, handlePreflight } from "./cors.js";
-import { checkLimit, rateLimitResponse } from "./ratelimit.js";
-import { routeRequest } from "./routes.js";
+import { applyCors, handlePreflight } from './cors.js';
+import { checkLimit, rateLimitResponse } from './ratelimit.js';
+import { routeRequest } from './routes.js';
 
 export default {
   async fetch(request, env, ctx) {
-    if (request.method === "OPTIONS") {
+    if (request.method === 'OPTIONS') {
       return handlePreflight(request);
     }
 
@@ -18,8 +18,8 @@ export default {
       return applyCors(response, request);
     } catch (err) {
       const errorResponse = new Response(
-        JSON.stringify({ success: false, error: "internal_error" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ success: false, error: 'internal_error' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
       return applyCors(errorResponse, request);
     }
