@@ -2,29 +2,263 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../data/models/active_profile_model.dart';
+import '../../data/models/learner_state_model.dart';
+import '../../data/models/profile_summary_model.dart';
+import '../../providers/http_client_provider.dart';
+import '../../providers/learner_state_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/app_nav.dart';
 
 enum _ProfileTab { profile, settings, about }
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   _ProfileTab _activeTab = _ProfileTab.profile;
-  late final Future<Map<String, dynamic>> _aboutFuture = _loadAboutTap();
 
-  Future<Map<String, dynamic>> _loadAboutTap() async {
-    final raw = await rootBundle.loadString(
-      'assets/profile-screen/about_tap.json',
+  Map<String, dynamic>? _aboutData;
+  bool _aboutLoading = false;
+  bool _aboutError = false;
+
+  bool _isEditing = false;
+  bool _isSaving = false;
+  String? _saveError;
+
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _languageController = TextEditingController();
+  final TextEditingController _gradeController = TextEditingController();
+  final TextEditingController _subjectController = TextEditingController();
+  bool _hasSibling = false;
+
+  ActiveProfileModel? _activeProfile;
+  LearnerStateModel? _learnerState;
+  bool _isLoadingProfile = true;
+  bool _profileLoadFailed = false;
+
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrapProfile();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _languageController.dispose();
+    _gradeController.dispose();
+    _subjectController.dispose();
+    super.dispose();
+  }
+
+  bool get _canUpdate => mounted && !_disposed;
+
+  Future<void> _bootstrapProfile() async {
+    try {
+      final repository = await ref.read(profileRepositoryProvider.future);
+      final activeProfile = await repository.readActiveProfile();
+
+      if (!_canUpdate) return;
+
+      if (activeProfile == null) {
+        setState(() {
+          _isLoadingProfile = false;
+          _profileLoadFailed = false;
+        });
+        return;
+      }
+
+      final learnerStateRepository = await ref.read(learnerStateRepositoryProvider.future);
+      if (!_canUpdate) return;
+
+      final learnerState = await learnerStateRepository.readCached(activeProfile.learnerId) ??
+          await learnerStateRepository.fetchState(learnerId: activeProfile.learnerId);
+
+      if (!_canUpdate) return;
+
+      setState(() {
+        _activeProfile = activeProfile;
+        _learnerState = learnerState;
+        _isLoadingProfile = false;
+      });
+      _syncControllersFromState();
+    } catch (e) {
+      debugPrint('Failed to load profile for settings: $e');
+      if (!_canUpdate) return;
+      setState(() {
+        _isLoadingProfile = false;
+        _profileLoadFailed = true;
+      });
+    }
+  }
+
+  Future<void> _loadAboutTap() async {
+    if (_aboutData != null || _aboutLoading) return;
+    setState(() {
+      _aboutLoading = true;
+      _aboutError = false;
+    });
+    try {
+      final raw = await rootBundle.loadString('assets/profile-screen/about_tap.json');
+      final decoded = jsonDecode(raw) as Map<String, dynamic>;
+      if (!_canUpdate) return;
+      setState(() {
+        _aboutData = decoded;
+        _aboutLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Failed to load about_tap.json: $e');
+      if (!_canUpdate) return;
+      setState(() {
+        _aboutLoading = false;
+        _aboutError = true;
+      });
+    }
+  }
+
+  void _syncControllersFromState() {
+    final fullName =
+        (_learnerState?.profile?.studentName ?? _activeProfile?.studentName ?? '').trim();
+    final parts = fullName.isEmpty ? <String>[] : fullName.split(RegExp(r'\s+'));
+    final firstName = parts.isNotEmpty ? parts.first : '';
+    final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+
+    _firstNameController.text = firstName;
+    _lastNameController.text = lastName;
+    _languageController.text = _learnerState?.profile?.language ?? '';
+    _gradeController.text = _activeProfile?.grade ?? '';
+    _subjectController.text = _verticalDisplay();
+  }
+
+  String _verticalDisplay() {
+    final course = _learnerState?.enrollment?.course;
+    if (course == null || course.isEmpty) return '';
+    return course;
+  }
+
+  void _startEditing() {
+    _syncControllersFromState();
+    setState(() {
+      _isEditing = true;
+      _saveError = null;
+    });
+  }
+
+  void _cancelEditing() {
+    _syncControllersFromState();
+    setState(() {
+      _isEditing = false;
+      _saveError = null;
+    });
+  }
+
+  Future<void> _saveEdits() async {
+    final activeProfile = _activeProfile;
+    if (activeProfile == null) return;
+
+    final phone = await _resolvePhone();
+    if (!_canUpdate) return;
+
+    if (phone.isEmpty) {
+      setState(() {
+        _saveError = 'Could not verify your phone number. Please log in again.';
+      });
+      return;
+    }
+
+    final firstName = _firstNameController.text.trim();
+    final lastName = _lastNameController.text.trim();
+    final fullName = [firstName, lastName].where((s) => s.isNotEmpty).join(' ');
+    final language = _languageController.text.trim();
+    final grade = _gradeController.text.trim();
+
+    final updates = <String, dynamic>{};
+    if (fullName.isNotEmpty) updates['student_name'] = fullName;
+    if (language.isNotEmpty) updates['language'] = language;
+    if (grade.isNotEmpty) updates['grade'] = grade;
+
+    if (updates.isEmpty) {
+      setState(() => _isEditing = false);
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+      _saveError = null;
+    });
+
+    try {
+      final repository = await ref.read(profileRepositoryProvider.future);
+      final updatedState = await repository.updateProfile(
+        phone: phone,
+        learnerId: activeProfile.learnerId,
+        updates: updates,
+      );
+
+      ActiveProfileModel? updatedProfile;
+      if (updates.containsKey('student_name') || updates.containsKey('grade')) {
+        updatedProfile = ActiveProfileModel(
+          phone: phone,
+          learnerId: activeProfile.learnerId,
+          studentName: updates.containsKey('student_name')
+              ? fullName
+              : activeProfile.studentName,
+          grade: updates.containsKey('grade') ? grade : activeProfile.grade,
+          division: activeProfile.division,
+          avatar: activeProfile.avatar,
+        );
+        await repository.setActiveProfile(updatedProfile);
+      }
+
+      if (!_canUpdate) return;
+
+      ref.invalidate(activeProfileProvider);
+      ref.invalidate(learnerStateDataProvider(activeProfile.learnerId));
+
+      setState(() {
+        if (updatedProfile != null) _activeProfile = updatedProfile;
+        _learnerState = updatedState;
+        _isEditing = false;
+        _isSaving = false;
+      });
+      _syncControllersFromState();
+      _showSavedSnack();
+    } catch (e) {
+      debugPrint('Profile save failed: $e');
+      if (!_canUpdate) return;
+      setState(() {
+        _isSaving = false;
+        _saveError = 'Could not save your changes. Please try again.';
+      });
+    }
+  }
+
+  void _showSavedSnack() {
+    if (!_canUpdate) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile updated')),
     );
-    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  void _onTabChanged(_ProfileTab tab) {
+    setState(() => _activeTab = tab);
+    if (tab == _ProfileTab.about) {
+      _loadAboutTap();
+    }
   }
 
   @override
@@ -35,11 +269,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         body: SafeArea(
           bottom: false,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SwitchProfileBar(onPressed: _showSwitchProfile),
+              _SwitchProfileBar(
+                onSwitchDialog: _showSwitchProfile,
+              ),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    if (constraints.maxHeight <= 0 || constraints.maxWidth <= 0) {
+                      return const SizedBox.shrink();
+                    }
+
                     final isWide = constraints.maxWidth >= 760;
 
                     return SingleChildScrollView(
@@ -60,8 +302,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       width: 132,
                                       child: _ProfileSideNav(
                                         activeTab: _activeTab,
-                                        onChanged: (tab) =>
-                                            setState(() => _activeTab = tab),
+                                        onChanged: _onTabChanged,
                                       ),
                                     ),
                                     const SizedBox(width: 34),
@@ -69,11 +310,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ],
                                 )
                               : Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
                                     _ProfileSideNav(
                                       activeTab: _activeTab,
-                                      onChanged: (tab) =>
-                                          setState(() => _activeTab = tab),
+                                      onChanged: _onTabChanged,
                                       horizontal: true,
                                     ),
                                     const SizedBox(height: 22),
@@ -94,93 +336,219 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _activeContent() {
-    return switch (_activeTab) {
-      _ProfileTab.profile => const _ProfileDetailsView(),
-      _ProfileTab.settings => const _SettingsView(),
-      _ProfileTab.about => _AboutTapView(aboutFuture: _aboutFuture),
-    };
+    switch (_activeTab) {
+      case _ProfileTab.profile:
+        return _ProfileDetailsView(
+          isLoading: _isLoadingProfile,
+          loadFailed: _profileLoadFailed,
+          isEditing: _isEditing,
+          isSaving: _isSaving,
+          saveError: _saveError,
+          activeProfile: _activeProfile,
+          learnerState: _learnerState,
+          firstNameController: _firstNameController,
+          lastNameController: _lastNameController,
+          languageController: _languageController,
+          gradeController: _gradeController,
+          subjectDisplay: _verticalDisplay(),
+          hasSibling: _hasSibling,
+          onStartEditing: _startEditing,
+          onCancelEditing: _cancelEditing,
+          onSave: _saveEdits,
+        );
+      case _ProfileTab.settings:
+        return const _SettingsView();
+      case _ProfileTab.about:
+        return _AboutTapView(
+          data: _aboutData,
+          loading: _aboutLoading,
+          failed: _aboutError,
+          onRetry: _loadAboutTap,
+        );
+    }
   }
 
-  void _showSwitchProfile() {
+  Future<String> _resolvePhone() async {
+    final tokenStore = ref.read(secureTokenStoreProvider);
+    final storedPhone = await tokenStore.readPhone();
+    if (storedPhone != null && storedPhone.isNotEmpty) return storedPhone;
+    return _activeProfile?.phone ?? '';
+  }
+
+  Future<void> _showSwitchProfile() async {
+    final phone = await _resolvePhone();
+    if (!_canUpdate) return;
+
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not verify your phone number. Please log in again.')),
+      );
+      return;
+    }
+
     showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.48),
-      builder: (context) => const _SwitchProfileDialog(),
+      builder: (context) => _SwitchProfileDialog(
+        phone: phone,
+        activeLearnerId: _activeProfile?.learnerId,
+        onProfileSelected: _switchToProfile,
+      ),
     );
+  }
+
+  Future<void> _switchToProfile(ProfileSummaryModel profile) async {
+    final phone = await _resolvePhone();
+    if (phone.isEmpty) return;
+
+    try {
+      final repository = await ref.read(profileRepositoryProvider.future);
+      final learnerState = await repository.selectProfile(
+        phone: phone,
+        learnerId: profile.learnerId,
+      );
+
+      await repository.setActiveProfile(
+        ActiveProfileModel(
+          phone: phone,
+          learnerId: profile.learnerId,
+          studentName: learnerState.profile?.studentName ?? profile.studentName,
+          grade: profile.grade,
+          division: profile.division,
+          avatar: profile.avatar,
+        ),
+      );
+
+      if (!_canUpdate) return;
+
+      ref.invalidate(activeProfileProvider);
+      ref.invalidate(learnerStateDataProvider(profile.learnerId));
+
+      if (mounted) Navigator.of(context).pop();
+
+      await _bootstrapProfile();
+    } catch (e) {
+      debugPrint('Failed to switch profile: $e');
+      if (!_canUpdate) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not switch profile. Please try again.')),
+      );
+    }
   }
 }
 
 class _SwitchProfileBar extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback onSwitchDialog;
 
-  const _SwitchProfileBar({required this.onPressed});
+  const _SwitchProfileBar({
+    required this.onSwitchDialog,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 560;
+    final screenWidth = MediaQuery.sizeOf(context).width;
 
-    return Container(
-      height: compact ? 92 : 74,
+    return ColoredBox(
       color: AppTheme.profileBar,
-      child: Center(
-        child: compact
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _SwitchProfileText(),
-                  const SizedBox(height: 10),
-                  _SwitchProfileButton(onPressed: onPressed),
-                ],
-              )
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _SwitchProfileText(),
-                  const SizedBox(width: 18),
-                  _SwitchProfileButton(onPressed: onPressed),
-                ],
-              ),
-      ),
-    );
-  }
-}
+      child: SizedBox(
+        width: screenWidth,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth =
+                  constraints.hasBoundedWidth ? constraints.maxWidth : screenWidth;
+              final compact = availableWidth < 560;
 
-class _SwitchProfileText extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      'Not Arav? Switch to your profile',
-      textAlign: TextAlign.center,
-      style: GoogleFonts.inter(
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-        color: AppTheme.textColor,
+              final text = Text(
+                'Not you? Switch to your profile',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textColor,
+                ),
+              );
+
+              final button = _SwitchProfileButton(
+                label: 'Switch Profile',
+                onPressed: onSwitchDialog,
+              );
+
+              if (compact) {
+                return SizedBox(
+                  width: availableWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      text,
+                      const SizedBox(height: 10),
+                      button,
+                    ],
+                  ),
+                );
+              }
+
+              return SizedBox(
+                width: availableWidth,
+                child: Center(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 18,
+                    runSpacing: 10,
+                    children: [
+                      text,
+                      button,
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
 }
 
 class _SwitchProfileButton extends StatelessWidget {
+  final String label;
   final VoidCallback onPressed;
+  final bool outlined;
 
-  const _SwitchProfileButton({required this.onPressed});
+  const _SwitchProfileButton({
+    required this.label,
+    required this.onPressed,
+    this.outlined = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 44,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.buttonColor,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 28),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
-        ),
-        child: const Text('Switch Profile'),
-      ),
+      child: outlined
+          ? OutlinedButton(
+              onPressed: onPressed,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.buttonColor,
+                side: BorderSide(color: AppTheme.buttonColor),
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+              ),
+              child: Text(label),
+            )
+          : ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.buttonColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 28),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+              ),
+              child: Text(label),
+            ),
     );
   }
 }
@@ -198,7 +566,7 @@ class _ProfileSideNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
+    final items = <(_ProfileTab, String)>[
       (_ProfileTab.profile, 'Profile'),
       (_ProfileTab.settings, 'Settings'),
       (_ProfileTab.about, 'About TAP'),
@@ -221,6 +589,7 @@ class _ProfileSideNav extends StatelessWidget {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (final item in items) ...[
           _NavPill(
@@ -276,68 +645,300 @@ class _NavPill extends StatelessWidget {
 }
 
 class _ProfileDetailsView extends StatelessWidget {
-  const _ProfileDetailsView();
+  final bool isLoading;
+  final bool loadFailed;
+  final bool isEditing;
+  final bool isSaving;
+  final String? saveError;
+  final ActiveProfileModel? activeProfile;
+  final LearnerStateModel? learnerState;
+  final TextEditingController firstNameController;
+  final TextEditingController lastNameController;
+  final TextEditingController languageController;
+  final TextEditingController gradeController;
+  final String subjectDisplay;
+  final bool hasSibling;
+  final VoidCallback onStartEditing;
+  final VoidCallback onCancelEditing;
+  final VoidCallback onSave;
+
+  const _ProfileDetailsView({
+    required this.isLoading,
+    required this.loadFailed,
+    required this.isEditing,
+    required this.isSaving,
+    required this.saveError,
+    required this.activeProfile,
+    required this.learnerState,
+    required this.firstNameController,
+    required this.lastNameController,
+    required this.languageController,
+    required this.gradeController,
+    required this.subjectDisplay,
+    required this.hasSibling,
+    required this.onStartEditing,
+    required this.onCancelEditing,
+    required this.onSave,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const _ProfileSkeleton();
+    }
+
+    if (loadFailed) {
+      return _WhiteCard(
+        padding: const EdgeInsets.all(18),
+        child: Text(
+          'Could not load your profile. Please try again later.',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+        ),
+      );
+    }
+
+    final profile = activeProfile;
+    if (profile == null) {
+      return _WhiteCard(
+        padding: const EdgeInsets.all(18),
+        child: Text(
+          'No active profile found.',
+          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+        ),
+      );
+    }
+
+    final schoolName = learnerState?.profile?.school ?? '—';
+    final grade = activeProfile?.grade ?? '—';
+
     return Column(
-      children: const [
-        _StudentSummaryCard(),
-        SizedBox(height: 16),
-        _ReadOnlySection(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _StudentSummaryCard(
+          studentName: profile.studentName ?? 'Student',
+          schoolName: schoolName,
+          grade: grade,
+          subjectDisplay: subjectDisplay,
+        ),
+        const SizedBox(height: 16),
+        if (saveError != null) ...[
+          _ErrorBanner(text: saveError!),
+          const SizedBox(height: 12),
+        ],
+        _EditableSection(
           title: 'Personal Details',
           children: [
-            _ReadOnlyField(label: 'First name', value: 'Aarav'),
-            _ReadOnlyField(label: 'Last name', value: 'Kumar'),
-            _ReadOnlyField(label: 'Language', value: 'Hindi'),
+            _EditableField(
+              label: 'First name',
+              isEditing: isEditing,
+              controller: firstNameController,
+            ),
+            _EditableField(
+              label: 'Last name',
+              isEditing: isEditing,
+              controller: lastNameController,
+            ),
+            _EditableField(
+              label: 'Language',
+              isEditing: isEditing,
+              controller: languageController,
+            ),
             _ReadOnlyField(
               label: 'Is a brother or sister also using TAP?',
-              value: 'No',
+              value: hasSibling ? 'Yes' : 'No',
             ),
-            _ReadOnlyField(label: 'Phone number', value: 'Verified'),
+            const _ReadOnlyField(label: 'Phone number', value: 'Verified'),
           ],
         ),
-        SizedBox(height: 10),
-        _ReadOnlySection(
+        const SizedBox(height: 10),
+        _EditableSection(
           title: 'School Details',
           children: [
-            _ReadOnlyField(
-              label: 'School Name',
-              value: 'Sarvodaya Co-ed Vidyalaya, Rohini',
+            _ReadOnlyField(label: 'School Name', value: schoolName),
+            _EditableField(
+              label: 'Grade',
+              isEditing: isEditing,
+              controller: gradeController,
             ),
-            _ReadOnlyField(label: 'Grade', value: '5'),
-            _ReadOnlyField(label: 'Subject', value: 'Science'),
+            _ReadOnlyField(
+              label: 'Subject',
+              value: subjectDisplay.isEmpty ? '—' : subjectDisplay,
+            ),
           ],
+        ),
+        const SizedBox(height: 16),
+        _EditActionsBar(
+          isEditing: isEditing,
+          isSaving: isSaving,
+          onStartEditing: onStartEditing,
+          onCancelEditing: onCancelEditing,
+          onSave: onSave,
         ),
       ],
     );
   }
 }
 
+class _EditActionsBar extends StatelessWidget {
+  final bool isEditing;
+  final bool isSaving;
+  final VoidCallback onStartEditing;
+  final VoidCallback onCancelEditing;
+  final VoidCallback onSave;
+
+  const _EditActionsBar({
+    required this.isEditing,
+    required this.isSaving,
+    required this.onStartEditing,
+    required this.onCancelEditing,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isEditing) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: OutlinedButton.icon(
+          onPressed: onStartEditing,
+          icon: const Icon(Icons.edit_outlined, size: 18),
+          label: Text(
+            'Edit Info',
+            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.buttonColor,
+            side: BorderSide(color: AppTheme.buttonColor),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: OutlinedButton(
+              onPressed: isSaving ? null : onCancelEditing,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF6E6E7A),
+                side: const BorderSide(color: Color(0xFFE1E2EA)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: isSaving ? null : onSave,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.buttonColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      'Save Changes',
+                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                    ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDECEC),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF5C2C2)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Color(0xFFD34B40), size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFD34B40),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StudentSummaryCard extends StatelessWidget {
-  const _StudentSummaryCard();
+  final String studentName;
+  final String schoolName;
+  final String grade;
+  final String subjectDisplay;
+
+  const _StudentSummaryCard({
+    required this.studentName,
+    required this.schoolName,
+    required this.grade,
+    required this.subjectDisplay,
+  });
 
   @override
   Widget build(BuildContext context) {
     return _WhiteCard(
       padding: const EdgeInsets.all(18),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 30,
-            backgroundColor: Color(0xFFE8E5FF),
-            child: Text('AK', style: TextStyle(color: AppTheme.buttonColor)),
+            backgroundColor: const Color(0xFFE8E5FF),
+            child: Text(
+              _initials(studentName),
+              style: const TextStyle(color: AppTheme.buttonColor),
+            ),
           ),
           const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
                     Flexible(
                       child: Text(
-                        'Aarav Kumar',
+                        studentName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.inter(
@@ -356,17 +957,15 @@ class _StudentSummaryCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                _MetaLine(
-                  icon: Icons.location_city_rounded,
-                  text: 'Sarvodaya Co-ed Vidyalaya, Rohini',
-                ),
+                _MetaLine(icon: Icons.location_city_rounded, text: schoolName),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 14,
                   runSpacing: 4,
-                  children: const [
-                    _MetaLine(icon: Icons.menu_book_rounded, text: 'Grade 5'),
-                    _MetaLine(icon: Icons.hub_rounded, text: 'Science Lab'),
+                  children: [
+                    _MetaLine(icon: Icons.menu_book_rounded, text: 'Grade $grade'),
+                    if (subjectDisplay.isNotEmpty)
+                      _MetaLine(icon: Icons.hub_rounded, text: subjectDisplay),
                   ],
                 ),
               ],
@@ -375,6 +974,13 @@ class _StudentSummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 }
 
@@ -404,17 +1010,21 @@ class _MetaLine extends StatelessWidget {
   }
 }
 
-class _ReadOnlySection extends StatelessWidget {
+class _EditableSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _ReadOnlySection({required this.title, required this.children});
+  const _EditableSection({
+    required this.title,
+    required this.children,
+  });
 
   @override
   Widget build(BuildContext context) {
     return _WhiteCard(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -444,6 +1054,7 @@ class _ReadOnlyField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -465,17 +1076,104 @@ class _ReadOnlyField extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: const Color(0xFFE1E2EA)),
             ),
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF6E6E7A),
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF6E6E7A),
+                    ),
+                  ),
+                ),
+                const Icon(Icons.lock_outline_rounded, size: 13, color: Color(0xFF9B9CA6)),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EditableField extends StatelessWidget {
+  final String label;
+  final bool isEditing;
+  final TextEditingController controller;
+
+  const _EditableField({
+    required this.label,
+    required this.isEditing,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF6E6E7A),
+            ),
+          ),
+          const SizedBox(height: 5),
+          if (isEditing)
+            Container(
+              width: double.infinity,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.buttonColor),
+              ),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: TextField(
+                controller: controller,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1C1C21),
+                ),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              height: 36,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F1F4),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFE1E2EA)),
+              ),
+              child: Text(
+                controller.text.isEmpty ? '—' : controller.text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF6E6E7A),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -487,8 +1185,10 @@ class _SettingsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
+    return const Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
         _ThemeCard(),
         SizedBox(height: 16),
         _AccountManagementCard(),
@@ -513,49 +1213,39 @@ class _ThemeCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             child: compact
-                ? Column(
+                ? const Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: const [
-                      _ThemeButton(
-                        label: 'Default',
-                        icon: Icons.desktop_windows,
-                      ),
+                    children: [
+                      _ThemeButton(label: 'Default', icon: Icons.desktop_windows),
                       _ThemeButton(
                         label: 'Light',
                         icon: Icons.wb_sunny_outlined,
                         selected: true,
                       ),
-                      _ThemeButton(
-                        label: 'Dark',
-                        icon: Icons.dark_mode_outlined,
-                      ),
+                      _ThemeButton(label: 'Dark', icon: Icons.dark_mode_outlined),
                     ],
                   )
-                : Row(
+                : const Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      _ThemeButton(
-                        label: 'Default',
-                        icon: Icons.desktop_windows,
-                      ),
+                    children: [
+                      _ThemeButton(label: 'Default', icon: Icons.desktop_windows),
                       _ThemeButton(
                         label: 'Light',
                         icon: Icons.wb_sunny_outlined,
                         selected: true,
                       ),
-                      _ThemeButton(
-                        label: 'Dark',
-                        icon: Icons.dark_mode_outlined,
-                      ),
+                      _ThemeButton(label: 'Dark', icon: Icons.dark_mode_outlined),
                     ],
                   ),
           );
 
           if (compact) {
             return Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SettingsTitle('Theme'),
+                const _SettingsTitle('Theme'),
                 const SizedBox(height: 12),
                 selector,
               ],
@@ -613,6 +1303,7 @@ class _ThemeButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
@@ -642,6 +1333,7 @@ class _AccountManagementCard extends StatelessWidget {
     return _WhiteCard(
       padding: const EdgeInsets.all(18),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -665,8 +1357,9 @@ class _AccountManagementCard extends StatelessWidget {
           const SizedBox(height: 20),
           Container(
             height: 52,
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 22),
-            alignment: Alignment.center,
+            alignment: Alignment.centerLeft,
             decoration: BoxDecoration(
               color: const Color(0xFFFFF0D8),
               borderRadius: BorderRadius.circular(10),
@@ -681,15 +1374,12 @@ class _AccountManagementCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.only(left: 22),
-            child: Text(
-              'Delete Account',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFFD34B40),
-              ),
+          Text(
+            'Delete Account',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFFD34B40),
             ),
           ),
         ],
@@ -699,56 +1389,84 @@ class _AccountManagementCard extends StatelessWidget {
 }
 
 class _AboutTapView extends StatelessWidget {
-  final Future<Map<String, dynamic>> aboutFuture;
+  final Map<String, dynamic>? data;
+  final bool loading;
+  final bool failed;
+  final VoidCallback onRetry;
 
-  const _AboutTapView({required this.aboutFuture});
+  const _AboutTapView({
+    required this.data,
+    required this.loading,
+    required this.failed,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: aboutFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return const _ProfileSkeleton();
-        final data = snapshot.data!;
-        final mission = data['mission'] as Map<String, dynamic>;
-        final problem = data['problem'] as Map<String, dynamic>;
-        final solution = data['solution'] as Map<String, dynamic>;
+    if (failed) {
+      return _WhiteCard(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Could not load this section.',
+              style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
 
-        return _WhiteCard(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            children: [
-              _AboutPair(
-                text: _AboutTextBlock(
-                  title: mission['title'] as String? ?? '',
-                  body: _asParagraphs(mission['body']),
-                ),
-                imagePath: mission['image'] as String? ?? '',
-                imageFirst: false,
-              ),
-              const SizedBox(height: 34),
-              _AboutPair(
-                text: _AboutTextBlock(
-                  title: problem['title'] as String? ?? '',
-                  body: _asParagraphs(problem['body']),
-                  source: problem['source'] as String?,
-                ),
-                imagePath: problem['image'] as String? ?? '',
-                imageFirst: true,
-              ),
-              const SizedBox(height: 34),
-              _AboutPair(
-                text: _AboutTextBlock(
-                  title: solution['title'] as String? ?? '',
-                  body: _asParagraphs(solution['body']),
-                ),
-                imagePath: solution['image'] as String? ?? '',
-                imageFirst: false,
-              ),
-            ],
+    final aboutData = data;
+    if (loading || aboutData == null) {
+      return const _ProfileSkeleton();
+    }
+
+    final mission = aboutData['mission'] as Map<String, dynamic>? ?? const {};
+    final problem = aboutData['problem'] as Map<String, dynamic>? ?? const {};
+    final solution = aboutData['solution'] as Map<String, dynamic>? ?? const {};
+
+    return _WhiteCard(
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _AboutPair(
+            text: _AboutTextBlock(
+              title: mission['title'] as String? ?? '',
+              body: _asParagraphs(mission['body']),
+            ),
+            imagePath: mission['image'] as String? ?? '',
+            imageFirst: false,
           ),
-        );
-      },
+          const SizedBox(height: 34),
+          _AboutPair(
+            text: _AboutTextBlock(
+              title: problem['title'] as String? ?? '',
+              body: _asParagraphs(problem['body']),
+              source: problem['source'] as String?,
+            ),
+            imagePath: problem['image'] as String? ?? '',
+            imageFirst: true,
+          ),
+          const SizedBox(height: 34),
+          _AboutPair(
+            text: _AboutTextBlock(
+              title: solution['title'] as String? ?? '',
+              body: _asParagraphs(solution['body']),
+            ),
+            imagePath: solution['image'] as String? ?? '',
+            imageFirst: false,
+          ),
+        ],
+      ),
     );
   }
 
@@ -779,6 +1497,7 @@ class _AboutPair extends StatelessWidget {
 
         if (narrow) {
           return Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: imageFirst
                 ? [image, const SizedBox(height: 18), text]
@@ -815,6 +1534,7 @@ class _AboutTextBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -860,9 +1580,14 @@ class _AboutImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (path.isEmpty) return const SizedBox.shrink();
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: Image.asset(path, fit: BoxFit.contain),
+      child: Image.asset(
+        path,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+      ),
     );
   }
 }
@@ -874,9 +1599,10 @@ class _ProfileSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return _WhiteCard(
       padding: const EdgeInsets.all(18),
-      child: Column(
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           _SkeletonBar(width: 70, height: 18),
           SizedBox(height: 22),
           _SkeletonBar(width: double.infinity, height: 34),
@@ -909,11 +1635,36 @@ class _SkeletonBar extends StatelessWidget {
   }
 }
 
-class _SwitchProfileDialog extends StatelessWidget {
-  const _SwitchProfileDialog();
+class _SwitchProfileDialog extends ConsumerStatefulWidget {
+  final String phone;
+  final String? activeLearnerId;
+  final Future<void> Function(ProfileSummaryModel) onProfileSelected;
+
+  const _SwitchProfileDialog({
+    required this.phone,
+    required this.activeLearnerId,
+    required this.onProfileSelected,
+  });
+
+  @override
+  ConsumerState<_SwitchProfileDialog> createState() => _SwitchProfileDialogState();
+}
+
+class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
+  String? _switchingLearnerId;
+
+  Future<void> _handleTap(ProfileSummaryModel profile) async {
+    setState(() => _switchingLearnerId = profile.learnerId);
+    await widget.onProfileSelected(profile);
+    if (mounted) setState(() => _switchingLearnerId = null);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final profilesAsync = ref.watch(
+      profilesPageDataProvider(ProfilesPageRequest(phone: widget.phone)),
+    );
+
     return Dialog(
       insetPadding: const EdgeInsets.all(24),
       backgroundColor: Colors.white,
@@ -931,18 +1682,13 @@ class _SwitchProfileDialog extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Switch Profile',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFFF1F1F4),
-                    ),
+                    style: IconButton.styleFrom(backgroundColor: const Color(0xFFF1F1F4)),
                   ),
                 ],
               ),
@@ -951,17 +1697,39 @@ class _SwitchProfileDialog extends StatelessWidget {
                 style: GoogleFonts.inter(fontSize: 12),
               ),
               const SizedBox(height: 18),
-              const _ProfileOption(
-                initials: 'AK',
-                name: 'Aarav Kumar',
-                meta: 'Grade 4 • Science',
-                selected: true,
-              ),
-              const SizedBox(height: 12),
-              const _ProfileOption(
-                initials: 'AK',
-                name: 'Ajay Kumar',
-                meta: 'Grade 8 • Financial Literacy',
+              profilesAsync.when(
+                data: (profiles) {
+                  if (profiles.isEmpty) {
+                    return Text(
+                      'No student profiles found for this account.',
+                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6E6E7A)),
+                    );
+                  }
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < profiles.length; i++) ...[
+                        _ProfileOption(
+                          profile: profiles[i],
+                          selected: profiles[i].learnerId == widget.activeLearnerId,
+                          loading: _switchingLearnerId == profiles[i].learnerId,
+                          onTap: _switchingLearnerId == null
+                              ? () => _handleTap(profiles[i])
+                              : null,
+                        ),
+                        if (i != profiles.length - 1) const SizedBox(height: 12),
+                      ],
+                    ],
+                  );
+                },
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+                error: (err, stack) => Text(
+                  'Could not load profiles. Please try again.',
+                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFD34B40)),
+                ),
               ),
             ],
           ),
@@ -972,87 +1740,103 @@ class _SwitchProfileDialog extends StatelessWidget {
 }
 
 class _ProfileOption extends StatelessWidget {
-  final String initials;
-  final String name;
-  final String meta;
+  final ProfileSummaryModel profile;
   final bool selected;
+  final bool loading;
+  final VoidCallback? onTap;
 
   const _ProfileOption({
-    required this.initials,
-    required this.name,
-    required this.meta,
-    this.selected = false,
+    required this.profile,
+    required this.selected,
+    required this.loading,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: selected ? const Color(0xFFE8E5FF) : Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE1E2EA)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: const Color(0xFFE8E5FF),
-            child: Text(
-              initials,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.buttonColor,
+    final meta = [
+      if (profile.grade != null) 'Grade ${profile.grade}',
+      if (profile.division != null) profile.division,
+    ].join(' • ');
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8E5FF) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: const Color(0xFFE1E2EA)),
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: const Color(0xFFE8E5FF),
+              child: Text(
+                _initials(profile.studentName),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.buttonColor,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    profile.studentName.isEmpty ? 'Student' : profile.studentName,
+                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    meta,
+                    style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF6E6E7A)),
+                  ),
+                ],
+              ),
+            ),
+            if (loading)
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Container(
+                height: 28,
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: const Color(0xFFE1E2EA)),
+                ),
+                child: Text(
+                  selected ? 'Selected ✓' : 'Select',
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w700,
+                    color: selected ? AppTheme.buttonColor : const Color(0xFF1C1C21),
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  meta,
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    color: const Color(0xFF6E6E7A),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 28,
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: const Color(0xFFE1E2EA)),
-            ),
-            child: Text(
-              selected ? 'Selected ✓' : 'Select',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: selected
-                    ? AppTheme.buttonColor
-                    : const Color(0xFF1C1C21),
               ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  String _initials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
   }
 }
 

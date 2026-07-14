@@ -60,25 +60,6 @@ class SendProjectCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 13),
-            Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                _SmallText('Send in '),
-                _SmallText(
-                  '2days 15hrs ',
-                  color: const Color(0xFF159A58),
-                  bold: true,
-                ),
-                _SmallText('and earn extra 2 '),
-                const Icon(
-                  Icons.diamond_rounded,
-                  size: 14,
-                  color: Color(0xFF5B5BD6),
-                ),
-              ],
-            ),
           ],
         ),
       ),
@@ -120,9 +101,7 @@ class _CardBody extends StatelessWidget {
               ),
               const SizedBox(height: 7),
               Text(
-                unitName == 'States of Matter'
-                    ? 'Get Ready for ScratchJr'
-                    : unitName,
+                unitName,
                 style: GoogleFonts.inter(
                   fontSize: 27,
                   fontWeight: FontWeight.w500,
@@ -224,31 +203,6 @@ class _TaskBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SmallText extends StatelessWidget {
-  final String text;
-  final Color color;
-  final bool bold;
-
-  const _SmallText(
-    this.text, {
-    this.color = const Color(0xFF1C1C21),
-    this.bold = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: GoogleFonts.inter(
-        fontSize: 11,
-        fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-        color: color,
-        letterSpacing: 0,
       ),
     );
   }

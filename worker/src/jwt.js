@@ -36,11 +36,7 @@ async function importKey(secret) {
 export async function sign(payload, secret) {
   const header = { alg: 'HS256', typ: 'JWT' };
   const now = Math.floor(Date.now() / 1000);
-  const fullPayload = {
-    jti: crypto.randomUUID(),
-    iat: now,
-    ...payload,
-  };
+  const fullPayload = { jti: crypto.randomUUID(), iat: now, ...payload };
 
   const headerPart = encodeJson(header);
   const payloadPart = encodeJson(fullPayload);
@@ -56,7 +52,7 @@ export async function sign(payload, secret) {
 export async function verify(token, secret) {
   const parts = token.split('.');
   if (parts.length !== 3) {
-    throw new Error('Malformed token');
+    throw new Error('malformed_token');
   }
   const [headerPart, payloadPart, signaturePart] = parts;
   const signingInput = `${headerPart}.${payloadPart}`;
@@ -71,13 +67,13 @@ export async function verify(token, secret) {
   );
 
   if (!valid) {
-    throw new Error('Invalid signature');
+    throw new Error('invalid_signature');
   }
 
   const payload = decodeJson(payloadPart);
   const now = Math.floor(Date.now() / 1000);
   if (payload.exp && payload.exp < now) {
-    throw new Error('Token expired');
+    throw new Error('token_expired');
   }
 
   return payload;
@@ -85,12 +81,15 @@ export async function verify(token, secret) {
 
 export async function signAccessToken(phone, secret) {
   const now = Math.floor(Date.now() / 1000);
-  return sign({ phone, type: 'access', iat: now, exp: now + 60 * 60 * 24 * 90 }, secret);
-}
-
-export async function signRegistrationToken(phone, secret) {
-  const now = Math.floor(Date.now() / 1000);
-  return sign({ phone, type: 'registration', iat: now, exp: now + 1800 }, secret);
+  return sign(
+    {
+      phone,
+      type: 'access',
+      iat: now,
+      exp: now + 60 * 60 * 24 * 90,
+    },
+    secret
+  );
 }
 
 export async function signResetToken(phone, secret) {
@@ -106,19 +105,4 @@ export function extractBearerToken(request) {
     }
   }
   return null;
-}
-
-export async function requireAccessToken(request, secret, phone) {
-  const token = extractBearerToken(request);
-  if (!token) {
-    throw new Error('Missing token');
-  }
-  const payload = await verify(token, secret);
-  if (payload.type !== 'access') {
-    throw new Error('Invalid token type');
-  }
-  if (phone && payload.phone !== phone) {
-    throw new Error('Token phone mismatch');
-  }
-  return payload;
 }

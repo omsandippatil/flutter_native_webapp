@@ -122,10 +122,26 @@ class _NavItem extends StatelessWidget {
 
   const _NavItem({required this.item, required this.active});
 
+  void _navigate(BuildContext context) {
+    if (active) return;
+    final route = item.route;
+    final router = GoRouter.of(context);
+    // Defer navigation until after the current gesture/frame finishes.
+    // AppNav is rebuilt fresh per route (each route's pageBuilder wraps its
+    // screen in a new AppNav), so calling context.go() synchronously from a
+    // tap handler tears down this same render tree mid hit-test dispatch,
+    // producing "Cannot hit test a render box that has never been laid out"
+    // and "Tried to build dirty widget in the wrong build scope". Scheduling
+    // it for the next frame lets the current gesture/build finish first.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      router.go(route);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.go(item.route),
+      onTap: () => _navigate(context),
       child: Center(
         child: active
             ? Container(

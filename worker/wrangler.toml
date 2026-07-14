@@ -1,15 +1,16 @@
-name = "tapapp-proxy"
+name = "tapapp-worker"
 main = "src/worker.js"
-compatibility_date = "2024-01-01"
+compatibility_date = "2026-07-01"
 
 [vars]
-FRAPPE_BASE_URL = "https://your-frappe-instance.example.com"
-JWT_SECRET = "test-jwt-secret-change-me"
-SMS_API_KEY = "test-sms-api-key-change-me"
-TAPAPP_APPSHEET_WEBAPP_URL = "https://script.google.com/macros/s/your-script-id/exec"
-TAPAPP_APPSHEET_WEBAPP_SECRET = "test-appsheet-secret-change-me"
+FRAPPE_BASE_URL = "https://opened.lol:8081"
+ALLOWED_ORIGINS = "*"
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+JWT_SECRET = "secretissecret"
+GROQ_API_KEY = "GROQ_API_KEY_REDACTED"
+FRAPPE_API_KEY = "ea35511a64e5cf2"
+FRAPPE_API_SECRET = "f2ab2b1be6e4c0d"
 
-[[kv_namespaces]]
-binding    = "KV"
-id         = "your-kv-namespace-id"
-preview_id = "your-kv-preview-id"
+kv_namespaces = [
+  { binding = "KV", id = "e3d834d9f35d4954bc25a0a392e8be09" }
+]

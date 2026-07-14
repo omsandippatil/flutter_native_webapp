@@ -20,7 +20,9 @@ void main() {
     );
   }
 
-  testWidgets('Renders Mobile layout when screen width is under 600', (WidgetTester tester) async {
+  testWidgets('Renders Mobile layout when screen width is under 600', (
+    WidgetTester tester,
+  ) async {
     // Set mobile size
     tester.view.physicalSize = const Size(400, 800);
     tester.view.devicePixelRatio = 1.0;
@@ -37,7 +39,9 @@ void main() {
     tester.view.resetPhysicalSize();
   });
 
-  testWidgets('Renders Desktop layout when screen width is over 600', (WidgetTester tester) async {
+  testWidgets('Renders Desktop layout when screen width is over 600', (
+    WidgetTester tester,
+  ) async {
     // Set desktop size
     tester.view.physicalSize = const Size(1024, 768);
     tester.view.devicePixelRatio = 1.0;
@@ -46,7 +50,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify desktop text content
-    expect(find.text('Hey Champ\nI am not able to talk to you'), findsOneWidget);
+    expect(
+      find.text('Hey Champ\nI am not able to talk to you'),
+      findsOneWidget,
+    );
     expect(find.text('Retry'), findsOneWidget);
     expect(find.text('Something went wrong'), findsNothing);
 

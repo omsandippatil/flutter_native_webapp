@@ -7,7 +7,7 @@ class StartActivityCard extends StatelessWidget {
   final String courseDisplay;
   final String unitName;
   final int points;
-  final VoidCallback onStart;
+  final VoidCallback? onStart;
 
   const StartActivityCard({
     super.key,
@@ -61,9 +61,7 @@ class StartActivityCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        unitName == 'States of Matter'
-                            ? 'Get Ready For ScratchJr'
-                            : unitName,
+                        unitName,
                         style: GoogleFonts.inter(
                           fontSize: 27,
                           fontWeight: FontWeight.w500,
@@ -130,7 +128,7 @@ class StartActivityCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Start Activity',
+                  onStart == null ? 'Weekly limit reached' : 'Start Activity',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

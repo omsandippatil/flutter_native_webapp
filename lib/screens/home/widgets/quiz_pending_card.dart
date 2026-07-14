@@ -44,9 +44,7 @@ class QuizPendingCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 7),
                       Text(
-                        unitName == 'States of Matter'
-                            ? 'Get Ready for ScratchJr'
-                            : unitName,
+                        unitName,
                         style: GoogleFonts.inter(
                           fontSize: 27,
                           fontWeight: FontWeight.w500,

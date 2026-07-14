@@ -1,6 +1,6 @@
 {
   "flow_id": "onboarding_flow",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "language": "en",
   "steps": [
     {
@@ -9,8 +9,8 @@
       "sender": "bot",
       "input_mode": "static",
       "audio_id": "aud_of_001",
-      "display_text": "Hi champ 👋 Great to have you here — let's get you set up!",
-      "voice_text": "Hi champ! Great to have you here. Let's get you set up!",
+      "display_text": "Hi {{name}} 👋 Great to have you here — let's get you set up!",
+      "voice_text": "Hi {{name}}! Great to have you here. Let's get you set up!",
       "next_step": "OF-002",
       "back_step": null
     },
@@ -19,34 +19,30 @@
       "type": "static",
       "sender": "bot",
       "input_mode": "buttons_only",
+      "component": "VerticalSelectCard",
       "audio_id": "aud_of_002",
-      "display_text": "Which course do you want to enroll in? Pick one below 👇",
-      "voice_text": "So, which course are you thinking of joining? Take a look below and pick whichever one feels right.",
-      "options": [
-        {
-          "label": "🔬 Science",
-          "value": "science",
-          "next_step": "OF-003"
-        },
-        {
-          "label": "💻 Coding",
-          "value": "coding",
-          "next_step": "OF-003"
-        },
-        {
-          "label": "📈 Financial Verticals",
-          "value": "financial-verticals",
-          "next_step": "OF-003"
-        },
-        {
-          "label": "🎨 Visual Arts",
-          "value": "visual-arts",
-          "next_step": "OF-003"
-        }
+      "display_text": "What do you want to learn? Pick a track below 👇",
+      "voice_text": "So, what do you want to learn? Take a look below and pick whichever track feels right.",
+      "cache_fields": [
+        "selected_vertical"
       ],
-      "cache_fields": ["selected_course"],
       "back_step": "OF-001",
-      "fallback_guide": "Hey, just tap one of the four course buttons above — that's all you need to do! 😊"
+      "fallback_guide": "Hey {{name}}, just tap one of the track cards above — that's all you need to do! 😊"
+    },
+    {
+      "step_id": "OF-002-COURSE",
+      "type": "static",
+      "sender": "bot",
+      "input_mode": "buttons_only",
+      "component": "CourseSelectCard",
+      "audio_id": "aud_of_002_course",
+      "display_text": "Nice pick! Now choose a course in {{vertical_display}} 👇",
+      "voice_text": "Nice pick! Now choose a course in {{vertical_display}}.",
+      "cache_fields": [
+        "selected_course"
+      ],
+      "back_step": "OF-002",
+      "fallback_guide": "Tap one of the course cards above — that's all you need to do! 😊"
     },
     {
       "step_id": "OF-003",
@@ -54,24 +50,8 @@
       "sender": "bot",
       "input_mode": "buttons_only",
       "audio_id": "aud_of_003",
-      "variants": {
-        "science": {
-          "display_text": "Ayyyy Science?! That's amazing, {{name}} — future scientist right here 🔬 Are you sure you want to lock in Science? Just so you know, your course can't be changed once you confirm.",
-          "voice_text": "Ooooh, Science? That's amazing — I can already picture you as a future scientist! Just double checking though, once you lock this in, it's staying locked. So, are you sure about Science?"
-        },
-        "coding": {
-          "display_text": "Ayyyy Coding?! Love that energy, {{name}} — future developer incoming 💻 Are you sure you want to lock in Coding? Just so you know, your course can't be changed once you confirm.",
-          "voice_text": "Coding, nice! I love that energy, future developer right here. Quick heads up though — once you confirm this, there's no switching later. So, are you sure you want to go with Coding?"
-        },
-        "financial-verticals": {
-          "display_text": "Ayyyy Financial Verticals?! Smart move, {{name}} — money mindset activated 📈 Are you sure you want to lock in Financial Verticals? Just so you know, your course can't be changed once you confirm.",
-          "voice_text": "Financial Verticals, smart choice! Money mindset officially activated. Just so you know, once you confirm this one it's permanent — so are you sure you want to go ahead?"
-        },
-        "visual-arts": {
-          "display_text": "Ayyyy Visual Arts?! So cool, {{name}} — creative genius detected 🎨 Are you sure you want to lock in Visual Arts? Just so you know, your course can't be changed once you confirm.",
-          "voice_text": "Visual Arts, so cool — creative genius detected right away! One quick thing though, once this is confirmed it can't be changed later. So, are you sure you want to lock it in?"
-        }
-      },
+      "display_text": "Ayyyy {{course_display}}?! That's amazing 🎉 Are you sure you want to lock in {{course_display}}? Just so you know, your course can't be changed once you confirm.",
+      "voice_text": "Ooooh, {{course_display}}? That's amazing — I love it! Just double checking though, once you lock this in, it's staying locked. So, are you sure?",
       "options": [
         {
           "label": "✅ Yes, I'm sure!",
@@ -84,7 +64,7 @@
           "next_step": "OF-002"
         }
       ],
-      "back_step": "OF-002",
+      "back_step": "OF-002-COURSE",
       "fallback_guide": "Tap '✅ Yes, I'm sure!' to confirm your course or '🔄 Let me re-pick' to go back — it's that simple!"
     },
     {
@@ -93,7 +73,7 @@
       "sender": "bot",
       "input_mode": "static",
       "audio_id": "aud_of_004",
-      "display_text": "[confetti] Woohoo {{name}}! You're officially enrolled in {{course_display}} 🎉 Let's make it count.",
+      "display_text": "[confetti] Woohoo! You're officially enrolled in {{course_display}} 🎉 Let's make it count.",
       "voice_text": "Woohoo! You're officially enrolled — let's make it count!",
       "next_step": "OF-005",
       "back_step": null
@@ -109,7 +89,14 @@
       "voice_text": "Alright, let's just double check your details are correct.",
       "content_ref": {
         "source": "student_profile",
-        "fields": ["name", "phone", "language", "school", "class", "subject"]
+        "fields": [
+          "name",
+          "phone",
+          "language",
+          "school",
+          "class",
+          "subject"
+        ]
       },
       "options": [
         {
@@ -167,7 +154,9 @@
       "audio_id": "aud_of_005_edit_name",
       "display_text": "What should I call you instead? Just type the correct name below 😊",
       "voice_text": "What should I call you instead? Go ahead and type the correct name below.",
-      "cache_fields": ["name"],
+      "cache_fields": [
+        "name"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": null
@@ -181,7 +170,9 @@
       "display_text": "What's the correct phone number?",
       "voice_text": "What's the correct phone number?",
       "validation": "phone",
-      "cache_fields": ["phone"],
+      "cache_fields": [
+        "phone"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Please enter a valid phone number."
@@ -221,7 +212,9 @@
           "next_step": "OF-005"
         }
       ],
-      "cache_fields": ["language"],
+      "cache_fields": [
+        "language"
+      ],
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Tap your preferred language from the buttons above."
     },
@@ -256,7 +249,11 @@
           "pre_fill_from_cache": true
         }
       ],
-      "cache_fields": ["school", "class", "subject"],
+      "cache_fields": [
+        "school",
+        "class",
+        "subject"
+      ],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Update the fields above and hit submit!"
@@ -281,7 +278,9 @@
           "next_step": "OF-007"
         }
       ],
-      "cache_fields": ["has_sibling"],
+      "cache_fields": [
+        "has_sibling"
+      ],
       "back_step": "OF-005",
       "fallback_guide": "Tap Yes or No — just one tap!"
     },
@@ -291,7 +290,7 @@
       "sender": "bot",
       "input_mode": "static",
       "audio_id": "aud_of_007",
-      "display_text": "Congrats {{name}} 🎉 You just earned [+500pts] for completing your profile! You're crushing it already.",
+      "display_text": "Congrats 🎉 You just earned [+500pts] for completing your profile! You're crushing it already.",
       "voice_text": "Congratulations! You just earned five hundred points for completing your profile. You're crushing it already!",
       "points_awarded": 500,
       "next_step": "OF-008",

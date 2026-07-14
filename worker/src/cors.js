@@ -1,17 +1,14 @@
-const ALLOWED_ORIGINS = new Set([
-  'https://yourapp.example.com',
-  'http://localhost:3000',
-  'http://localhost:8080',
-]);
-
-function resolveOrigin(request) {
+function resolveOrigin(request, env) {
   const origin = request.headers.get('Origin');
   if (!origin) return '*';
-  return ALLOWED_ORIGINS.has(origin) ? origin : null;
+  const allowedRaw = (env.ALLOWED_ORIGINS || '').trim();
+  if (allowedRaw === '*' || allowedRaw === '') return origin;
+  const allowed = allowedRaw.split(',').map((o) => o.trim()).filter(Boolean);
+  return allowed.includes(origin) ? origin : null;
 }
 
-export function corsHeaders(request) {
-  const origin = resolveOrigin(request);
+export function corsHeaders(request, env) {
+  const origin = resolveOrigin(request, env);
   const headers = {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Flutter-Authorization',
@@ -24,9 +21,9 @@ export function corsHeaders(request) {
   return headers;
 }
 
-export function applyCors(response, request) {
+export function applyCors(response, request, env) {
   const headers = new Headers(response.headers);
-  const cors = corsHeaders(request);
+  const cors = corsHeaders(request, env);
   for (const key in cors) {
     headers.set(key, cors[key]);
   }
@@ -37,9 +34,9 @@ export function applyCors(response, request) {
   });
 }
 
-export function handlePreflight(request) {
+export function handlePreflight(request, env) {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders(request),
+    headers: corsHeaders(request, env),
   });
 }

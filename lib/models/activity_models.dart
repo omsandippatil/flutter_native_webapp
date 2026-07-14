@@ -1,96 +1,69 @@
+import '../models/program_content/course_detail_model.dart';
+
 enum LearningStage { startActivity, sendProject, quizPending, completed }
 
 class CourseUnit {
-  final String courseId;
-  final String courseDisplay;
-  final String unitId;
-  final int unitIndex;
-  final String unitName;
-  final String videoDescription;
-  final String videoUrl;
-  final int videoPoints;
-  final String submissionPrompt;
-  final int submissionPoints;
-  final int quizQuestionCount;
-
   const CourseUnit({
-    required this.courseId,
-    required this.courseDisplay,
-    required this.unitId,
     required this.unitIndex,
+    required this.courseDisplay,
     required this.unitName,
     required this.videoDescription,
-    required this.videoUrl,
     required this.videoPoints,
-    required this.submissionPrompt,
     required this.submissionPoints,
-    required this.quizQuestionCount,
+    required this.submissionPrompt,
+    required this.totalPoints,
   });
 
-  factory CourseUnit.fromCourseJson(Map<String, dynamic> json) {
-    final units = json['units'] as List<dynamic>? ?? const [];
-    final unit = units.isNotEmpty
-        ? units.first as Map<String, dynamic>
-        : <String, dynamic>{};
-    return CourseUnit.fromUnitJson(json, unit);
-  }
+  final int unitIndex;
+  final String courseDisplay;
+  final String unitName;
+  final String videoDescription;
+  final int videoPoints;
+  final int submissionPoints;
+  final String submissionPrompt;
+  final int totalPoints;
 
-  factory CourseUnit.fromUnitJson(
-    Map<String, dynamic> courseJson,
-    Map<String, dynamic> unit,
-  ) {
-    final video = unit['video'] as Map<String, dynamic>? ?? const {};
-    final submission = unit['submission'] as Map<String, dynamic>? ?? const {};
-    final quiz = unit['quiz'] as Map<String, dynamic>? ?? const {};
-    final questions = quiz['questions'] as List<dynamic>? ?? const [];
+  factory CourseUnit.fromCourse(CourseDetailModel course, int unitIndex) {
+    final unit = course.units[unitIndex];
+    final video = unit.videos.isNotEmpty ? unit.videos.first : null;
+    final assignment = unit.assignments.isNotEmpty ? unit.assignments.first : null;
+    final assignmentStep = assignment != null && assignment.steps.isNotEmpty
+        ? assignment.steps.first
+        : null;
 
     return CourseUnit(
-      courseId: courseJson['course_id'] as String? ?? 'science',
-      courseDisplay: courseJson['course_display'] as String? ?? 'Basic',
-      unitId: unit['unit_id'] as String? ?? 'science_u01',
-      unitIndex: unit['unit_index'] as int? ?? 0,
-      unitName: unit['unit_name'] as String? ?? 'Get Ready For ScratchJr',
-      videoDescription: video['description'] as String? ?? 'why bottles matter',
-      videoUrl: video['url'] as String? ?? '',
-      videoPoints: video['points'] as int? ?? 10,
-      submissionPrompt:
-          submission['prompt'] as String? ??
-          'Share a clear screenshot or video of your activity.',
-      submissionPoints: submission['points'] as int? ?? 25,
-      quizQuestionCount: questions.length,
+      unitIndex: unitIndex,
+      courseDisplay: course.vertical.isNotEmpty ? course.vertical : course.name,
+      unitName: unit.name,
+      videoDescription: video?.description ?? unit.description,
+      videoPoints: video?.points ?? unit.xp,
+      submissionPoints: unit.xp,
+      submissionPrompt: assignmentStep?.unguidedText ?? assignment?.description ?? '',
+      totalPoints: unit.xp,
     );
   }
-
-  String get displayCourseName => 'Basic';
-
-  String get displayUnitName {
-    if (unitName == 'States of Matter') return 'Get Ready for ScratchJr';
-    return unitName;
-  }
-
-  int get totalPoints => videoPoints + submissionPoints + 5;
 }
 
-class StudentLearningProgress {
-  final String studentName;
-  final int points;
-  final int streakDay;
-  final int skillGems;
-  final int watchedVideosThisWeek;
-  final bool videoDone;
-  final bool submissionDone;
-  final bool quizDone;
-
-  const StudentLearningProgress({
+class LearningProgress {
+  const LearningProgress({
     required this.studentName,
     required this.points,
-    required this.streakDay,
     required this.skillGems,
-    required this.watchedVideosThisWeek,
+    required this.streakDay,
     required this.videoDone,
     required this.submissionDone,
     required this.quizDone,
+    required this.watchedVideosThisWeek,
   });
+
+  final String studentName;
+  final int points;
+  final int skillGems;
+  final int streakDay;
+  final bool videoDone;
+  final bool submissionDone;
+  final bool quizDone;
+  final int watchedVideosThisWeek;
 
   LearningStage get currentStage {
     if (!videoDone) return LearningStage.startActivity;
@@ -98,13 +71,18 @@ class StudentLearningProgress {
     if (!quizDone) return LearningStage.quizPending;
     return LearningStage.completed;
   }
-
-  bool get canWatchMoreVideosThisWeek => watchedVideosThisWeek < 2;
 }
 
 class LearningDashboard {
-  final CourseUnit unit;
-  final StudentLearningProgress progress;
+  const LearningDashboard({
+    required this.progress,
+    required this.unit,
+    required this.hasEnrollment,
+    required this.hasReachedWeeklyCap,
+  });
 
-  const LearningDashboard({required this.unit, required this.progress});
+  final LearningProgress progress;
+  final CourseUnit? unit;
+  final bool hasEnrollment;
+  final bool hasReachedWeeklyCap;
 }

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../models/activity_models.dart';
-import '../../providers/activity_provider.dart';
+import '../../providers/home_dashboard_provider.dart';
 import '../../widgets/app_nav.dart';
 import '../../widgets/loading_view.dart';
 
@@ -38,14 +38,9 @@ class _PassportDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = dashboard.progress;
-    final hasActivity =
-        progress.videoDone ||
-        progress.submissionDone ||
-        progress.quizDone ||
-        progress.points > 3;
-    final displayPoints = hasActivity ? progress.points : 0;
-    final displayGems = hasActivity ? progress.skillGems : 0;
-    final displayStreak = hasActivity ? progress.streakDay : 0;
+    final points = progress.points;
+    final gems = progress.skillGems;
+    final streak = progress.streakDay;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -77,10 +72,9 @@ class _PassportDashboard extends StatelessWidget {
                               Expanded(
                                 child: _ProgressColumn(
                                   studentName: progress.studentName,
-                                  points: displayPoints,
-                                  gems: displayGems,
-                                  streak: displayStreak,
-                                  hasActivity: hasActivity,
+                                  points: points,
+                                  gems: gems,
+                                  streak: streak,
                                 ),
                               ),
                               const SizedBox(width: 28),
@@ -93,10 +87,9 @@ class _PassportDashboard extends StatelessWidget {
                             children: [
                               _ProgressColumn(
                                 studentName: progress.studentName,
-                                points: displayPoints,
-                                gems: displayGems,
-                                streak: displayStreak,
-                                hasActivity: hasActivity,
+                                points: points,
+                                gems: gems,
+                                streak: streak,
                               ),
                               const SizedBox(height: 22),
                               _StudentProfileCard(
@@ -155,14 +148,12 @@ class _ProgressColumn extends StatelessWidget {
   final int points;
   final int gems;
   final int streak;
-  final bool hasActivity;
 
   const _ProgressColumn({
     required this.studentName,
     required this.points,
     required this.gems,
     required this.streak,
-    required this.hasActivity,
   });
 
   @override
@@ -189,7 +180,61 @@ class _ProgressColumn extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 26),
-        _RankProgressCard(points: points),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow = constraints.maxWidth < 560;
+            final rankCards = [
+              _RankProgressCard(
+                title: 'Bronze Buddy',
+                value: points,
+                target: 500,
+                unitLabel: 'points',
+                icon: Icons.workspace_premium_rounded,
+                iconBg: const Color(0xFFC17A43),
+                iconColor: const Color(0xFF6B3B20),
+              ),
+              _RankProgressCard(
+                title: 'Skill Gems',
+                value: gems,
+                target: 50,
+                unitLabel: 'gems',
+                icon: Icons.diamond_rounded,
+                iconBg: AppTheme.gemBg,
+                iconColor: AppTheme.buttonColor,
+              ),
+              _RankProgressCard(
+                title: 'Streak',
+                value: streak,
+                target: 30,
+                unitLabel: 'days',
+                icon: Icons.water_drop_rounded,
+                iconBg: AppTheme.streakBg,
+                iconColor: AppTheme.streakColor,
+              ),
+            ];
+
+            if (narrow) {
+              return Column(
+                children: [
+                  for (final card in rankCards) ...[
+                    card,
+                    if (card != rankCards.last) const SizedBox(height: 12),
+                  ],
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final card in rankCards) ...[
+                  Expanded(child: card),
+                  if (card != rankCards.last) const SizedBox(width: 12),
+                ],
+              ],
+            );
+          },
+        ),
         const SizedBox(height: 26),
         Text(
           'Your Achievements Champ!',
@@ -212,7 +257,6 @@ class _ProgressColumn extends StatelessWidget {
                 label: 'Points',
                 title: 'What are points',
                 description: 'Earn points by doing TAP Activities every week!',
-                locked: false,
               ),
               _AchievementCard(
                 icon: Icons.diamond_rounded,
@@ -223,8 +267,6 @@ class _ProgressColumn extends StatelessWidget {
                 title: 'What are skill gems',
                 description:
                     'You earn 1 skill gem for every submission you make.',
-                locked: !hasActivity,
-                lockedText: 'Submit Activity to unlock Skill Gems',
               ),
               _AchievementCard(
                 icon: Icons.water_drop_rounded,
@@ -235,8 +277,6 @@ class _ProgressColumn extends StatelessWidget {
                 title: 'What are streaks',
                 description:
                     'If you forget to submit your streak resets to zero.',
-                locked: !hasActivity,
-                lockedText: 'Submit Activity to unlock Streaks',
               ),
             ];
 
@@ -270,14 +310,28 @@ class _ProgressColumn extends StatelessWidget {
 }
 
 class _RankProgressCard extends StatelessWidget {
-  final int points;
+  final String title;
+  final int value;
+  final int target;
+  final String unitLabel;
+  final IconData icon;
+  final Color iconBg;
+  final Color iconColor;
 
-  const _RankProgressCard({required this.points});
+  const _RankProgressCard({
+    required this.title,
+    required this.value,
+    required this.target,
+    required this.unitLabel,
+    required this.icon,
+    required this.iconBg,
+    required this.iconColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final target = 500;
-    final clamped = points.clamp(0, target);
+    final clamped = value.clamp(0, target);
+    final remaining = target - clamped;
 
     return Container(
       width: double.infinity,
@@ -294,7 +348,7 @@ class _RankProgressCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Bronze Buddy',
+                  title,
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -305,12 +359,10 @@ class _RankProgressCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
-                    value: clamped / target,
+                    value: target == 0 ? 0 : clamped / target,
                     minHeight: 5,
                     backgroundColor: AppTheme.chatBubble,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppTheme.buttonColor,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(iconColor),
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -326,7 +378,7 @@ class _RankProgressCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${target - clamped} points remaining',
+                      '$remaining $unitLabel remaining',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -342,14 +394,8 @@ class _RankProgressCard extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Color(0xFFC17A43),
-            ),
-            child: const Icon(
-              Icons.workspace_premium_rounded,
-              color: Color(0xFF6B3B20),
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: iconBg),
+            child: Icon(icon, color: iconColor),
           ),
         ],
       ),
@@ -365,8 +411,6 @@ class _AchievementCard extends StatefulWidget {
   final String label;
   final String title;
   final String description;
-  final bool locked;
-  final String? lockedText;
 
   const _AchievementCard({
     required this.icon,
@@ -376,8 +420,6 @@ class _AchievementCard extends StatefulWidget {
     required this.label,
     required this.title,
     required this.description,
-    required this.locked,
-    this.lockedText,
   });
 
   @override
@@ -389,15 +431,11 @@ class _AchievementCardState extends State<_AchievementCard> {
 
   @override
   Widget build(BuildContext context) {
-    final showBack = _hovered && !widget.locked;
-
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
-        onTap: () {
-          if (!widget.locked) setState(() => _hovered = !_hovered);
-        },
+        onTap: () => setState(() => _hovered = !_hovered),
         child: SizedBox(
           height: 152,
           child: AnimatedSwitcher(
@@ -418,7 +456,7 @@ class _AchievementCardState extends State<_AchievementCard> {
                 },
               );
             },
-            child: showBack
+            child: _hovered
                 ? _AchievementBack(
                     key: ValueKey('${widget.label}-back'),
                     icon: widget.icon,
@@ -434,8 +472,6 @@ class _AchievementCardState extends State<_AchievementCard> {
                     iconBg: widget.iconBg,
                     value: widget.value,
                     label: widget.label,
-                    locked: widget.locked,
-                    lockedText: widget.lockedText,
                   ),
           ),
         ),
@@ -450,8 +486,6 @@ class _AchievementFront extends StatelessWidget {
   final Color iconBg;
   final String value;
   final String label;
-  final bool locked;
-  final String? lockedText;
 
   const _AchievementFront({
     super.key,
@@ -460,8 +494,6 @@ class _AchievementFront extends StatelessWidget {
     required this.iconBg,
     required this.value,
     required this.label,
-    required this.locked,
-    this.lockedText,
   });
 
   @override
@@ -470,7 +502,7 @@ class _AchievementFront extends StatelessWidget {
       height: 152,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: locked ? AppTheme.softSurface : AppTheme.cardBackground,
+        color: AppTheme.cardBackground,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppTheme.borderColor),
       ),
@@ -479,37 +511,24 @@ class _AchievementFront extends StatelessWidget {
         children: [
           _AchievementIcon(icon: icon, iconColor: iconColor, iconBg: iconBg),
           const SizedBox(height: 12),
-          if (locked)
-            Text(
-              lockedText ?? 'Submit Activity to unlock',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                height: 1.25,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.subheadingColor,
-              ),
-            )
-          else ...[
-            Text(
-              value,
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                height: 1,
-                fontWeight: FontWeight.w900,
-                color: AppTheme.subheadingColor,
-              ),
+          Text(
+            value,
+            style: GoogleFonts.inter(
+              fontSize: 22,
+              height: 1,
+              fontWeight: FontWeight.w900,
+              color: AppTheme.subheadingColor,
             ),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                height: 1.2,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.subheadingColor,
-              ),
+          ),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 1.2,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.subheadingColor,
             ),
-          ],
+          ),
         ],
       ),
     );
@@ -545,7 +564,7 @@ class _AchievementBack extends StatelessWidget {
           children: [
             Text(
               title,
-              maxLines: compact ? 2 : 2,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(
@@ -558,7 +577,7 @@ class _AchievementBack extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               description,
-              maxLines: compact ? 4 : 4,
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(

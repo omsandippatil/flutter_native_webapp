@@ -10,7 +10,8 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _progressController;
 
   @override
@@ -57,17 +58,19 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     'assets/logos/gov-logo.png',
                     height: isDesktop ? 64 : 54,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                   Image.asset(
                     'assets/logos/tap_logo.png',
                     height: isDesktop ? 48 : 38,
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const SizedBox.shrink(),
                   ),
                 ],
               ),
-              
+
               const Spacer(flex: 2),
 
               // 2. Centered Content (Title, Subtitle, Circular GIF, Progress Bar)
@@ -95,14 +98,12 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 36),
-                  
+
                   // Circular loader GIF
                   Container(
                     width: isDesktop ? 280 : 220,
                     height: isDesktop ? 280 : 220,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: const BoxDecoration(shape: BoxShape.circle),
                     child: ClipOval(
                       child: Image.asset(
                         'assets/splash-screen/tap-buddy-loader.gif',
@@ -129,7 +130,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           value: _progressController.value,
                           minHeight: 6,
                           backgroundColor: const Color(0xFFE8E8FB),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5B5BD6)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Color(0xFF5B5BD6),
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         );
                       },

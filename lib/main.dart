@@ -5,10 +5,6 @@ import 'app.dart';
 void main() {
   // Ensure Flutter engine is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
-  runApp(
-    const ProviderScope(
-      child: App(),
-    ),
-  );
+
+  runApp(const ProviderScope(child: App()));
 }

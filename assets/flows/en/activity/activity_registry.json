@@ -1,70 +1,64 @@
 {
   "registry_id": "activity_registry",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "language": "en",
   "component_bindings": [
     {
       "step_id": "AF-004",
       "component": "VideoPlayer",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].video",
-      "fields": ["video_id", "description", "url", "points"]
+      "source": "courses/{lang}/{course_id}.json",
+      "path": "units[{unit_index}].vids[0]",
+      "fields": ["id", "nm", "desc", "yt", "pts"]
     },
     {
       "step_id": "AF-007",
       "component": "SubmissionCard",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].submission",
-      "fields": ["submission_id", "type", "prompt", "points"]
+      "source": "courses/{lang}/{course_id}.json",
+      "path": "units[{unit_index}].assigns[0]",
+      "fields": ["id", "nm", "desc", "steps"],
+      "step_selector": "match_sub_types_to_profile"
+    },
+    {
+      "step_id": "AF-008",
+      "component": "SubmissionReview",
+      "source": "review_result",
+      "path": "current",
+      "fields": ["review"]
     },
     {
       "step_id": "AF-QUIZ-QUESTION",
       "component": "QuizQuestion",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].quiz.questions[{quiz_index}]",
-      "fields": ["question_id", "prompt", "options", "correct_option_id"]
+      "source": "courses/{lang}/{course_id}.json",
+      "path": "units[{unit_index}].quiz.qs[{quiz_index}]",
+      "fields": ["q", "opts", "ans", "hint"]
     },
     {
       "step_id": "AF-QUIZ-CORRECT",
       "component": "QuizCorrectFeedback",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.correct",
-      "fields": ["display_text", "voice_text"]
+      "source": "generated",
+      "kind": "celebration"
     },
     {
       "step_id": "AF-QUIZ-WRONG",
       "component": "QuizFeedback",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.wrong",
-      "fields": ["consolation", "cheer_up_audio_id", "hint", "explanation"]
+      "source": "courses/{lang}/{course_id}.json",
+      "path": "units[{unit_index}].quiz.qs[{quiz_index}]",
+      "fields": ["ans", "exp"],
+      "cheer_up_source": "generated"
     },
     {
-      "step_id": "AF-QUIZ-MOTIVATE",
-      "component": "QuizMotivate",
-      "source": "courses/{course_id}.json",
-      "path": "units[{unit_index}].quiz.questions[{quiz_index}].feedback.motivate_next",
-      "fields": ["display_text", "voice_text"]
-    },
-    {
-      "step_id": "AF-012",
-      "component": "SubmissionReview",
-      "source": "review_result",
-      "path": "current",
-      "fields": ["display_text", "voice_text"]
-    },
-    {
-      "step_id": "AF-014",
-      "component": "ScoreSummary",
+      "step_id": "AF-011",
+      "component": "QuizSummary",
       "source": "session_state",
       "path": null,
-      "fields": ["quiz_score", "submission_points", "video_points", "total_today"]
+      "fields": ["quiz_correct", "quiz_total"]
     },
     {
-      "step_id": "AF-NEXT-UNIT",
-      "component": "UnitPreviewCard",
-      "source": "courses/{course_id}.json",
+      "step_id": "AF-UNIT-TRANSITION",
+      "component": "UnitTransitionCard",
+      "source": "courses/{lang}/{course_id}.json",
       "path": "units[{next_unit_index}]",
-      "fields": ["unit_id", "unit_name"]
+      "fields": ["nm"]
     }
   ]
 }
