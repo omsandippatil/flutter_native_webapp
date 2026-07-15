@@ -46,7 +46,9 @@ function contextLinesFromLearnerContext(context) {
   if (typeof xp === 'number') lines.push(`They currently have ${xp} XP.`);
   if (typeof streak === 'number') lines.push(`Their current streak is ${streak} day(s).`);
   if (hasReachedWeeklyCap) {
-    lines.push('They have already reached their weekly activity limit, so no new units are available right now.');
+    lines.push(
+      'They have already reached their weekly activity limit, so no new units are available right now.'
+    );
   }
 
   return lines;
@@ -85,7 +87,9 @@ export async function handleTapbuddyChat(request, env) {
   if (language) contextLines.push(`Reply only in this language: ${language}.`);
   contextLines.push(...contextLinesFromLearnerContext(context));
 
-  const systemContent = contextLines.length ? `${SYSTEM_PROMPT}\n${contextLines.join(' ')}` : SYSTEM_PROMPT;
+  const systemContent = contextLines.length
+    ? `${SYSTEM_PROMPT}\n${contextLines.join(' ')}`
+    : SYSTEM_PROMPT;
 
   const messages = [
     { role: 'system', content: systemContent },

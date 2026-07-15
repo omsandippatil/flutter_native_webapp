@@ -52,7 +52,10 @@ export async function callGroq(env, { model, messages, temperature, maxTokens, r
   return { content, raw: parsed };
 }
 
-export async function callGroqVision(env, { model, messages, temperature, maxTokens, responseFormat }) {
+export async function callGroqVision(
+  env,
+  { model, messages, temperature, maxTokens, responseFormat }
+) {
   if (!env.GROQ_API_KEY) {
     const err = new Error('groq_api_key_not_configured');
     err.status = 500;

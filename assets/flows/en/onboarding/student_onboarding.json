@@ -23,9 +23,7 @@
       "audio_id": "aud_of_002",
       "display_text": "What do you want to learn? Pick a track below 👇",
       "voice_text": "So, what do you want to learn? Take a look below and pick whichever track feels right.",
-      "cache_fields": [
-        "selected_vertical"
-      ],
+      "cache_fields": ["selected_vertical"],
       "back_step": "OF-001",
       "fallback_guide": "Hey {{name}}, just tap one of the track cards above — that's all you need to do! 😊"
     },
@@ -38,9 +36,7 @@
       "audio_id": "aud_of_002_course",
       "display_text": "Nice pick! Now choose a course in {{vertical_display}} 👇",
       "voice_text": "Nice pick! Now choose a course in {{vertical_display}}.",
-      "cache_fields": [
-        "selected_course"
-      ],
+      "cache_fields": ["selected_course"],
       "back_step": "OF-002",
       "fallback_guide": "Tap one of the course cards above — that's all you need to do! 😊"
     },
@@ -89,14 +85,7 @@
       "voice_text": "Alright, let's just double check your details are correct.",
       "content_ref": {
         "source": "student_profile",
-        "fields": [
-          "name",
-          "phone",
-          "language",
-          "school",
-          "class",
-          "subject"
-        ]
+        "fields": ["name", "phone", "language", "school", "class", "subject"]
       },
       "options": [
         {
@@ -154,9 +143,7 @@
       "audio_id": "aud_of_005_edit_name",
       "display_text": "What should I call you instead? Just type the correct name below 😊",
       "voice_text": "What should I call you instead? Go ahead and type the correct name below.",
-      "cache_fields": [
-        "name"
-      ],
+      "cache_fields": ["name"],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": null
@@ -170,9 +157,7 @@
       "display_text": "What's the correct phone number?",
       "voice_text": "What's the correct phone number?",
       "validation": "phone",
-      "cache_fields": [
-        "phone"
-      ],
+      "cache_fields": ["phone"],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Please enter a valid phone number."
@@ -212,9 +197,7 @@
           "next_step": "OF-005"
         }
       ],
-      "cache_fields": [
-        "language"
-      ],
+      "cache_fields": ["language"],
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Tap your preferred language from the buttons above."
     },
@@ -249,11 +232,7 @@
           "pre_fill_from_cache": true
         }
       ],
-      "cache_fields": [
-        "school",
-        "class",
-        "subject"
-      ],
+      "cache_fields": ["school", "class", "subject"],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
       "fallback_guide": "Update the fields above and hit submit!"
@@ -278,9 +257,7 @@
           "next_step": "OF-007"
         }
       ],
-      "cache_fields": [
-        "has_sibling"
-      ],
+      "cache_fields": ["has_sibling"],
       "back_step": "OF-005",
       "fallback_guide": "Tap Yes or No — just one tap!"
     },

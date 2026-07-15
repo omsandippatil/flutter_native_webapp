@@ -12,7 +12,8 @@ const VISION_MODEL = 'llama-4-scout-17b-16e-instruct';
 function buildUserLines(question, expectedAnswer, rubric) {
   const lines = [];
   if (question) lines.push(`Question: ${String(question).slice(0, MAX_TEXT_CHARS)}`);
-  if (expectedAnswer) lines.push(`Expected answer criteria: ${String(expectedAnswer).slice(0, MAX_TEXT_CHARS)}`);
+  if (expectedAnswer)
+    lines.push(`Expected answer criteria: ${String(expectedAnswer).slice(0, MAX_TEXT_CHARS)}`);
   if (rubric) lines.push(`Rubric: ${String(rubric).slice(0, MAX_TEXT_CHARS)}`);
   return lines;
 }
@@ -54,10 +55,18 @@ async function reviewTextSubmission(env, question, expectedAnswer, rubric, submi
   });
 }
 
-async function reviewImageSubmission(env, question, expectedAnswer, rubric, imageUrl, submissionText) {
+async function reviewImageSubmission(
+  env,
+  question,
+  expectedAnswer,
+  rubric,
+  imageUrl,
+  submissionText
+) {
   const lines = buildUserLines(question, expectedAnswer, rubric);
   lines.push('The student submitted the attached image as their answer.');
-  if (submissionText) lines.push(`Additional student notes: ${submissionText.slice(0, MAX_TEXT_CHARS)}`);
+  if (submissionText)
+    lines.push(`Additional student notes: ${submissionText.slice(0, MAX_TEXT_CHARS)}`);
 
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -82,7 +91,9 @@ async function reviewImageSubmission(env, question, expectedAnswer, rubric, imag
 async function reviewAudioSubmission(env, question, expectedAnswer, rubric, audioUrl) {
   const transcript = await callGroqAudioTranscription(env, { audioUrl });
   const lines = buildUserLines(question, expectedAnswer, rubric);
-  lines.push(`Student submission (transcribed from audio): ${transcript.text.slice(0, MAX_TEXT_CHARS)}`);
+  lines.push(
+    `Student submission (transcribed from audio): ${transcript.text.slice(0, MAX_TEXT_CHARS)}`
+  );
 
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
@@ -156,7 +167,14 @@ export async function handleSubmissionReview(request, env) {
     if (submissionType === 'text') {
       result = await reviewTextSubmission(env, question, expectedAnswer, rubric, submissionText);
     } else if (submissionType === 'image') {
-      result = await reviewImageSubmission(env, question, expectedAnswer, rubric, imageUrl, submissionText);
+      result = await reviewImageSubmission(
+        env,
+        question,
+        expectedAnswer,
+        rubric,
+        imageUrl,
+        submissionText
+      );
     } else {
       result = await reviewAudioSubmission(env, question, expectedAnswer, rubric, audioUrl);
     }

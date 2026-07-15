@@ -3,7 +3,10 @@ function resolveOrigin(request, env) {
   if (!origin) return '*';
   const allowedRaw = (env.ALLOWED_ORIGINS || '').trim();
   if (allowedRaw === '*' || allowedRaw === '') return origin;
-  const allowed = allowedRaw.split(',').map((o) => o.trim()).filter(Boolean);
+  const allowed = allowedRaw
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   return allowed.includes(origin) ? origin : null;
 }
 

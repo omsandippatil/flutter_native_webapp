@@ -6,29 +6,124 @@ import {
 } from './auth.js';
 
 export const ROUTES = [
-  { method: 'POST', path: '/auth/check-phone', target: 'tap_lms.tapapp.api.auth.tapapp_auth.check_phone', auth: false },
-  { method: 'POST', path: '/auth/login', target: 'tap_lms.tapapp.api.auth.tapapp_auth.login_with_password', auth: false },
-  { method: 'POST', path: '/auth/forgot-password/send-otp', target: 'tap_lms.tapapp.api.auth.tapapp_auth.forgot_password_send_otp', auth: false },
-  { method: 'POST', path: '/auth/forgot-password/verify-otp', target: 'tap_lms.tapapp.api.auth.tapapp_auth.forgot_password_verify_otp', auth: false },
-  { method: 'POST', path: '/auth/reset-password', target: 'tap_lms.tapapp.api.auth.tapapp_auth.reset_password', auth: 'reset' },
+  {
+    method: 'POST',
+    path: '/auth/check-phone',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.check_phone',
+    auth: false,
+  },
+  {
+    method: 'POST',
+    path: '/auth/login',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.login_with_password',
+    auth: false,
+  },
+  {
+    method: 'POST',
+    path: '/auth/forgot-password/send-otp',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.forgot_password_send_otp',
+    auth: false,
+  },
+  {
+    method: 'POST',
+    path: '/auth/forgot-password/verify-otp',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.forgot_password_verify_otp',
+    auth: false,
+  },
+  {
+    method: 'POST',
+    path: '/auth/reset-password',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.reset_password',
+    auth: 'reset',
+  },
 
-  { method: 'GET', path: '/profiles', target: 'tap_lms.tapapp.api.auth.tapapp_auth.get_profiles', auth: true },
-  { method: 'GET', path: '/profiles/search', target: 'tap_lms.tapapp.api.auth.tapapp_auth.search_profiles', auth: true },
-  { method: 'POST', path: '/profiles/select', target: 'tap_lms.tapapp.api.profile.profile.select_profile', auth: true },
-  { method: 'POST', path: '/profiles/avatar', target: 'tap_lms.tapapp.api.profile.profile.update_avatar', auth: true },
-  { method: 'POST', path: '/profiles/update', target: 'tap_lms.tapapp.api.profile.profile.update_profile', auth: true },
+  {
+    method: 'GET',
+    path: '/profiles',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.get_profiles',
+    auth: true,
+  },
+  {
+    method: 'GET',
+    path: '/profiles/search',
+    target: 'tap_lms.tapapp.api.auth.tapapp_auth.search_profiles',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/profiles/select',
+    target: 'tap_lms.tapapp.api.profile.profile.select_profile',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/profiles/avatar',
+    target: 'tap_lms.tapapp.api.profile.profile.update_avatar',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/profiles/update',
+    target: 'tap_lms.tapapp.api.profile.profile.update_profile',
+    auth: true,
+  },
 
-  { method: 'GET', path: '/students/search', target: 'tap_lms.tapapp.api.profile.profile.search_student', auth: true },
-  { method: 'GET', path: '/students', target: 'tap_lms.tapapp.api.profile.profile.get_bulk_students', auth: true },
-  { method: 'POST', path: '/students/update', target: 'tap_lms.tapapp.api.profile.profile.update_student', auth: true },
-  { method: 'POST', path: '/students/bulk-update', target: 'tap_lms.tapapp.api.profile.profile.bulk_update_students', auth: true },
+  {
+    method: 'GET',
+    path: '/students/search',
+    target: 'tap_lms.tapapp.api.profile.profile.search_student',
+    auth: true,
+  },
+  {
+    method: 'GET',
+    path: '/students',
+    target: 'tap_lms.tapapp.api.profile.profile.get_bulk_students',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/students/update',
+    target: 'tap_lms.tapapp.api.profile.profile.update_student',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/students/bulk-update',
+    target: 'tap_lms.tapapp.api.profile.profile.bulk_update_students',
+    auth: true,
+  },
 
-  { method: 'GET', path: '/learner/state', target: 'tap_lms.tapapp.api.progress.learner.get_learner_state', auth: true },
-  { method: 'POST', path: '/learner/enroll', target: 'tap_lms.tapapp.api.progress.learner.enroll_course', auth: true },
-  { method: 'POST', path: '/learner/submit-progress', target: 'tap_lms.tapapp.api.progress.learner.submit_progress', auth: true },
+  {
+    method: 'GET',
+    path: '/learner/state',
+    target: 'tap_lms.tapapp.api.progress.learner.get_learner_state',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/learner/enroll',
+    target: 'tap_lms.tapapp.api.progress.learner.enroll_course',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/learner/submit-progress',
+    target: 'tap_lms.tapapp.api.progress.learner.submit_progress',
+    auth: true,
+  },
 
-  { method: 'GET', path: '/achievements', target: 'tap_lms.tapapp.api.progress.achievements.get_learner_achievements', auth: true },
-  { method: 'POST', path: '/achievements/award', target: 'tap_lms.tapapp.api.progress.achievements.award_achievement', auth: true },
+  {
+    method: 'GET',
+    path: '/achievements',
+    target: 'tap_lms.tapapp.api.progress.achievements.get_learner_achievements',
+    auth: true,
+  },
+  {
+    method: 'POST',
+    path: '/achievements/award',
+    target: 'tap_lms.tapapp.api.progress.achievements.award_achievement',
+    auth: true,
+  },
 ];
 
 function matchRoute(method, pathname) {
@@ -148,8 +243,12 @@ export async function routeRequest(request, env) {
     parsed = null;
   }
 
-  const unwrapped = parsed && Object.prototype.hasOwnProperty.call(parsed, 'message') ? parsed.message : parsed;
-  const finalBody = unwrapped && typeof unwrapped === 'object' ? unwrapped : { success: backendResponse.ok, raw: responseText };
+  const unwrapped =
+    parsed && Object.prototype.hasOwnProperty.call(parsed, 'message') ? parsed.message : parsed;
+  const finalBody =
+    unwrapped && typeof unwrapped === 'object'
+      ? unwrapped
+      : { success: backendResponse.ok, raw: responseText };
 
   if (refreshedToken) {
     finalBody.token = refreshedToken;
