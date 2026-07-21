@@ -82,11 +82,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         return;
       }
 
-      final learnerStateRepository = await ref.read(learnerStateRepositoryProvider.future);
+      final learnerStateRepository = await ref.read(
+        learnerStateRepositoryProvider.future,
+      );
       if (!_canUpdate) return;
 
-      final learnerState = await learnerStateRepository.readCached(activeProfile.learnerId) ??
-          await learnerStateRepository.fetchState(learnerId: activeProfile.learnerId);
+      final learnerState =
+          await learnerStateRepository.readCached(activeProfile.learnerId) ??
+          await learnerStateRepository.fetchState(
+            learnerId: activeProfile.learnerId,
+          );
 
       if (!_canUpdate) return;
 
@@ -113,7 +118,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _aboutError = false;
     });
     try {
-      final raw = await rootBundle.loadString('assets/profile-screen/about_tap.json');
+      final raw = await rootBundle.loadString(
+        'assets/profile-screen/about_tap.json',
+      );
       final decoded = jsonDecode(raw) as Map<String, dynamic>;
       if (!_canUpdate) return;
       setState(() {
@@ -132,8 +139,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _syncControllersFromState() {
     final fullName =
-        (_learnerState?.profile?.studentName ?? _activeProfile?.studentName ?? '').trim();
-    final parts = fullName.isEmpty ? <String>[] : fullName.split(RegExp(r'\s+'));
+        (_learnerState?.profile?.studentName ??
+                _activeProfile?.studentName ??
+                '')
+            .trim();
+    final parts = fullName.isEmpty
+        ? <String>[]
+        : fullName.split(RegExp(r'\s+'));
     final firstName = parts.isNotEmpty ? parts.first : '';
     final lastName = parts.length > 1 ? parts.sublist(1).join(' ') : '';
 
@@ -249,9 +261,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showSavedSnack() {
     if (!_canUpdate) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Profile updated')));
   }
 
   void _onTabChanged(_ProfileTab tab) {
@@ -272,13 +284,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SwitchProfileBar(
-                onSwitchDialog: _showSwitchProfile,
-              ),
+              _SwitchProfileBar(onSwitchDialog: _showSwitchProfile),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    if (constraints.maxHeight <= 0 || constraints.maxWidth <= 0) {
+                    if (constraints.maxHeight <= 0 ||
+                        constraints.maxWidth <= 0) {
                       return const SizedBox.shrink();
                     }
 
@@ -311,7 +322,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 )
                               : Column(
                                   mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     _ProfileSideNav(
                                       activeTab: _activeTab,
@@ -381,7 +393,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not verify your phone number. Please log in again.')),
+        const SnackBar(
+          content: Text(
+            'Could not verify your phone number. Please log in again.',
+          ),
+        ),
       );
       return;
     }
@@ -431,7 +447,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       debugPrint('Failed to switch profile: $e');
       if (!_canUpdate) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not switch profile. Please try again.')),
+        const SnackBar(
+          content: Text('Could not switch profile. Please try again.'),
+        ),
       );
     }
   }
@@ -440,9 +458,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 class _SwitchProfileBar extends StatelessWidget {
   final VoidCallback onSwitchDialog;
 
-  const _SwitchProfileBar({
-    required this.onSwitchDialog,
-  });
+  const _SwitchProfileBar({required this.onSwitchDialog});
 
   @override
   Widget build(BuildContext context) {
@@ -456,8 +472,9 @@ class _SwitchProfileBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final availableWidth =
-                  constraints.hasBoundedWidth ? constraints.maxWidth : screenWidth;
+              final availableWidth = constraints.hasBoundedWidth
+                  ? constraints.maxWidth
+                  : screenWidth;
               final compact = availableWidth < 560;
 
               final text = Text(
@@ -480,11 +497,7 @@ class _SwitchProfileBar extends StatelessWidget {
                   width: availableWidth,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      text,
-                      const SizedBox(height: 10),
-                      button,
-                    ],
+                    children: [text, const SizedBox(height: 10), button],
                   ),
                 );
               }
@@ -497,10 +510,7 @@ class _SwitchProfileBar extends StatelessWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 18,
                     runSpacing: 10,
-                    children: [
-                      text,
-                      button,
-                    ],
+                    children: [text, button],
                   ),
                 ),
               );
@@ -534,7 +544,9 @@ class _SwitchProfileButton extends StatelessWidget {
                 foregroundColor: AppTheme.buttonColor,
                 side: BorderSide(color: AppTheme.buttonColor),
                 padding: const EdgeInsets.symmetric(horizontal: 28),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
               ),
               child: Text(label),
             )
@@ -545,7 +557,9 @@ class _SwitchProfileButton extends StatelessWidget {
                 foregroundColor: Colors.white,
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(horizontal: 28),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(9),
+                ),
               ),
               child: Text(label),
             ),
@@ -692,7 +706,10 @@ class _ProfileDetailsView extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: Text(
           'Could not load your profile. Please try again later.',
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF6E6E7A),
+          ),
         ),
       );
     }
@@ -703,7 +720,10 @@ class _ProfileDetailsView extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: Text(
           'No active profile found.',
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF6E6E7A),
+          ),
         ),
       );
     }
@@ -811,7 +831,9 @@ class _EditActionsBar extends StatelessWidget {
           style: OutlinedButton.styleFrom(
             foregroundColor: AppTheme.buttonColor,
             side: BorderSide(color: AppTheme.buttonColor),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         ),
       );
@@ -827,11 +849,16 @@ class _EditActionsBar extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF6E6E7A),
                 side: const BorderSide(color: Color(0xFFE1E2EA)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: Text(
                 'Cancel',
-                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -846,17 +873,25 @@ class _EditActionsBar extends StatelessWidget {
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: isSaving
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : Text(
                       'Save Changes',
-                      style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700),
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
             ),
           ),
@@ -882,7 +917,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Color(0xFFD34B40), size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFD34B40),
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -930,45 +969,70 @@ class _StudentSummaryCard extends StatelessWidget {
           ),
           const SizedBox(width: 18),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final textWidth = constraints.maxWidth;
+                final compact = textWidth < 230;
+                final subjectWidth = compact
+                    ? textWidth
+                    : (textWidth - 14) * 0.58;
+                final gradeWidth = compact
+                    ? textWidth
+                    : (textWidth - 14) * 0.36;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Flexible(
-                      child: Text(
-                        studentName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          color: const Color(0xFF1C1C21),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            studentName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF1C1C21),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: 16,
+                          color: Color(0xFF24A866),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.check_circle_outline_rounded,
-                      size: 16,
-                      color: Color(0xFF24A866),
+                    const SizedBox(height: 6),
+                    _MetaLine(
+                      icon: Icons.location_city_rounded,
+                      text: schoolName,
+                      width: textWidth,
+                    ),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 14,
+                      runSpacing: 4,
+                      children: [
+                        _MetaLine(
+                          icon: Icons.menu_book_rounded,
+                          text: 'Grade $grade',
+                          width: gradeWidth,
+                        ),
+                        if (subjectDisplay.isNotEmpty)
+                          _MetaLine(
+                            icon: Icons.hub_rounded,
+                            text: subjectDisplay,
+                            width: subjectWidth,
+                          ),
+                      ],
                     ),
                   ],
-                ),
-                const SizedBox(height: 6),
-                _MetaLine(icon: Icons.location_city_rounded, text: schoolName),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 14,
-                  runSpacing: 4,
-                  children: [
-                    _MetaLine(icon: Icons.menu_book_rounded, text: 'Grade $grade'),
-                    if (subjectDisplay.isNotEmpty)
-                      _MetaLine(icon: Icons.hub_rounded, text: subjectDisplay),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
           ),
         ],
@@ -980,32 +1044,45 @@ class _StudentSummaryCard extends StatelessWidget {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
   }
 }
 
 class _MetaLine extends StatelessWidget {
   final IconData icon;
   final String text;
+  final double width;
 
-  const _MetaLine({required this.icon, required this.text});
+  const _MetaLine({
+    required this.icon,
+    required this.text,
+    required this.width,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: const Color(0xFF24A866)),
-        const SizedBox(width: 5),
-        Text(
-          text,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF6E6E7A),
+    return SizedBox(
+      width: width,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: const Color(0xFF24A866)),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF6E6E7A),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -1014,10 +1091,7 @@ class _EditableSection extends StatelessWidget {
   final String title;
   final List<Widget> children;
 
-  const _EditableSection({
-    required this.title,
-    required this.children,
-  });
+  const _EditableSection({required this.title, required this.children});
 
   @override
   Widget build(BuildContext context) {
@@ -1090,7 +1164,11 @@ class _ReadOnlyField extends StatelessWidget {
                     ),
                   ),
                 ),
-                const Icon(Icons.lock_outline_rounded, size: 13, color: Color(0xFF9B9CA6)),
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 13,
+                  color: Color(0xFF9B9CA6),
+                ),
               ],
             ),
           ),
@@ -1188,11 +1266,7 @@ class _SettingsView extends StatelessWidget {
     return const Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _ThemeCard(),
-        SizedBox(height: 16),
-        _AccountManagementCard(),
-      ],
+      children: [_ThemeCard(), SizedBox(height: 16), _AccountManagementCard()],
     );
   }
 }
@@ -1217,25 +1291,37 @@ class _ThemeCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _ThemeButton(label: 'Default', icon: Icons.desktop_windows),
+                      _ThemeButton(
+                        label: 'Default',
+                        icon: Icons.desktop_windows,
+                      ),
                       _ThemeButton(
                         label: 'Light',
                         icon: Icons.wb_sunny_outlined,
                         selected: true,
                       ),
-                      _ThemeButton(label: 'Dark', icon: Icons.dark_mode_outlined),
+                      _ThemeButton(
+                        label: 'Dark',
+                        icon: Icons.dark_mode_outlined,
+                      ),
                     ],
                   )
                 : const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      _ThemeButton(label: 'Default', icon: Icons.desktop_windows),
+                      _ThemeButton(
+                        label: 'Default',
+                        icon: Icons.desktop_windows,
+                      ),
                       _ThemeButton(
                         label: 'Light',
                         icon: Icons.wb_sunny_outlined,
                         selected: true,
                       ),
-                      _ThemeButton(label: 'Dark', icon: Icons.dark_mode_outlined),
+                      _ThemeButton(
+                        label: 'Dark',
+                        icon: Icons.dark_mode_outlined,
+                      ),
                     ],
                   ),
           );
@@ -1412,13 +1498,13 @@ class _AboutTapView extends StatelessWidget {
           children: [
             Text(
               'Could not load this section.',
-              style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF6E6E7A),
+              ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: onRetry,
-              child: const Text('Retry'),
-            ),
+            OutlinedButton(onPressed: onRetry, child: const Text('Retry')),
           ],
         ),
       );
@@ -1647,7 +1733,8 @@ class _SwitchProfileDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_SwitchProfileDialog> createState() => _SwitchProfileDialogState();
+  ConsumerState<_SwitchProfileDialog> createState() =>
+      _SwitchProfileDialogState();
 }
 
 class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
@@ -1682,13 +1769,18 @@ class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
                   Expanded(
                     child: Text(
                       'Switch Profile',
-                      style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w900),
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
-                    style: IconButton.styleFrom(backgroundColor: const Color(0xFFF1F1F4)),
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFF1F1F4),
+                    ),
                   ),
                 ],
               ),
@@ -1702,7 +1794,10 @@ class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
                   if (profiles.isEmpty) {
                     return Text(
                       'No student profiles found for this account.',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6E6E7A)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF6E6E7A),
+                      ),
                     );
                   }
                   return Column(
@@ -1711,13 +1806,15 @@ class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
                       for (var i = 0; i < profiles.length; i++) ...[
                         _ProfileOption(
                           profile: profiles[i],
-                          selected: profiles[i].learnerId == widget.activeLearnerId,
+                          selected:
+                              profiles[i].learnerId == widget.activeLearnerId,
                           loading: _switchingLearnerId == profiles[i].learnerId,
                           onTap: _switchingLearnerId == null
                               ? () => _handleTap(profiles[i])
                               : null,
                         ),
-                        if (i != profiles.length - 1) const SizedBox(height: 12),
+                        if (i != profiles.length - 1)
+                          const SizedBox(height: 12),
                       ],
                     ],
                   );
@@ -1728,7 +1825,10 @@ class _SwitchProfileDialogState extends ConsumerState<_SwitchProfileDialog> {
                 ),
                 error: (err, stack) => Text(
                   'Could not load profiles. Please try again.',
-                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFFD34B40)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFFD34B40),
+                  ),
                 ),
               ),
             ],
@@ -1790,13 +1890,21 @@ class _ProfileOption extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    profile.studentName.isEmpty ? 'Student' : profile.studentName,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700),
+                    profile.studentName.isEmpty
+                        ? 'Student'
+                        : profile.studentName,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     meta,
-                    style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF6E6E7A)),
+                    style: GoogleFonts.inter(
+                      fontSize: 10,
+                      color: const Color(0xFF6E6E7A),
+                    ),
                   ),
                 ],
               ),
@@ -1822,7 +1930,9 @@ class _ProfileOption extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: selected ? AppTheme.buttonColor : const Color(0xFF1C1C21),
+                    color: selected
+                        ? AppTheme.buttonColor
+                        : const Color(0xFF1C1C21),
                   ),
                 ),
               ),
@@ -1836,7 +1946,8 @@ class _ProfileOption extends StatelessWidget {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
   }
 }
 

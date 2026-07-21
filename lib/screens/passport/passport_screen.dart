@@ -367,22 +367,29 @@ class _RankProgressCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 7),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       '$clamped/$target',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.headingText,
                       ),
                     ),
-                    Text(
-                      '$remaining $unitLabel remaining',
-                      style: GoogleFonts.inter(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.headingText,
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '$remaining $unitLabel remaining',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.headingText,
+                        ),
                       ),
                     ),
                   ],
@@ -522,6 +529,8 @@ class _AchievementFront extends StatelessWidget {
           ),
           Text(
             label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
               fontSize: 13,
               height: 1.2,
