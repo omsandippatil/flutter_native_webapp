@@ -1,5 +1,6 @@
 import {
   validateAccessToken,
+  validateResetToken,
   tokenNeedsRefresh,
   issueAccessToken,
   unauthorizedResponse,
@@ -217,6 +218,12 @@ export async function routeRequest(request, env) {
     }
     if (tokenNeedsRefresh(authResult.payload)) {
       refreshedToken = await issueAccessToken(authResult.payload.phone, env);
+    }
+    params.phone = authResult.payload.phone;
+  } else if (route.auth === 'reset') {
+    const authResult = await validateResetToken(request, env, params.phone);
+    if (!authResult.valid) {
+      return unauthorizedResponse(authResult.error);
     }
     params.phone = authResult.payload.phone;
   }
