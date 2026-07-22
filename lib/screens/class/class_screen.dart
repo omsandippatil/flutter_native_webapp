@@ -789,6 +789,13 @@ class _ChatBubbleRow extends StatelessWidget {
       );
     }
 
+    if (message.contentType == ClassChatContentType.checkpoint) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: _CheckpointCard(message: message, controller: controller),
+      );
+    }
+
     if (isUser) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -930,6 +937,8 @@ class _BubbleContent extends StatelessWidget {
       case ClassChatContentType.text:
       case ClassChatContentType.unitTransition:
         return _TextBubble(text: message.text ?? '', isUser: isUser);
+      case ClassChatContentType.checkpoint:
+        return _CheckpointCard(message: message, controller: controller);
       case ClassChatContentType.video:
         return _VideoCard(key: ValueKey('video_${message.id}'), message: message, controller: controller);
       case ClassChatContentType.submission:
@@ -962,6 +971,180 @@ class _BubbleContent extends StatelessWidget {
       case ClassChatContentType.loading:
         return const SizedBox.shrink();
     }
+  }
+}
+
+class _CheckpointCard extends StatelessWidget {
+  const _CheckpointCard({required this.message, required this.controller});
+
+  final ClassChatMessage message;
+  final ClassChatController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = message.data['image'] as String?;
+    final buttonLabel = message.data['buttonLabel'] as String? ?? 'Continue';
+    final action = message.data['action'] as String? ?? '';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE7E7EF)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _TapBuddySpeakingOrb(),
+          const SizedBox(height: 12),
+          Container(
+            height: 34,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF0EDFF),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.volume_up_rounded, size: 15, color: AppTheme.buttonColor),
+                const SizedBox(width: 6),
+                Text(
+                  'Hear again',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.buttonColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (image != null) ...[
+            const SizedBox(height: 18),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 230, maxWidth: 360),
+              child: Image.asset(
+                image,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Text(
+              message.text ?? '',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                height: 1.35,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF2C2C34),
+              ),
+            ),
+          ),
+          const SizedBox(height: 22),
+          SizedBox(
+            width: 280,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: action.isEmpty ? null : () => controller.continueCheckpoint(action),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.buttonColor,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(
+                buttonLabel,
+                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TapBuddySpeakingOrb extends StatelessWidget {
+  const _TapBuddySpeakingOrb();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 136,
+      height: 136,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 136,
+            height: 136,
+            decoration: BoxDecoration(
+              color: const Color(0xFFB9AAFF).withValues(alpha: 0.52),
+              shape: BoxShape.circle,
+            ),
+          ),
+          Container(
+            width: 116,
+            height: 116,
+            decoration: BoxDecoration(
+              color: const Color(0xFF8F80FF).withValues(alpha: 0.42),
+              shape: BoxShape.circle,
+            ),
+          ),
+          Container(
+            width: 94,
+            height: 94,
+            decoration: const BoxDecoration(
+              color: Color(0xFF292930),
+              shape: BoxShape.circle,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.white,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/onboarding/TAP-bot.png',
+                      width: 28,
+                      height: 28,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.smart_toy_rounded, size: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'TAP Buddy',
+                  style: GoogleFonts.inter(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  'Speaking',
+                  style: GoogleFonts.inter(
+                    fontSize: 8,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1159,7 +1342,11 @@ class _VideoCardState extends State<_VideoCard> {
             width: double.infinity,
             height: 46,
             child: ElevatedButton(
-              onPressed: watched ? null : widget.controller.markVideoWatched,
+              onPressed: watched
+                  ? null
+                  : () {
+                      widget.controller.markVideoWatched();
+                    },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
@@ -1388,7 +1575,10 @@ class _SubmissionCardState extends State<_SubmissionCard> {
   Widget build(BuildContext context) {
     final assignmentName = widget.message.data['assignmentName'] as String? ?? '';
     final unguidedText = widget.message.data['unguidedText'] as String? ?? '';
-    final kind = widget.controller.currentSubmissionKind;
+    final subTypes = widget.message.data['subTypes'] as String? ?? '';
+    final kind = SubmissionKindResolver.fromSubTypes(subTypes);
+    final stepNumber = widget.message.data['stepNumber'] as int?;
+    final stepTotal = widget.message.data['stepTotal'] as int?;
     final isAwaiting = widget.controller.isAwaitingInput;
     final canInteract = isAwaiting && !_submitted;
 
@@ -1411,7 +1601,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  "Today's activity",
+                  stepNumber != null && stepTotal != null
+                      ? 'Step $stepNumber/$stepTotal'
+                      : "Today's activity",
                   style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6E6E7A)),
                 ),
               ),

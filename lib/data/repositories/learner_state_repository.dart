@@ -78,7 +78,7 @@ class LearnerStateRepository {
       throw ProgressConflictException(data);
     }
 
-    return _writeFull(learnerId, data, clearConflict: true);
+    return _writeProgressResult(learnerId, data);
   }
 
   Future<void> applyAchievementAward(String learnerId, String achievement, String level) async {
@@ -111,6 +111,16 @@ class LearnerStateRepository {
     final model = existing == null
         ? LearnerStateModel.fromFullJson(learnerId, json)
         : existing.mergeFrom(json);
+    await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
+    return model;
+  }
+
+  Future<LearnerStateModel> _writeProgressResult(
+    String learnerId,
+    Map<String, dynamic> json,
+  ) async {
+    final model = await _writePartial(learnerId, json);
+    model.hasPendingConflict = false;
     await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
     return model;
   }

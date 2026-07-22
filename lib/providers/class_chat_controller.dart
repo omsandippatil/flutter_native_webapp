@@ -8,7 +8,6 @@ import '../data/repositories/learner_state_repository.dart';
 import '../data/repositories/submission_review_repository.dart';
 import '../models/activity_flow_model.dart';
 import '../models/archetype_step_selector.dart';
-import '../models/archetype_submission_kind.dart';
 import '../models/class_chat_message_model.dart';
 import '../models/learner_archetype.dart';
 import '../models/local_archetype_calculator.dart';
@@ -87,12 +86,13 @@ class ClassChatController extends ChangeNotifier {
   int _accumulatedQuizPoints = 0;
   bool _videoWatchedThisUnit = false;
   bool _submissionAcceptedThisUnit = false;
+  bool _videoProgressSaved = false;
+  bool _submissionProgressSaved = false;
+  bool _quizProgressSaved = false;
 
   CourseAssignmentStepModel? _pendingAssignmentStep;
   CourseAssignmentModel? _pendingAssignment;
-
-  Future<Map<String, dynamic>>? _pendingReviewFuture;
-  bool _submissionUsedHardcodedReply = false;
+  int _assignmentStepIndex = 0;
 
   final List<Timer> _pendingTimers = [];
   int _msgCounter = 0;
@@ -116,7 +116,26 @@ class ClassChatController extends ChangeNotifier {
   int get displayedTotalPoints => startingPoints + sessionTotalPoints;
 
   void _begin() {
-    _runStep('AF-001');
+    final enrollment = _learnerState.enrollment;
+    _videoWatchedThisUnit = (enrollment?.videosCompleted ?? 0) > unitIndex;
+    _submissionAcceptedThisUnit = (enrollment?.submissionIndex ?? 0) > unitIndex;
+    _videoProgressSaved = _videoWatchedThisUnit;
+    _submissionProgressSaved = _submissionAcceptedThisUnit;
+    _quizProgressSaved = (enrollment?.quizzesCompleted ?? 0) > unitIndex;
+
+    if (!_videoWatchedThisUnit) {
+      _runStep('AF-001');
+      return;
+    }
+    if (!_submissionAcceptedThisUnit) {
+      _runStep('AF-006');
+      return;
+    }
+    if (!_quizProgressSaved) {
+      _showQuizStartCheckpoint();
+      return;
+    }
+    _completeUnitThenReveal();
   }
 
   String _interpolate(String template, {int? explicitPoints}) {
@@ -144,7 +163,7 @@ class ClassChatController extends ChangeNotifier {
 
     switch (stepId) {
       case 'AF-004':
-        _emitVideoStep(step);
+        _showVideoStartCheckpoint();
         return;
       case 'AF-007':
         _emitAssignmentStep(step);
@@ -210,7 +229,7 @@ class ClassChatController extends ChangeNotifier {
     notifyListeners();
   }
 
-  void markVideoWatched() {
+  Future<void> markVideoWatched() async {
     final msgIndex = _messages.lastIndexWhere((m) => m.stepId == 'AF-004' && !m.isPending);
     final video = _currentVideo;
     if (video == null) return;
@@ -225,6 +244,8 @@ class ClassChatController extends ChangeNotifier {
       );
     }
 
+    await _saveVideoProgress(video.points);
+
     _push(ClassChatMessage(
       id: _newId(),
       stepId: 'AF-004',
@@ -233,17 +254,15 @@ class ClassChatController extends ChangeNotifier {
       text: 'I watched it',
     ));
 
-    final af005 = _flow.step('AF-005');
-    _push(ClassChatMessage(
-      id: _newId(),
-      stepId: 'AF-005',
-      sender: ClassChatSender.bot,
-      contentType: ClassChatContentType.text,
-      text: _interpolate(af005?.displayText ?? 'Nice! +{{video_points}} points banked.',
-          explicitPoints: video.points),
-    ));
     _awaitingInput = false;
-    _scheduleAutoAdvance(af005?.autoAdvanceMs ?? 2000, () => _runStep('AF-006'));
+    _pushCheckpoint(
+      stepId: 'VIDEO-CHECKPOINT',
+      image: 'assets/class-screen/10Points.png',
+      text:
+          'Wow! That’s amazing 🌟 $studentName, you just earned ${video.points} points for watching the video 🥳🥳🥳\n\nNow it’s time to do the activity submission 🌟',
+      buttonLabel: 'Continue',
+      action: 'submission',
+    );
     notifyListeners();
   }
 
@@ -251,20 +270,22 @@ class ClassChatController extends ChangeNotifier {
     final assignment = _currentAssignment;
     if (assignment == null || assignment.steps.isEmpty) {
       _submissionAcceptedThisUnit = true;
-      _runStep('AF-009');
-      return;
-    }
-    final assignStep = ArchetypeStepSelector.selectStep(assignment.steps, _currentArchetype);
-    if (assignStep == null) {
-      _submissionAcceptedThisUnit = true;
-      _runStep('AF-009');
+      _showQuizStartCheckpoint();
       return;
     }
 
+    if (_assignmentStepIndex >= assignment.steps.length) {
+      _submissionAcceptedThisUnit = true;
+      unawaited(_saveSubmissionProgress(_currentUnit.xp));
+      _showQuizStartCheckpoint();
+      return;
+    }
+
+    final assignStep = assignment.steps[_assignmentStepIndex];
     _pendingAssignment = assignment;
     _pendingAssignmentStep = assignStep;
 
-    final kind = currentSubmissionKind;
+    final kind = SubmissionKindResolver.fromSubTypes(assignStep.subTypes);
 
     _push(ClassChatMessage(
       id: _newId(),
@@ -280,13 +301,19 @@ class ClassChatController extends ChangeNotifier {
         'submissionKind': kind.name,
         'archetype': _currentArchetype,
         'points': _currentUnit.xp,
+        'stepNumber': _assignmentStepIndex + 1,
+        'stepTotal': assignment.steps.length,
       },
     ));
     _awaitingInput = true;
     notifyListeners();
   }
 
-  SubmissionKind get currentSubmissionKind => ArchetypeSubmissionKind.forArchetype(_currentArchetype);
+  SubmissionKind get currentSubmissionKind {
+    final step = _pendingAssignmentStep;
+    if (step == null) return SubmissionKind.text;
+    return SubmissionKindResolver.fromSubTypes(step.subTypes);
+  }
 
   String? _hardcodedReplyFor(SubmissionAnswer answer) {
     if (answer.kind != SubmissionKind.emoji) return null;
@@ -325,12 +352,16 @@ class ClassChatController extends ChangeNotifier {
       data: {'kind': answer.kind.name, 'text': answer.text, 'emoji': answer.emoji},
     ));
 
-    final needsAiReview = SubmissionKindResolver.requiresAiReview(answer.kind);
+    final isMediaSubmission = answer.kind == SubmissionKind.image ||
+        answer.kind == SubmissionKind.video ||
+        answer.kind == SubmissionKind.imageVideo;
+    final needsAiReview = !isMediaSubmission && SubmissionKindResolver.requiresAiReview(answer.kind);
     final hardcodedReply = _hardcodedReplyFor(answer);
 
     if (!needsAiReview || hardcodedReply != null) {
-      _submissionUsedHardcodedReply = true;
-      final passed = !needsAiReview ? answer.matchesCriteria(step.validCriteria) : true;
+      final passed = isMediaSubmission
+          ? true
+          : (!needsAiReview ? answer.matchesCriteria(step.validCriteria) : true);
       _push(ClassChatMessage(
         id: _newId(),
         stepId: 'AF-008',
@@ -342,32 +373,87 @@ class ClassChatController extends ChangeNotifier {
                 : "That's a good try — let's keep practicing this one."),
         data: {'passed': passed},
       ));
-      await _finishAssignment(accepted: passed, awardPointsNow: passed);
+      await _finishAssignmentStep(accepted: passed);
       return;
     }
 
-    _pendingReviewFuture = _submissionReviewRepository.reviewSubmission(
-      phone: phone,
-      learnerId: learnerId,
-      submissionText: answer.text ?? step.unguidedText,
-      question: assignment.description,
-      expectedAnswer: step.validCriteria,
-      rubric: null,
-    );
+    _push(ClassChatMessage(
+      id: _newId(),
+      stepId: 'AF-008-REVIEWING',
+      sender: ClassChatSender.bot,
+      contentType: ClassChatContentType.submissionReviewing,
+    ));
+    notifyListeners();
 
-    await _finishAssignment(accepted: false, awardPointsNow: false);
+    try {
+      final data = await _submissionReviewRepository.reviewSubmission(
+        phone: phone,
+        learnerId: learnerId,
+        submissionText: answer.text ?? step.unguidedText,
+        question: assignment.description,
+        expectedAnswer: step.validCriteria,
+        rubric: null,
+      );
+      _messages.removeWhere((m) => m.stepId == 'AF-008-REVIEWING');
+      final review = data['review'];
+      final reviewMap = review is Map ? Map<String, dynamic>.from(review) : const <String, dynamic>{};
+      final passed = data['success'] == true && reviewMap['verdict'] == 'pass';
+      _push(ClassChatMessage(
+        id: _newId(),
+        stepId: 'AF-008',
+        sender: ClassChatSender.bot,
+        contentType: ClassChatContentType.submissionReview,
+        text: passed
+            ? _interpolate(
+                _flow.step('AF-008')?.displayText ?? 'Great work! +{{submission_points}} points.',
+                explicitPoints: _currentUnit.xp,
+              )
+            : (reviewMap['feedback'] as String?) ??
+                "That submission didn't quite pass this time — let's try again.",
+        data: {
+          'score': (reviewMap['score'] as num?)?.toInt(),
+          'passed': passed,
+          'feedback': reviewMap['feedback'],
+          'smsText': reviewMap['sms_text'],
+          'strengths': reviewMap['strengths'],
+          'improvements': reviewMap['improvements'],
+        },
+      ));
+      await _finishAssignmentStep(accepted: passed);
+    } catch (_) {
+      _messages.removeWhere((m) => m.stepId == 'AF-008-REVIEWING');
+      await _finishAssignmentStep(accepted: false);
+    }
   }
 
-  Future<void> _finishAssignment({required bool accepted, required bool awardPointsNow}) async {
-    _submissionAcceptedThisUnit = accepted;
-    if (accepted && awardPointsNow) {
+  Future<void> _finishAssignmentStep({required bool accepted}) async {
+    _pendingAssignment = null;
+    _pendingAssignmentStep = null;
+    if (accepted) {
+      _assignmentStepIndex++;
+      final assignment = _currentAssignment;
+      if (assignment != null && _assignmentStepIndex < assignment.steps.length) {
+        final step = _flow.step('AF-007');
+        if (step != null) _emitAssignmentStep(step);
+        return;
+      }
+
+      _submissionAcceptedThisUnit = true;
       _accumulatedSubmissionPoints += _currentUnit.xp;
       final bumped = await _archetypeProgressionRepository.bumpAfterAcceptedSubmission(learnerId);
       _learnerState.archetype = bumped;
+      await _saveSubmissionProgress(_currentUnit.xp);
+      _showQuizStartCheckpoint();
+    } else {
+      _pushCheckpoint(
+        stepId: 'SUBMISSION-RETRY',
+        image: null,
+        text:
+            'Pro tip: Take the photo in good light and show your full work 📸✨\n\nI’m excited to see what you made😅\nYou can do this! ⭐💪',
+        buttonLabel: 'Submit Again',
+        action: 'submission_retry',
+      );
     }
-    _pendingAssignment = null;
-    _pendingAssignmentStep = null;
-    _runStep('AF-009');
   }
 
   void _emitQuizQuestionStep(FlowStepModel step) {
@@ -454,96 +540,157 @@ class ClassChatController extends ChangeNotifier {
       data: {'correct': _quizCorrectCount, 'total': _quizQuestions.length},
     ));
     _awaitingInput = false;
-    unawaited(_revealSubmissionReviewThenPause());
+    unawaited(_saveQuizThenShowTotals());
   }
 
-  Future<void> _revealSubmissionReviewThenPause() async {
-    final pending = _pendingReviewFuture;
-    _pendingReviewFuture = null;
+  void _showQuizStartCheckpoint() {
+    _pushCheckpoint(
+      stepId: 'QUIZ-START',
+      image: 'assets/class-screen/lets_begin.png',
+      text: "Let’s start the ${_currentUnit.name} quiz🚀🚀🚀",
+      buttonLabel: 'Quiz',
+      action: 'quiz',
+    );
+  }
 
-    if (pending == null || _submissionUsedHardcodedReply) {
-      _awaitingContinue = true;
-      notifyListeners();
-      return;
+  void _showVideoStartCheckpoint() {
+    _pushCheckpoint(
+      stepId: 'VIDEO-START',
+      image: null,
+      text:
+          "Today we're going to play with ${_currentUnit.name}.\nWatch a short video, then make your own project.",
+      buttonLabel: 'Watch',
+      action: 'video',
+    );
+  }
+
+  void _pushCheckpoint({
+    required String stepId,
+    required String? image,
+    required String text,
+    required String buttonLabel,
+    required String action,
+  }) {
+    _push(ClassChatMessage(
+      id: _newId(),
+      stepId: stepId,
+      sender: ClassChatSender.bot,
+      contentType: ClassChatContentType.checkpoint,
+      text: text,
+      data: {
+        if (image != null) 'image': image,
+        'buttonLabel': buttonLabel,
+        'action': action,
+      },
+    ));
+    _awaitingInput = false;
+  }
+
+  void continueCheckpoint(String action) {
+    switch (action) {
+      case 'video':
+        final step = _flow.step('AF-004');
+        if (step != null) _emitVideoStep(step);
+        return;
+      case 'submission':
+        _runStep('AF-006');
+        return;
+      case 'submission_retry':
+        final step = _flow.step('AF-007');
+        if (step != null) _emitAssignmentStep(step);
+        return;
+      case 'quiz':
+        _runStep('AF-QUIZ-QUESTION');
+        return;
+      case 'totals':
+        _showFinalWinCard();
+        return;
+      case 'finish':
+        unawaited(_completeUnitThenReveal());
+        return;
     }
+  }
 
+  void _showFinalWinCard() {
+    _pushCheckpoint(
+      stepId: 'FINAL-WIN',
+      image: 'assets/class-screen/you-won.png',
+      text:
+          'Activity Points    ${_accumulatedVideoPoints + _accumulatedSubmissionPoints} 🪙\nQuiz Points    $_accumulatedQuizPoints 🪙\nSkill Gems    ${_submissionAcceptedThisUnit ? 1 : 0} 💎\nSubmission Streak    ${_submissionAcceptedThisUnit ? 1 : 0} 🔥',
+      buttonLabel: 'Continue',
+      action: 'finish',
+    );
+  }
+
+  Future<void> _saveQuizThenShowTotals() async {
+    await _saveQuizProgress(_accumulatedQuizPoints);
+    _pushCheckpoint(
+      stepId: 'QUIZ-TOTALS',
+      image: null,
+      text: 'Great job Champ!\nDo you want to know your total points and gems collected so far?',
+      buttonLabel: 'Yes Yes Yes 😍',
+      action: 'totals',
+    );
+  }
+
+  Future<void> _saveVideoProgress(int points) async {
+    if (_videoProgressSaved) return;
+    _videoProgressSaved = true;
     try {
-      final data = await pending;
-      final success = data['success'] == true;
-      final review = data['review'];
-
-      if (success && review is Map) {
-        final reviewMap = Map<String, dynamic>.from(review);
-        final verdict = reviewMap['verdict'] as String?;
-        final score = (reviewMap['score'] as num?)?.toInt() ?? 0;
-        final feedback = reviewMap['feedback'] as String?;
-        final smsText = reviewMap['sms_text'] as String?;
-        final passed = verdict == 'pass';
-
-        if (passed) {
-          _accumulatedSubmissionPoints += _currentUnit.xp;
-          _submissionAcceptedThisUnit = true;
-          final bumped = await _archetypeProgressionRepository.bumpAfterAcceptedSubmission(learnerId);
-          _learnerState.archetype = bumped;
-        } else {
-          _submissionAcceptedThisUnit = false;
-        }
-
-        _push(ClassChatMessage(
-          id: _newId(),
-          stepId: 'AF-008',
-          sender: ClassChatSender.bot,
-          contentType: ClassChatContentType.submissionReview,
-          text: passed
-              ? _interpolate(_flow.step('AF-008')?.displayText ?? 'Great work! +{{submission_points}} points.',
-                  explicitPoints: _currentUnit.xp)
-              : (feedback?.isNotEmpty == true
-                  ? feedback!
-                  : "That submission didn't quite pass this time — let's keep practicing this one."),
-          data: {
-            'score': score,
-            'passed': passed,
-            'feedback': feedback,
-            'smsText': smsText,
-            'strengths': reviewMap['strengths'],
-            'improvements': reviewMap['improvements'],
-          },
-        ));
-
-        if (smsText != null && smsText.isNotEmpty) {
-          _push(ClassChatMessage(
-            id: _newId(),
-            stepId: 'AF-008-SMS',
-            sender: ClassChatSender.bot,
-            contentType: ClassChatContentType.text,
-            text: smsText,
-          ));
-        }
-      } else {
-        _submissionAcceptedThisUnit = false;
-        _push(ClassChatMessage(
-          id: _newId(),
-          stepId: 'AF-008',
-          sender: ClassChatSender.bot,
-          contentType: ClassChatContentType.submissionReview,
-          text: "We couldn't review this submission right now — no points were added for it this time.",
-          data: {'passed': false},
-        ));
-      }
+      await _learnerStateRepository.submitProgress(
+        learnerId: learnerId,
+        xp: points,
+        activityType: 'video_complete',
+        videoIndex: unitIndex + 1,
+      );
+    } on ProgressConflictException {
+      _learnerState = await _learnerStateRepository.fetchState(
+        learnerId: learnerId,
+        forceRefresh: true,
+      );
     } catch (_) {
-      _submissionAcceptedThisUnit = false;
-      _push(ClassChatMessage(
-        id: _newId(),
-        stepId: 'AF-008',
-        sender: ClassChatSender.bot,
-        contentType: ClassChatContentType.submissionReview,
-        text: "We couldn't review this submission right now — no points were added for it this time.",
-        data: {'passed': false},
-      ));
+      _videoProgressSaved = false;
     }
+  }
 
-    _awaitingContinue = true;
-    notifyListeners();
+  Future<void> _saveSubmissionProgress(int points) async {
+    if (_submissionProgressSaved) return;
+    _submissionProgressSaved = true;
+    try {
+      await _learnerStateRepository.submitProgress(
+        learnerId: learnerId,
+        xp: points,
+        activityType: 'submission_complete',
+        submissionIndex: unitIndex + 1,
+      );
+    } on ProgressConflictException {
+      _learnerState = await _learnerStateRepository.fetchState(
+        learnerId: learnerId,
+        forceRefresh: true,
+      );
+    } catch (_) {
+      _submissionProgressSaved = false;
+    }
+  }
+
+  Future<void> _saveQuizProgress(int points) async {
+    if (_quizProgressSaved) return;
+    _quizProgressSaved = true;
+    try {
+      await _learnerStateRepository.submitProgress(
+        learnerId: learnerId,
+        xp: points,
+        activityType: 'quiz_complete',
+        quizIndex: unitIndex + 1,
+      );
+    } on ProgressConflictException {
+      _learnerState = await _learnerStateRepository.fetchState(
+        learnerId: learnerId,
+        forceRefresh: true,
+      );
+    } catch (_) {
+      _quizProgressSaved = false;
+    }
   }
 
   void continueAfterReview() {
@@ -584,14 +731,12 @@ class ClassChatController extends ChangeNotifier {
 
     try {
       final unitKey = _currentUnit.name;
-      final totalXp = sessionTotalPoints > 0 ? sessionTotalPoints : 10;
 
       final submittedState = await _learnerStateRepository.submitProgress(
         learnerId: learnerId,
-        xp: totalXp,
         activityType: 'unit_complete',
-        videoIndex: unitIndex + (_videoWatchedThisUnit ? 1 : 0),
-        quizIndex: unitIndex + (_quizCorrectCount > 0 ? 1 : 0),
+        videoIndex: _videoWatchedThisUnit ? unitIndex + 1 : null,
+        quizIndex: _quizProgressSaved ? unitIndex + 1 : null,
         submissionIndex: _submissionAcceptedThisUnit ? unitIndex + 1 : null,
       );
 

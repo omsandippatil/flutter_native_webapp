@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/activity_models.dart';
 import '../../providers/home_dashboard_provider.dart';
+import '../../widgets/app_header.dart';
 import '../../widgets/app_nav.dart';
 import '../../widgets/loading_view.dart';
 
@@ -51,54 +52,87 @@ class _PassportDashboard extends StatelessWidget {
           child: Center(
             child: Container(
               width: double.infinity,
+              height: double.infinity,
               constraints: const BoxConstraints(maxWidth: 1060),
               color: AppTheme.cardBackground,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  isWide ? 24 : 20,
-                  18,
-                  isWide ? 24 : 20,
-                  96,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const _PassportLogos(),
-                    const SizedBox(height: 22),
-                    isWide
-                        ? Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: _ProgressColumn(
-                                  studentName: progress.studentName,
-                                  points: points,
-                                  gems: gems,
-                                  streak: streak,
-                                ),
-                              ),
-                              const SizedBox(width: 28),
-                              _StudentProfileCard(
-                                studentName: progress.studentName,
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              _ProgressColumn(
-                                studentName: progress.studentName,
-                                points: points,
-                                gems: gems,
-                                streak: streak,
-                              ),
-                              const SizedBox(height: 22),
-                              _StudentProfileCard(
-                                studentName: progress.studentName,
-                              ),
-                            ],
+              child: Column(
+                children: [
+                  AppHeader(
+                    title: 'Passport',
+                    studentName: progress.studentName,
+                    subtitle: 'Have a look at your progress',
+                    points: progress.points,
+                    streakDay: progress.streakDay,
+                    showAskBuddy: true,
+                    showStudentSummary: true,
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, bodyConstraints) {
+                        final horizontalPadding = isWide ? 24.0 : 18.0;
+                        final topPadding = isWide ? 44.0 : 28.0;
+                        const bottomPadding = 34.0;
+
+                        return SingleChildScrollView(
+                          physics: const ClampingScrollPhysics(),
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            topPadding,
+                            horizontalPadding,
+                            bottomPadding,
                           ),
-                  ],
-                ),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minHeight: math.max(
+                                0,
+                                bodyConstraints.maxHeight - topPadding - bottomPadding,
+                              ),
+                            ),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 840),
+                                child: isWide
+                                    ? Row(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Expanded(
+                                            child: _ProgressColumn(
+                                              points: points,
+                                              gems: gems,
+                                              streak: streak,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 24),
+                                          _StudentProfileCard(
+                                            studentName: progress.studentName,
+                                          ),
+                                        ],
+                                      )
+                                    : Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          _ProgressColumn(
+                                            points: points,
+                                            gems: gems,
+                                            streak: streak,
+                                          ),
+                                          const SizedBox(height: 22),
+                                          _StudentProfileCard(
+                                            studentName: progress.studentName,
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -108,49 +142,12 @@ class _PassportDashboard extends StatelessWidget {
   }
 }
 
-class _PassportLogos extends StatelessWidget {
-  const _PassportLogos();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _LogoTile(path: 'assets/logos/gov-logo.png'),
-        const SizedBox(width: 10),
-        _LogoTile(path: 'assets/logos/tap-otherLogo.png'),
-      ],
-    );
-  }
-}
-
-class _LogoTile extends StatelessWidget {
-  final String path;
-
-  const _LogoTile({required this.path});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 42,
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: AppTheme.fieldBackground,
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Image.asset(path, fit: BoxFit.contain),
-    );
-  }
-}
-
 class _ProgressColumn extends StatelessWidget {
-  final String studentName;
   final int points;
   final int gems;
   final int streak;
 
   const _ProgressColumn({
-    required this.studentName,
     required this.points,
     required this.gems,
     required this.streak,
@@ -161,79 +158,14 @@ class _ProgressColumn extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Hey $studentName 👋',
-          style: GoogleFonts.inter(
-            fontSize: 22,
-            height: 1.1,
-            fontWeight: FontWeight.w900,
-            color: AppTheme.headingText,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Have a look at your progress',
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.mutedText,
-          ),
-        ),
-        const SizedBox(height: 26),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final narrow = constraints.maxWidth < 560;
-            final rankCards = [
-              _RankProgressCard(
-                title: 'Bronze Buddy',
-                value: points,
-                target: 500,
-                unitLabel: 'points',
-                icon: Icons.workspace_premium_rounded,
-                iconBg: const Color(0xFFC17A43),
-                iconColor: const Color(0xFF6B3B20),
-              ),
-              _RankProgressCard(
-                title: 'Skill Gems',
-                value: gems,
-                target: 50,
-                unitLabel: 'gems',
-                icon: Icons.diamond_rounded,
-                iconBg: AppTheme.gemBg,
-                iconColor: AppTheme.buttonColor,
-              ),
-              _RankProgressCard(
-                title: 'Streak',
-                value: streak,
-                target: 30,
-                unitLabel: 'days',
-                icon: Icons.water_drop_rounded,
-                iconBg: AppTheme.streakBg,
-                iconColor: AppTheme.streakColor,
-              ),
-            ];
-
-            if (narrow) {
-              return Column(
-                children: [
-                  for (final card in rankCards) ...[
-                    card,
-                    if (card != rankCards.last) const SizedBox(height: 12),
-                  ],
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (final card in rankCards) ...[
-                  Expanded(child: card),
-                  if (card != rankCards.last) const SizedBox(width: 12),
-                ],
-              ],
-            );
-          },
+        _RankProgressCard(
+          title: 'Bronze Buddy',
+          value: points,
+          target: 400,
+          unitLabel: 'points',
+          icon: Icons.workspace_premium_rounded,
+          iconBg: const Color(0xFFC17A43),
+          iconColor: const Color(0xFF6B3B20),
         ),
         const SizedBox(height: 26),
         Text(
@@ -286,7 +218,7 @@ class _ProgressColumn extends StatelessWidget {
                 child: Row(
                   children: [
                     for (final card in cards) ...[
-                      SizedBox(width: 128, child: card),
+                      SizedBox(width: 150, child: card),
                       if (card != cards.last) const SizedBox(width: 10),
                     ],
                   ],
@@ -295,10 +227,10 @@ class _ProgressColumn extends StatelessWidget {
             }
 
             return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 for (final card in cards) ...[
-                  Expanded(child: card),
-                  if (card != cards.last) const SizedBox(width: 10),
+                  SizedBox(width: 150, child: card),
                 ],
               ],
             );
@@ -335,10 +267,11 @@ class _RankProgressCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+      height: 78,
+      padding: const EdgeInsets.fromLTRB(18, 12, 18, 12),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppTheme.borderColor),
       ),
       child: Row(
@@ -350,22 +283,23 @@ class _RankProgressCard extends StatelessWidget {
                 Text(
                   title,
                   style: GoogleFonts.inter(
-                    fontSize: 15,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.headingText,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 7),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(999),
                   child: LinearProgressIndicator(
                     value: target == 0 ? 0 : clamped / target,
-                    minHeight: 5,
+                    minHeight: 4,
                     backgroundColor: AppTheme.chatBubble,
-                    valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppTheme.buttonColor),
                   ),
                 ),
-                const SizedBox(height: 7),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Text(
@@ -373,7 +307,7 @@ class _RankProgressCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
-                        fontSize: 14,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.headingText,
                       ),
@@ -397,12 +331,12 @@ class _RankProgressCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 20),
+          const SizedBox(width: 16),
           Container(
-            width: 40,
-            height: 40,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(shape: BoxShape.circle, color: iconBg),
-            child: Icon(icon, color: iconColor),
+            child: Icon(icon, color: iconColor, size: 19),
           ),
         ],
       ),
@@ -444,7 +378,8 @@ class _AchievementCardState extends State<_AchievementCard> {
       child: GestureDetector(
         onTap: () => setState(() => _hovered = !_hovered),
         child: SizedBox(
-          height: 152,
+          width: double.infinity,
+          height: 132,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             transitionBuilder: (child, animation) {
@@ -506,11 +441,12 @@ class _AchievementFront extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 152,
-      padding: const EdgeInsets.all(16),
+      height: 132,
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppTheme.borderColor),
       ),
       child: Column(
@@ -521,7 +457,7 @@ class _AchievementFront extends StatelessWidget {
           Text(
             value,
             style: GoogleFonts.inter(
-              fontSize: 22,
+              fontSize: 20,
               height: 1,
               fontWeight: FontWeight.w900,
               color: AppTheme.subheadingColor,
@@ -532,7 +468,7 @@ class _AchievementFront extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
-              fontSize: 13,
+              fontSize: 11,
               height: 1.2,
               fontWeight: FontWeight.w500,
               color: AppTheme.subheadingColor,
@@ -573,25 +509,25 @@ class _AchievementBack extends StatelessWidget {
           children: [
             Text(
               title,
-              maxLines: 2,
+              maxLines: compact ? 2 : 1,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(
-                fontSize: compact ? 11 : 14,
+                fontSize: compact ? 11 : 13,
                 height: 1.15,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.subheadingColor,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               description,
-              maxLines: 4,
+              maxLines: compact ? 3 : 3,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(
-                fontSize: compact ? 10 : 13,
-                height: 1.3,
+                fontSize: compact ? 10 : 11,
+                height: 1.2,
                 fontWeight: FontWeight.w500,
                 color: AppTheme.mutedText,
               ),
@@ -600,12 +536,12 @@ class _AchievementBack extends StatelessWidget {
         );
 
         return Container(
-          height: 152,
+          height: 132,
           width: double.infinity,
-          padding: EdgeInsets.all(compact ? 10 : 14),
+          padding: EdgeInsets.all(compact ? 10 : 12),
           decoration: BoxDecoration(
             color: AppTheme.cardBackground,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppTheme.borderColor),
           ),
           child: compact
@@ -619,11 +555,11 @@ class _AchievementBack extends StatelessWidget {
                       small: true,
                     ),
                     const SizedBox(height: 8),
-                    Expanded(child: textColumn),
+                    Flexible(child: textColumn),
                   ],
                 )
               : Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     _AchievementIcon(
                       icon: icon,
@@ -656,13 +592,13 @@ class _AchievementIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = small ? 42.0 : 66.0;
+    final size = small ? 38.0 : 54.0;
 
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-      child: Icon(icon, color: iconColor, size: small ? 22 : 32),
+      child: Icon(icon, color: iconColor, size: small ? 20 : 26),
     );
   }
 }
@@ -682,28 +618,28 @@ class _StudentProfileCard extends StatelessWidget {
         .join();
 
     return Container(
-      width: 270,
-      padding: const EdgeInsets.fromLTRB(24, 22, 24, 28),
+      width: 240,
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 22),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFFE1E2EA)),
       ),
       child: Column(
         children: [
           CircleAvatar(
-            radius: 30,
+            radius: 28,
             backgroundColor: const Color(0xFFE8E5FF),
             child: Text(
               initials.isEmpty ? 'AK' : initials,
               style: GoogleFonts.inter(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.buttonColor,
               ),
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Text(
             studentName,
             style: GoogleFonts.inter(
@@ -712,16 +648,16 @@ class _StudentProfileCard extends StatelessWidget {
               color: const Color(0xFF25252C),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 3),
           Text(
             'Junior Buddy 🌱',
             style: GoogleFonts.inter(
-              fontSize: 15,
+              fontSize: 13,
               fontWeight: FontWeight.w500,
               color: const Color(0xFF777887),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -734,7 +670,7 @@ class _StudentProfileCard extends StatelessWidget {
               Text(
                 'Grade 4',
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: const Color(0xFF6F7080),
                 ),
               ),
@@ -746,16 +682,16 @@ class _StudentProfileCard extends StatelessWidget {
               Text(
                 'Science Lab',
                 style: GoogleFonts.inter(
-                  fontSize: 14,
+                  fontSize: 12,
                   color: const Color(0xFF6F7080),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 26),
           Image.asset(
             'assets/class-screen/Skill Passport 1.png',
-            height: 260,
+            height: 220,
             fit: BoxFit.contain,
           ),
         ],

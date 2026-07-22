@@ -14,8 +14,8 @@ final learnerStateDataProvider = FutureProvider.autoDispose.family<LearnerStateM
   (ref, learnerId) async {
     final repository = await ref.watch(learnerStateRepositoryProvider.future);
     final cached = await repository.readCached(learnerId);
-    if (cached != null) return cached;
-    return repository.fetchState(learnerId: learnerId);
+    if (cached != null && cached.enrollment != null) return cached;
+    return repository.fetchState(learnerId: learnerId, forceRefresh: cached != null);
   },
 );
 

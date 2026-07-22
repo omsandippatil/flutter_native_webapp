@@ -2,6 +2,7 @@ enum ClassChatSender { bot, user }
 
 enum ClassChatContentType {
   text,
+  checkpoint,
   video,
   submission,
   // NEW: the user's reply to a submission is rendered as a short echo
