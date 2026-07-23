@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../data/models/chat_turn_model.dart';
+import '../models/chat_turn_model.dart';
 import '../providers/language_provider.dart';
 import '../providers/profile_provider.dart';
 import '../providers/tap_buddy_context_provider.dart';
@@ -50,7 +50,8 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
     if (!mounted || activeProfile == null) return;
 
     final repository = await ref.read(tapbuddyChatRepositoryProvider.future);
-    final transcript = await repository.readTranscript(activeProfile.phone, activeProfile.learnerId);
+    final resolvedProfile = activeProfile;
+    final transcript = await repository.readTranscript(resolvedProfile.phone, resolvedProfile.learnerId);
 
     if (!mounted) return;
     setState(() {

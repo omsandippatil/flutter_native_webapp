@@ -8,6 +8,7 @@ Never discuss topics unrelated to learning, studies, or the app. If asked someth
 
 const MAX_HISTORY_MESSAGES = 12;
 const MAX_MESSAGE_CHARS = 2000;
+const TAPBUDDY_MODEL = 'llama-3.1-8b-instant';
 
 function sanitizeHistory(history) {
   if (!Array.isArray(history)) return [];
@@ -99,7 +100,7 @@ export async function handleTapbuddyChat(request, env) {
 
   try {
     const result = await callGroq(env, {
-      model: env.GROQ_MODEL,
+      model: TAPBUDDY_MODEL,
       messages,
       temperature: 0.6,
       maxTokens: 500,

@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/router/router.dart';
-import '../../../data/models/active_profile_model.dart';
-import '../../../data/models/learner_state_model.dart';
+import '../../../models/active_profile_model.dart';
+import '../../../models/learner_state_model.dart';
 import '../../../data/repositories/achievements_repository.dart';
 import '../../../data/repositories/learner_state_repository.dart';
 import '../../../data/repositories/profile_repository.dart';
@@ -429,12 +429,14 @@ class _ConversationalOnboardingScreenState
   }
 
   Future<void> _enrollInCourse(String courseId) async {
-    final repository = _learnerStateRepository;
+    final repository = _profileRepository;
     if (repository == null) return;
     try {
-      final updated = await repository.enrollCourse(
+      final updated = await repository.completeOnboarding(
+        phone: _activeProfile.phone,
         learnerId: _activeProfile.learnerId,
         course: courseId,
+        markComplete: false,
       );
       setState(() {
         _learnerState = updated;
@@ -456,26 +458,32 @@ class _ConversationalOnboardingScreenState
     final updates = Map<String, dynamic>.from(_pendingProfileUpdates);
     _pendingProfileUpdates.clear();
     try {
-      final updated = await repository.updateProfile(
+      final updated = await repository.completeOnboarding(
         phone: _activeProfile.phone,
         learnerId: _activeProfile.learnerId,
         updates: updates,
+        markComplete: false,
       );
       setState(() {
         _learnerState = updated;
       });
       ref.invalidate(learnerStateDataProvider(_activeProfile.learnerId));
       if (updates.containsKey('student_name')) {
-        await _profileRepository?.setActiveProfile(
-          ActiveProfileModel(
-            phone: _activeProfile.phone,
-            learnerId: _activeProfile.learnerId,
-            studentName: updates['student_name'] as String,
-            grade: _activeProfile.grade,
-            division: _activeProfile.division,
-            avatar: _activeProfile.avatar,
-          ),
+        final updatedProfile = ActiveProfileModel(
+          phone: _activeProfile.phone,
+          learnerId: _activeProfile.learnerId,
+          studentName: updates['student_name'] as String,
+          grade: _activeProfile.grade,
+          division: _activeProfile.division,
+          avatar: _activeProfile.avatar,
+          onboardingCompleted: _activeProfile.onboardingCompleted,
         );
+        await setActiveProfile(ref, updatedProfile);
+        if (mounted) {
+          setState(() {
+            _activeProfile = updatedProfile;
+          });
+        }
       }
     } catch (e) {
       debugPrint('Profile update failed: $e');
@@ -496,6 +504,44 @@ class _ConversationalOnboardingScreenState
     } catch (e) {
       debugPrint('Achievement award failed: $e');
     }
+  }
+
+  Future<void> _completeOnboardingAndAward() async {
+    final repository = _profileRepository;
+    if (repository != null) {
+      try {
+        final updatedState = await repository.completeOnboarding(
+          phone: _activeProfile.phone,
+          learnerId: _activeProfile.learnerId,
+          course: _selectedCourseId,
+          markComplete: true,
+        );
+
+        final updatedProfile = ActiveProfileModel(
+          phone: _activeProfile.phone,
+          learnerId: _activeProfile.learnerId,
+          studentName: updatedState.profile?.studentName ?? _activeProfile.studentName,
+          grade: _activeProfile.grade,
+          division: _activeProfile.division,
+          avatar: _activeProfile.avatar,
+          onboardingCompleted: true,
+        );
+        await setActiveProfile(ref, updatedProfile);
+
+        if (mounted) {
+          setState(() {
+            _activeProfile = updatedProfile;
+            _learnerState = updatedState;
+          });
+        }
+
+        ref.invalidate(learnerStateDataProvider(_activeProfile.learnerId));
+      } catch (e) {
+        debugPrint('Failed to mark onboarding complete: $e');
+      }
+    }
+
+    await _awardOnboardingCompletionBonus();
   }
 
   void _showErrorSnack(String message) {
@@ -1259,7 +1305,7 @@ class _ConversationalOnboardingScreenState
           const Divider(height: 16),
           _buildProfileRow('Course', _getCourseDisplayName(_selectedCourseId)),
           const Divider(height: 16),
-          _buildProfileRow('School', profile?.school ?? '—', locked: true),
+          _buildProfileRow('School', profile?.schoolName ?? '—', locked: true),
           const Divider(height: 16),
           _buildProfileRow('Grade', _activeProfile.grade ?? '—'),
         ],
@@ -1300,7 +1346,7 @@ class _ConversationalOnboardingScreenState
   }
 
   void _finishOnboarding() {
-    _awardOnboardingCompletionBonus();
+    _completeOnboardingAndAward();
     showDialog(
       context: context,
       barrierDismissible: false,

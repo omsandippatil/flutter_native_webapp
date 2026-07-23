@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/router/router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../data/models/active_profile_model.dart';
-import '../../../data/models/profile_summary_model.dart';
+import '../../../models/active_profile_model.dart';
+import '../../../models/profile_summary_model.dart';
 import '../../../providers/profile_provider.dart';
 
 class ProfileSelectScreen extends ConsumerStatefulWidget {
@@ -31,15 +31,13 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
     try {
       final repository = await ref.read(profileRepositoryProvider.future);
 
-      // Fetch (and cache forever) the full learner state for this profile.
       final learnerState = await repository.selectProfile(
         phone: widget.phone,
         learnerId: profile.learnerId,
       );
 
-      // Remember which profile is active so the app can resume straight to
-      // Home next time, without going through profile selection again.
-      await repository.setActiveProfile(
+      await setActiveProfile(
+        ref,
         ActiveProfileModel(
           phone: widget.phone,
           learnerId: profile.learnerId,
@@ -47,12 +45,12 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
           grade: profile.grade,
           division: profile.division,
           avatar: profile.avatar,
+          onboardingCompleted: profile.onboardingCompleted,
         ),
       );
-      ref.invalidate(activeProfileProvider);
 
       if (!mounted) return;
-      context.go(AppRoutes.home);
+      context.go(profile.onboardingCompleted ? AppRoutes.home : AppRoutes.onboarding);
     } catch (e) {
       if (!mounted) return;
       setState(() {

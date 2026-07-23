@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/state_model.dart';
+import '../models/state_model.dart';
 import '../data/repositories/onboarding_data_repository.dart';
 import 'flow_repository_provider.dart';
 import 'local_cache_provider.dart';

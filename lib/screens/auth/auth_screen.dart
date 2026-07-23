@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/router/router.dart';
 import '../../core/theme/app_theme.dart';
+import '../../models/active_profile_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/profile_provider.dart';
 
 enum _AuthStep { phone, password, createPassword }
 
@@ -136,21 +138,69 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
       }
 
       if (!mounted) return;
-      setState(() => _isLoading = false);
 
-      final hasProfiles = result['profiles'] is List && (result['profiles'] as List).isNotEmpty;
+      final rawProfiles = result['profiles'];
+      final profiles = rawProfiles is List ? rawProfiles : const [];
 
-      if (isNewAccount || !hasProfiles) {
+      if (isNewAccount || profiles.isEmpty) {
+        setState(() => _isLoading = false);
         context.go(AppRoutes.onboarding);
-      } else {
-        context.go('${AppRoutes.profileSelect}?phone=$_phone');
+        return;
       }
+
+      if (profiles.length == 1) {
+        final only = Map<String, dynamic>.from(profiles.first as Map);
+        final learnerId = only['learner_id'] as String?;
+        if (learnerId != null) {
+          await _selectSingleProfileAndRoute(learnerId, only);
+          return;
+        }
+      }
+
+      setState(() => _isLoading = false);
+      context.go('${AppRoutes.profileSelect}?phone=$_phone');
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
         _errorText = 'Something went wrong. Please try again.';
       });
+    }
+  }
+
+  Future<void> _selectSingleProfileAndRoute(
+    String learnerId,
+    Map<String, dynamic> profileJson,
+  ) async {
+    try {
+      final profileRepository = await ref.read(profileRepositoryProvider.future);
+      final learnerState = await profileRepository.selectProfile(
+        phone: _phone,
+        learnerId: learnerId,
+      );
+
+      final onboardingCompleted = profileJson['onboarding_completed'] as bool? ?? false;
+
+      await setActiveProfile(
+        ref,
+        ActiveProfileModel(
+          phone: _phone,
+          learnerId: learnerId,
+          studentName: learnerState.profile?.studentName ?? profileJson['student_name'] as String?,
+          grade: profileJson['grade']?.toString(),
+          division: profileJson['division'] as String?,
+          avatar: profileJson['avatar']?.toString(),
+          onboardingCompleted: onboardingCompleted,
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      context.go(onboardingCompleted ? AppRoutes.home : AppRoutes.onboarding);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      context.go('${AppRoutes.profileSelect}?phone=$_phone');
     }
   }
 

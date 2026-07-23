@@ -1,7 +1,7 @@
 
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
-import '../models/submission_review_model.dart';
+import '../../models/submission_review_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 

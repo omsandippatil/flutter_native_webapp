@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/theme/app_theme.dart';
-import '../../data/models/active_profile_model.dart';
-import '../../data/models/learner_state_model.dart';
-import '../../data/models/profile_summary_model.dart';
+import '../../models/active_profile_model.dart';
+import '../../models/learner_state_model.dart';
+import '../../models/profile_summary_model.dart';
 import '../../providers/http_client_provider.dart';
 import '../../providers/learner_state_provider.dart';
 import '../../providers/profile_provider.dart';
@@ -39,7 +39,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _languageController = TextEditingController();
   final TextEditingController _gradeController = TextEditingController();
   final TextEditingController _subjectController = TextEditingController();
-  bool _hasSibling = false;
+  final bool _hasSibling = false;
 
   ActiveProfileModel? _activeProfile;
   LearnerStateModel? _learnerState;
@@ -728,7 +728,7 @@ class _ProfileDetailsView extends StatelessWidget {
       );
     }
 
-    final schoolName = learnerState?.profile?.school ?? '—';
+    final schoolName = learnerState?.profile?.schoolName ?? '—';
     final grade = activeProfile?.grade ?? '—';
 
     return Column(

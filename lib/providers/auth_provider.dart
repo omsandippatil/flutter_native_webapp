@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/auth_session_model.dart';
+import '../models/auth_session_model.dart';
 import '../data/repositories/auth_repository.dart';
 import 'http_client_provider.dart';
 import 'local_cache_provider.dart';

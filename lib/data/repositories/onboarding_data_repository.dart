@@ -1,7 +1,7 @@
 import '../../core/cache/local_cache.dart';
 import '../../core/cache/onboarding_cache_keys.dart';
 import '../local/asset_loader.dart';
-import '../models/state_model.dart';
+import '../../models/state_model.dart';
 
 class OnboardingDataRepository {
   OnboardingDataRepository(this._assetLoader, this._localCache);

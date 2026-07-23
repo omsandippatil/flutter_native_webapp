@@ -125,6 +125,12 @@ export const ROUTES = [
     target: 'tap_lms.tapapp.api.progress.achievements.award_achievement',
     auth: true,
   },
+  {
+  method: 'POST',
+  path: '/onboarding/complete',
+  target: 'tap_lms.tapapp.api.profile.onboarding.complete_onboarding',
+  auth: true,
+  },
 ];
 
 function matchRoute(method, pathname) {

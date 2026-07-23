@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:go_router/go_router.dart';
-import '../../core/router/router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,18 +15,16 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    // Progress animation to control the loader bar
+    // Purely decorative now — this screen no longer decides where to
+    // navigate. The router's `redirect` watches auth state and moves on
+    // as soon as it resolves (login / onboarding / welcome / home), so
+    // this animation just fills the time while that resolves. It repeats
+    // instead of running once, in case the profile lookup takes longer
+    // than one cycle.
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..forward();
-
-    // Navigate to the conversational login screen after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        context.go(AppRoutes.login);
-      }
-    });
+    )..repeat();
   }
 
   @override

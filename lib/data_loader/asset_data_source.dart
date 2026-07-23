@@ -1,6 +1,6 @@
 
 import '../data/local/asset_loader.dart';
-import '../data/models/state_model.dart';
+import '../models/state_model.dart';
 
 class AssetDataSource {
   AssetDataSource(this._assetLoader);

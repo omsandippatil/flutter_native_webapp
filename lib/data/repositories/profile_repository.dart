@@ -1,8 +1,8 @@
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
-import '../models/active_profile_model.dart';
-import '../models/learner_state_model.dart';
-import '../models/profile_summary_model.dart';
+import '../../models/active_profile_model.dart';
+import '../../models/learner_state_model.dart';
+import '../../models/profile_summary_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 import 'learner_state_repository.dart';
@@ -81,7 +81,16 @@ class ProfileRepository {
     return rows;
   }
 
-  Future<LearnerStateModel> selectProfile({required String phone, required String learnerId}) async {
+  Future<LearnerStateModel> selectProfile({
+    required String phone,
+    required String learnerId,
+    bool forceRefresh = false,
+  }) async {
+    if (!forceRefresh) {
+      final cached = await _learnerStateRepository.readCached(learnerId);
+      if (cached != null) return cached;
+    }
+
     final data = await _http.post(ApiEndpoints.profilesSelect, body: {
       'phone': phone,
       'learner_id': learnerId,
@@ -153,5 +162,37 @@ class ProfileRepository {
         : existing.mergeFrom(data);
     await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
     return model;
+  }
+
+  Future<LearnerStateModel> completeOnboarding({
+    required String phone,
+    required String learnerId,
+    Map<String, dynamic>? updates,
+    String? course,
+    bool markComplete = true,
+  }) async {
+    await _http.post(ApiEndpoints.onboardingComplete, body: {
+      'phone': phone,
+      'learner_id': learnerId,
+      if (updates != null && updates.isNotEmpty) 'updates': updates,
+      if (course != null) 'course': course,
+      'mark_complete': markComplete ? 1 : 0,
+    });
+
+    if (updates != null && updates.containsKey('student_name')) {
+      await RosterCacheSync.patchRow(
+        _localCache,
+        phone: phone,
+        learnerId: learnerId,
+        studentName: updates['student_name'] as String?,
+      );
+    }
+
+    final refreshed = await _learnerStateRepository.fetchState(
+      learnerId: learnerId,
+      forceRefresh: true,
+    );
+    await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), refreshed.toJson());
+    return refreshed;
   }
 }

@@ -1,7 +1,7 @@
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
 import '../../models/learner_archetype.dart';
-import '../models/learner_state_model.dart';
+import '../../models/learner_state_model.dart';
 
 /// Every accepted submission bumps the learner one level up the archetype
 /// ladder (dormant -> fence_sitter -> irregular_submitter -> submitter),

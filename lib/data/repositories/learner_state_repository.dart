@@ -1,7 +1,7 @@
 
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
-import '../models/learner_state_model.dart';
+import '../../models/learner_state_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 
@@ -31,17 +31,16 @@ class LearnerStateRepository {
     String? fields,
     bool forceRefresh = false,
   }) async {
-    if (!forceRefresh && fields == null) {
+    if (!forceRefresh) {
       final cached = await readCached(learnerId);
       if (cached != null) return cached;
     }
 
     final data = await _http.get(ApiEndpoints.learnerState, query: {
       'learner_id': learnerId,
-      if (fields != null) 'fields': fields,
     });
 
-    return fields == null ? _writeFull(learnerId, data) : _writePartial(learnerId, data);
+    return _writeFull(learnerId, data);
   }
 
   Future<LearnerStateModel> enrollCourse({required String learnerId, required String course}) async {

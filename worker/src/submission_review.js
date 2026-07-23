@@ -6,8 +6,14 @@ Evaluate the submission against the given question and expected answer criteria.
 Respond ONLY with a JSON object with this exact shape and no extra text:
 {"score": number between 0 and 100, "verdict": "pass" or "review" or "fail", "feedback": short encouraging feedback string, "sms_text": very short friendly message under 200 characters either appreciating the student or gently pointing to one improvement, "strengths": array of short strings, "improvements": array of short strings}`;
 
+const STRICT_RETRY_SUFFIX = `
+Your previous response was cut off before finishing valid JSON. Respond again with ONLY a single complete, valid JSON object matching the shape above. Do not think out loud or explain your reasoning first. Keep "feedback" under 2 sentences, "sms_text" under 200 characters, and each item in "strengths" and "improvements" to a few words, so the full object fits well within the token limit. Do not include any text before or after the JSON.`;
+
 const MAX_TEXT_CHARS = 4000;
-const VISION_MODEL = 'llama-4-scout-17b-16e-instruct';
+const VISION_MODEL = 'qwen/qwen3.6-27b';
+const REASONING_EFFORT = 'none';
+const DEFAULT_MAX_TOKENS = 900;
+const RETRY_MAX_TOKENS = 1400;
 
 function buildUserLines(question, expectedAnswer, rubric) {
   const lines = [];
@@ -16,6 +22,14 @@ function buildUserLines(question, expectedAnswer, rubric) {
     lines.push(`Expected answer criteria: ${String(expectedAnswer).slice(0, MAX_TEXT_CHARS)}`);
   if (rubric) lines.push(`Rubric: ${String(rubric).slice(0, MAX_TEXT_CHARS)}`);
   return lines;
+}
+
+function isJsonValidationError(err) {
+  if (!err) return false;
+  if (err.groqError && err.groqError.code === 'json_validate_failed') return true;
+  if (typeof err.message === 'string' && err.message.includes('json_validate_failed')) return true;
+  const failedGeneration = err.groqError && err.groqError.failed_generation;
+  return typeof failedGeneration === 'string' && failedGeneration.includes('max completion tokens');
 }
 
 function parseReview(rawContent) {
@@ -37,6 +51,20 @@ function formatReviewResponse(learnerId, review) {
   };
 }
 
+async function callWithJsonRetry(callFn, baseMessages) {
+  try {
+    return await callFn(baseMessages, DEFAULT_MAX_TOKENS);
+  } catch (err) {
+    if (!isJsonValidationError(err)) throw err;
+    const retryMessages = [...baseMessages];
+    retryMessages[0] = {
+      ...retryMessages[0],
+      content: retryMessages[0].content + STRICT_RETRY_SUFFIX,
+    };
+    return callFn(retryMessages, RETRY_MAX_TOKENS);
+  }
+}
+
 async function reviewTextSubmission(env, question, expectedAnswer, rubric, submissionText) {
   const lines = buildUserLines(question, expectedAnswer, rubric);
   lines.push(`Student submission: ${submissionText.slice(0, MAX_TEXT_CHARS)}`);
@@ -46,13 +74,18 @@ async function reviewTextSubmission(env, question, expectedAnswer, rubric, submi
     { role: 'user', content: lines.join('\n') },
   ];
 
-  return callGroq(env, {
-    model: env.GROQ_MODEL,
-    messages,
-    temperature: 0.2,
-    maxTokens: 600,
-    responseFormat: { type: 'json_object' },
-  });
+  return callWithJsonRetry(
+    (msgs, maxTokens) =>
+      callGroq(env, {
+        model: env.GROQ_MODEL,
+        messages: msgs,
+        temperature: 0.2,
+        maxTokens,
+        responseFormat: { type: 'json_object' },
+        reasoningEffort: REASONING_EFFORT,
+      }),
+    messages
+  );
 }
 
 async function reviewImageSubmission(
@@ -79,13 +112,18 @@ async function reviewImageSubmission(
     },
   ];
 
-  return callGroqVision(env, {
-    model: VISION_MODEL,
-    messages,
-    temperature: 0.2,
-    maxTokens: 600,
-    responseFormat: { type: 'json_object' },
-  });
+  return callWithJsonRetry(
+    (msgs, maxTokens) =>
+      callGroqVision(env, {
+        model: VISION_MODEL,
+        messages: msgs,
+        temperature: 0.2,
+        maxTokens,
+        responseFormat: { type: 'json_object' },
+        reasoningEffort: REASONING_EFFORT,
+      }),
+    messages
+  );
 }
 
 async function reviewAudioSubmission(env, question, expectedAnswer, rubric, audioUrl) {
@@ -100,13 +138,18 @@ async function reviewAudioSubmission(env, question, expectedAnswer, rubric, audi
     { role: 'user', content: lines.join('\n') },
   ];
 
-  const result = await callGroq(env, {
-    model: env.GROQ_MODEL,
-    messages,
-    temperature: 0.2,
-    maxTokens: 600,
-    responseFormat: { type: 'json_object' },
-  });
+  const result = await callWithJsonRetry(
+    (msgs, maxTokens) =>
+      callGroq(env, {
+        model: env.GROQ_MODEL,
+        messages: msgs,
+        temperature: 0.2,
+        maxTokens,
+        responseFormat: { type: 'json_object' },
+        reasoningEffort: REASONING_EFFORT,
+      }),
+    messages
+  );
 
   return { ...result, transcript: transcript.text };
 }
@@ -146,6 +189,19 @@ export async function handleSubmissionReview(request, env) {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  if (
+    submissionType === 'image' &&
+    imageUrl &&
+    !imageUrl.startsWith('http://') &&
+    !imageUrl.startsWith('https://') &&
+    !imageUrl.startsWith('data:image/')
+  ) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'image_url_must_be_http_or_data_uri' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   if (submissionType === 'audio' && (!audioUrl || typeof audioUrl !== 'string')) {

@@ -1,8 +1,8 @@
 
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
-import '../models/learner_state_model.dart';
-import '../models/profile_summary_model.dart';
+import '../../models/learner_state_model.dart';
+import '../../models/profile_summary_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 import 'learner_state_repository.dart';
@@ -72,8 +72,9 @@ class RosterRepository {
     bool forceRefresh = false,
   }) async {
     final rosterKey = CacheKeys.roster(phone, grade: grade, division: division);
-    if (!forceRefresh && _localCache.has(rosterKey)) {
-      return readCachedRoster(phone, grade: grade, division: division);
+    if (!forceRefresh) {
+      final cached = await readCachedRoster(phone, grade: grade, division: division);
+      if (cached.isNotEmpty) return cached;
     }
 
     final data = await _http.get(ApiEndpoints.students, query: {

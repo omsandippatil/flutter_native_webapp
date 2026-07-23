@@ -1,17 +1,69 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../../core/router/router.dart';
+import '../../providers/profile_provider.dart';
 
-class WelcomeBackScreen extends StatelessWidget {
-  final String studentName;
+class WelcomeBackScreen extends ConsumerStatefulWidget {
+  const WelcomeBackScreen({super.key, this.onDone});
 
-  const WelcomeBackScreen({super.key, this.studentName = 'Aarav'});
+  /// Called once, right before navigating away to /home, so the router
+  /// can mark this session's one-time Welcome gate as satisfied.
+  final VoidCallback? onDone;
+
+  @override
+  ConsumerState<WelcomeBackScreen> createState() => _WelcomeBackScreenState();
+}
+
+class _WelcomeBackScreenState extends ConsumerState<WelcomeBackScreen> {
+  static const Duration _minimumHold = Duration(seconds: 5);
+
+  Timer? _autoAdvanceTimer;
+  bool _minimumHoldElapsed = false;
+  bool _userTappedContinue = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoAdvanceTimer = Timer(_minimumHold, () {
+      if (!mounted) return;
+      setState(() => _minimumHoldElapsed = true);
+      // If the user already tapped Continue before the 5s were up, this is
+      // the moment to actually leave — otherwise just unlock the button.
+      if (_userTappedContinue) _goHome();
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoAdvanceTimer?.cancel();
+    super.dispose();
+  }
+
+  void _goHome() {
+    widget.onDone?.call();
+    if (mounted) context.go(AppRoutes.home);
+  }
+
+  void _handleContinuePressed() {
+    _userTappedContinue = true;
+    // Enforce the 5s floor: if it hasn't elapsed yet, just remember the
+    // tap and let the timer's callback above finish the navigation once
+    // it fires. If it already elapsed, leave immediately.
+    if (_minimumHoldElapsed) _goHome();
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 800;
+
+    final activeProfileAsync = ref.watch(activeProfileProvider);
+    final studentName = activeProfileAsync.value?.studentName ?? 'there';
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -98,17 +150,17 @@ class WelcomeBackScreen extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
-                  // Continue button
+                  // Continue button — disabled until the 5s minimum hold
+                  // has elapsed, so the screen can't be skipped instantly.
                   SizedBox(
                     width: isDesktop ? 320 : double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: () {
-                        context.go(AppRoutes.home);
-                      },
+                      onPressed: _minimumHoldElapsed ? _handleContinuePressed : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF5B5BD6),
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: const Color(0xFFBDC3C7),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),

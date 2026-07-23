@@ -9,7 +9,10 @@ function buildGroqError(resp, parsed, text, fallback) {
   return err;
 }
 
-export async function callGroq(env, { model, messages, temperature, maxTokens, responseFormat }) {
+export async function callGroq(
+  env,
+  { model, messages, temperature, maxTokens, responseFormat, reasoningEffort }
+) {
   if (!env.GROQ_API_KEY) {
     const err = new Error('groq_api_key_not_configured');
     err.status = 500;
@@ -24,6 +27,9 @@ export async function callGroq(env, { model, messages, temperature, maxTokens, r
   };
   if (responseFormat) {
     body.response_format = responseFormat;
+  }
+  if (reasoningEffort) {
+    body.reasoning_effort = reasoningEffort;
   }
 
   const resp = await fetch(GROQ_URL, {
@@ -54,7 +60,7 @@ export async function callGroq(env, { model, messages, temperature, maxTokens, r
 
 export async function callGroqVision(
   env,
-  { model, messages, temperature, maxTokens, responseFormat }
+  { model, messages, temperature, maxTokens, responseFormat, reasoningEffort }
 ) {
   if (!env.GROQ_API_KEY) {
     const err = new Error('groq_api_key_not_configured');
@@ -70,6 +76,9 @@ export async function callGroqVision(
   };
   if (responseFormat) {
     body.response_format = responseFormat;
+  }
+  if (reasoningEffort) {
+    body.reasoning_effort = reasoningEffort;
   }
 
   const resp = await fetch(GROQ_URL, {

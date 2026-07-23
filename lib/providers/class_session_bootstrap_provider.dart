@@ -1,14 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/enrollment_model.dart';
-import '../data/models/learner_state_model.dart';
+import '../models/enrollment_model.dart';
+import '../models/learner_state_model.dart';
 import '../models/program_content/course_detail_model.dart';
 import 'class_session_window_repository.dart';
 import 'learner_state_provider.dart';
 import 'local_cache_provider.dart';
 import 'profile_provider.dart';
 import 'program_content_provider.dart';
-import 'submission_review_provider.dart';
 
 class NoActiveEnrollmentException implements Exception {
   const NoActiveEnrollmentException();

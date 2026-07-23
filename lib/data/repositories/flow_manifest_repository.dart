@@ -2,7 +2,7 @@ import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
 import '../../core/constants/app_constants.dart';
 import '../local/asset_loader.dart';
-import '../models/flow_manifest_model.dart';
+import '../../models/flow_manifest_model.dart';
 
 class FlowManifestRepository {
   FlowManifestRepository(this._assetLoader, this._localCache);

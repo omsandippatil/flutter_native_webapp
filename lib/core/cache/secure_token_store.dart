@@ -17,7 +17,7 @@ class SecureTokenStore {
     await Future.wait([
       _storage.write(key: _phoneKey, value: phone),
       _storage.write(key: _tokenKey, value: token),
-      if (adminCode != null) _storage.write(key: _adminCodeKey, value: adminCode),
+      ?adminCode != null ? _storage.write(key: _adminCodeKey, value: adminCode) : null,
     ]);
   }
 

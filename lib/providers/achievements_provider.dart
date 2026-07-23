@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/achievement_model.dart';
+import '../models/achievement_model.dart';
 import '../data/repositories/achievements_repository.dart';
 import 'http_client_provider.dart';
 import 'learner_state_provider.dart';

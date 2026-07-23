@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models/active_profile_model.dart';
-import '../data/models/learner_state_model.dart';
-import '../data/models/profile_summary_model.dart';
+import '../models/active_profile_model.dart';
+import '../models/learner_state_model.dart';
+import '../models/profile_summary_model.dart';
 import '../data/repositories/profile_repository.dart';
 import 'http_client_provider.dart';
 import 'learner_state_provider.dart';

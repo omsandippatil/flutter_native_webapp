@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../data/models/learner_state_model.dart';
+import '../models/learner_state_model.dart';
 import '../data/repositories/archetype_progression_repository.dart';
 import '../data/repositories/learner_state_repository.dart';
 import '../data/repositories/submission_review_repository.dart';

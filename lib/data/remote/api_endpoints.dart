@@ -27,4 +27,6 @@ class ApiEndpoints {
 
   static const String tapbuddyChat = '/tapbuddy/chat';
   static const String submissionReview = '/submission-review/review';
+
+  static const String onboardingComplete = '/onboarding/complete';
 }

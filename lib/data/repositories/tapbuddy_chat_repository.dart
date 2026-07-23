@@ -1,6 +1,6 @@
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
-import '../models/chat_turn_model.dart';
+import '../../models/chat_turn_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 

@@ -7,6 +7,7 @@ class ProfileSummaryModel {
     this.grade,
     this.division,
     this.avatar,
+    this.onboardingCompleted = false,
   });
 
   final String learnerId;
@@ -16,6 +17,7 @@ class ProfileSummaryModel {
   final String? grade;
   final String? division;
   final String? avatar;
+  final bool onboardingCompleted;
 
   static int? _parseRollNumber(dynamic raw) {
     if (raw == null) return null;
@@ -32,6 +34,7 @@ class ProfileSummaryModel {
         grade: json['grade']?.toString(),
         division: json['division'] as String?,
         avatar: json['avatar']?.toString(),
+        onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,6 +45,7 @@ class ProfileSummaryModel {
         'grade': grade,
         'division': division,
         'avatar': avatar,
+        'onboarding_completed': onboardingCompleted,
       };
 
   ProfileSummaryModel copyWith({
@@ -50,6 +54,7 @@ class ProfileSummaryModel {
     String? grade,
     String? division,
     String? avatar,
+    bool? onboardingCompleted,
   }) =>
       ProfileSummaryModel(
         learnerId: learnerId,
@@ -59,6 +64,7 @@ class ProfileSummaryModel {
         grade: grade ?? this.grade,
         division: division ?? this.division,
         avatar: avatar ?? this.avatar,
+        onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       );
 
   static List<ProfileSummaryModel> listFromJson(String ownerPhone, dynamic raw) {
@@ -83,3 +89,4 @@ class ProfileSummaryModel {
         .toList(growable: false);
   }
 }
+

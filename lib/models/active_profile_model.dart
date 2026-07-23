@@ -6,6 +6,7 @@ class ActiveProfileModel {
     this.grade,
     this.division,
     this.avatar,
+    this.onboardingCompleted = false,
   });
 
   final String phone;
@@ -14,6 +15,7 @@ class ActiveProfileModel {
   final String? grade;
   final String? division;
   final String? avatar;
+  final bool onboardingCompleted;
 
   factory ActiveProfileModel.fromJson(Map<String, dynamic> json) => ActiveProfileModel(
         phone: json['phone'] as String,
@@ -22,6 +24,7 @@ class ActiveProfileModel {
         grade: json['grade'] as String?,
         division: json['division'] as String?,
         avatar: json['avatar'] as String?,
+        onboardingCompleted: json['onboarding_completed'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -31,5 +34,24 @@ class ActiveProfileModel {
         'grade': grade,
         'division': division,
         'avatar': avatar,
+        'onboarding_completed': onboardingCompleted,
       };
+
+  ActiveProfileModel copyWith({
+    String? studentName,
+    String? grade,
+    String? division,
+    String? avatar,
+    bool? onboardingCompleted,
+  }) =>
+      ActiveProfileModel(
+        phone: phone,
+        learnerId: learnerId,
+        studentName: studentName ?? this.studentName,
+        grade: grade ?? this.grade,
+        division: division ?? this.division,
+        avatar: avatar ?? this.avatar,
+        onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
+      );
 }
+
