@@ -64,6 +64,18 @@ class _AuthRefreshListenable extends ChangeNotifier {
       },
       fireImmediately: false,
     );
+    // The listener above only reacts to *future* transitions. If
+    // `activeProfileProvider` already resolved before this listenable was
+    // constructed (e.g. this router/listenable got recreated after the
+    // provider was already warm), that past resolution would otherwise be
+    // missed entirely and `hasResolvedOnce` would stay false forever,
+    // permanently trapping `redirect` on the first-load `/splash` guard.
+    // Seed it from the provider's current value so a late-attached
+    // listener still counts an already-resolved state as resolved.
+    final current = _ref.read(activeProfileProvider);
+    if (current.hasValue || current.hasError) {
+      hasResolvedOnce = true;
+    }
   }
 
   final Ref _ref;
@@ -102,13 +114,14 @@ const Set<String> _publicRoutes = {
 /// during this app process's lifetime. Deliberately in-memory (not
 /// persisted to disk/cache) — the requirement is "every cold start", and a
 /// fresh `ProviderScope` on process restart already gives that for free.
-/// Guarded behind a provider (rather than a bare top-level variable) so
-/// tests and hot-restarts that recreate the container get a clean slate.
-class _WelcomeGate {
-  bool shown = false;
-}
-
-final _welcomeGateProvider = Provider<_WelcomeGate>((ref) => _WelcomeGate());
+///
+/// This is a `StateProvider<bool>` rather than a mutable field on a plain
+/// object: mutating a field directly (`someProvider.read(ref).shown = true`)
+/// does not go through Riverpod's notification system, so nothing watching
+/// or listening reacts to it. Using `StateProvider` means setting `.state`
+/// is a real state change, which keeps this consistent with the rest of
+/// the auth-state plumbing that `_AuthRefreshListenable` depends on.
+final _welcomeGateProvider = StateProvider<bool>((ref) => false);
 
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshListenable = _AuthRefreshListenable(ref);
@@ -153,8 +166,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onboarded = loggedIn && (profile.onboardingCompleted == true);
 
       if (!loggedIn) {
-        // Logged out: only the auth funnel and error screen are reachable.
-        if (target == AppRoutes.login || target == AppRoutes.error) return null;
+        // Logged out: the auth funnel (login, profile-select, onboarding)
+        // and the error screen are reachable, but `/` (splash) is not a
+        // valid resting place once the profile lookup has resolved — it's
+        // only meant to be shown *during* that first load (handled by the
+        // guard above). Without this, a resolved `AsyncData(null)` on
+        // `target == '/'` fell through to "stay here" since splash was
+        // included in `_publicRoutes`, leaving a logged-out user stuck on
+        // splash forever even though resolution succeeded.
+        if (target != AppRoutes.splash && _publicRoutes.contains(target)) return null;
         return AppRoutes.login;
       }
 
@@ -168,8 +188,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Fully logged in and onboarded. First time this app process has
       // resolved to that state, route through Welcome Back once; every
       // subsequent redirect this session goes straight to /home.
-      final welcomeGate = ref.read(_welcomeGateProvider);
-      if (!welcomeGate.shown) {
+      final welcomeShown = ref.read(_welcomeGateProvider);
+      if (!welcomeShown) {
         if (target == AppRoutes.welcome) return null;
         if (_authOnlyRoutes.contains(target) || target == AppRoutes.home) {
           return AppRoutes.welcome;
@@ -211,7 +231,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.welcome,
         pageBuilder: (context, state) => AppRoutes.page(
           WelcomeBackScreen(
-            onDone: () => ref.read(_welcomeGateProvider).shown = true,
+            onDone: () => ref.read(_welcomeGateProvider.notifier).state = true,
           ),
         ),
       ),

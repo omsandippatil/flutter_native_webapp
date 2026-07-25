@@ -9,9 +9,19 @@ import 'learner_state_provider.dart';
 import 'local_cache_provider.dart';
 
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
-  final localCache = await ref.watch(localCacheProvider.future);
-  final learnerStateRepository = await ref.watch(learnerStateRepositoryProvider.future);
-  return ProfileRepository(ref.watch(httpClientProvider), localCache, learnerStateRepository);
+  // `ref.read(...future)` here, not `ref.watch`: these are one-time async
+  // setup steps (open the Hive box, construct the repository), not values
+  // this provider should keep re-running for. `ref.watch` on a `.future`
+  // makes this provider rebuild every time `localCacheProvider` or
+  // `learnerStateRepositoryProvider` rebuild for any reason — and since
+  // `activeProfileProvider` below watches this provider's `.future` in
+  // turn, that rebuild cascades straight into `activeProfileProvider`,
+  // which notifies the router's `refreshListenable`, which re-runs
+  // `redirect` while this is still mid-flight — producing an unbroken
+  // loading loop that never settles into `AsyncData`.
+  final localCache = await ref.read(localCacheProvider.future);
+  final learnerStateRepository = await ref.read(learnerStateRepositoryProvider.future);
+  return ProfileRepository(ref.read(httpClientProvider), localCache, learnerStateRepository);
 });
 
 class ProfilesPageRequest {
@@ -30,7 +40,7 @@ class ProfilesPageRequest {
 
 final profilesPageDataProvider =
     FutureProvider.autoDispose.family<List<ProfileSummaryModel>, ProfilesPageRequest>((ref, request) async {
-  final repository = await ref.watch(profileRepositoryProvider.future);
+  final repository = await ref.read(profileRepositoryProvider.future);
   final cached = await repository.readCachedProfilesPage(request.phone, request.page, request.pageSize);
   if (cached.isNotEmpty) return cached;
   return repository.fetchProfilesPage(phone: request.phone, page: request.page, pageSize: request.pageSize);
@@ -38,14 +48,20 @@ final profilesPageDataProvider =
 
 final selectProfileProvider =
     FutureProvider.autoDispose.family<LearnerStateModel, ({String phone, String learnerId})>((ref, args) async {
-  final repository = await ref.watch(profileRepositoryProvider.future);
+  final repository = await ref.read(profileRepositoryProvider.future);
   return repository.selectProfile(phone: args.phone, learnerId: args.learnerId);
 });
 
 /// The profile the user picked on the profile-select screen. Persisted forever
 /// so the app can jump straight to Home on next launch without re-selecting.
+///
+/// Reads `profileRepositoryProvider.future` rather than watching it — this
+/// provider's job is to reflect the *active profile*, not to rebuild every
+/// time the repository provider itself rebuilds. The repository, once
+/// constructed, is stable for the app's lifetime; nothing here needs to
+/// react to it changing.
 final activeProfileProvider = FutureProvider<ActiveProfileModel?>((ref) async {
-  final repository = await ref.watch(profileRepositoryProvider.future);
+  final repository = await ref.read(profileRepositoryProvider.future);
   return repository.readActiveProfile();
 });
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
@@ -11,16 +12,46 @@ class CacheEntry<T> {
   final DateTime cachedAt;
 }
 
+class LocalCacheOpenTimeoutException implements Exception {
+  const LocalCacheOpenTimeoutException();
+
+  @override
+  String toString() =>
+      'LocalCacheOpenTimeoutException: opening local storage took too long. '
+      'On web this usually means a stale IndexedDB connection from a '
+      'previous session is blocking the new one — clear site data and '
+      'reload.';
+}
+
 class LocalCache {
   LocalCache._(this._box, this._indexBox);
 
   static const String _boxName = 'tap_forever_cache';
   static const String _indexBoxName = 'tap_forever_cache_index';
 
+  // A blocked `Hive.openBox` (most commonly on web, where it maps to a
+  // blocked `indexedDB.open()` call left waiting on a stale connection
+  // from a previous session/tab) never throws and never completes — it
+  // just hangs forever with no console output. Every provider that
+  // depends on `localCacheProvider` chains through this call, and the
+  // router's first-load splash guard waits on that whole chain, so a
+  // silent hang here silently hangs the entire app on the splash screen.
+  // Bounding this with a timeout turns that silent, undiagnosable hang
+  // into a concrete, catchable exception instead.
+  static const Duration _openTimeout = Duration(seconds: 10);
+
   final Box<String> _box;
   final Box<String> _indexBox;
 
   static Future<LocalCache> open() async {
+    try {
+      return await _openInternal().timeout(_openTimeout);
+    } on TimeoutException {
+      throw const LocalCacheOpenTimeoutException();
+    }
+  }
+
+  static Future<LocalCache> _openInternal() async {
     await Hive.initFlutter();
     final box = await Hive.openBox<String>(_boxName);
     final indexBox = await Hive.openBox<String>(_indexBoxName);

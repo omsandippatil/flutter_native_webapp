@@ -113,10 +113,10 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
       return;
     }
 
-    await _login(password, isNewAccount: true);
+    await _login(password);
   }
 
-  Future<void> _login(String password, {bool isNewAccount = false}) async {
+  Future<void> _login(String password) async {
     setState(() {
       _isLoading = true;
       _errorText = null;
@@ -142,7 +142,7 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
       final rawProfiles = result['profiles'];
       final profiles = rawProfiles is List ? rawProfiles : const [];
 
-      if (isNewAccount || profiles.isEmpty) {
+      if (profiles.isEmpty) {
         setState(() => _isLoading = false);
         context.go(AppRoutes.onboarding);
         return;
