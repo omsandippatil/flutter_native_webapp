@@ -351,7 +351,7 @@ class _ConversationalOnboardingScreenState
 
               if (selectedOption.containsKey('next_flow')) {
                 if (selectedOption['next_flow'] == 'activity_flow') {
-                  Timer(const Duration(milliseconds: 1000), () {
+                  _completeOnboardingAndAward().then((_) {
                     if (mounted) context.go(AppRoutes.home);
                   });
                 } else {
@@ -385,7 +385,7 @@ class _ConversationalOnboardingScreenState
         _executeStep();
       } else if (step.containsKey('next_flow')) {
         if (step['next_flow'] == 'activity_flow') {
-          Timer(const Duration(milliseconds: 1500), () {
+          _completeOnboardingAndAward().then((_) {
             if (mounted) context.go(AppRoutes.home);
           });
         }
