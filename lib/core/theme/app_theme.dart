@@ -18,6 +18,12 @@ class AppTheme {
   static const Color mutedLavender = Color(0xFFE5E4FA);
   static const Color profileBar = Color(0xFFE5E1F1);
   static const Color selectedSurface = Color(0xFFF4F3FF);
+  static const Color onboardingBackground = Color(0xFFF5F6FA);
+  static const Color onboardingSurface = Color(0xFFF8F9FD);
+  static const Color mediaPlaceholder = Color(0xFFF0F0F3);
+  static const Color disabledButton = Color(0xFFBDC3C7);
+  static const Color imagePlaceholder = Color(0xFFB9BBC8);
+  static const Color subtleShadow = Color(0xFF000000);
 
   // Borders and text
   static const Color borderColor = Color(0xFFE1E2EA);
@@ -33,6 +39,7 @@ class AppTheme {
   static const Color streakColor = Color(0xFF24A866);
   static const Color streakBg = Color(0xFFDFF5E8);
   static const Color successBubble = Color(0xFFE0F2E6);
+  static const Color chatSuccessBubble = Color(0xFFE8FAF1);
   static const Color successText = Color(0xFF0F5132);
   static const Color dangerText = Color(0xFFD34B40);
   static const Color warningSurface = Color(0xFFFFF0D8);

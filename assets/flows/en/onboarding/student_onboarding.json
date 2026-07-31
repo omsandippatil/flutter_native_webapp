@@ -266,8 +266,9 @@
       "type": "static",
       "sender": "bot",
       "input_mode": "static",
+      "component": "SkillPassportCard",
       "audio_id": "aud_of_007",
-      "display_text": "Congrats 🎉 You just earned [+500pts] for completing your profile! You're crushing it already.",
+      "display_text": "",
       "voice_text": "Congratulations! You just earned five hundred points for completing your profile. You're crushing it already!",
       "points_awarded": 500,
       "next_step": "OF-008",
@@ -279,11 +280,11 @@
       "sender": "bot",
       "input_mode": "buttons_only",
       "audio_id": "aud_of_008",
-      "display_text": "You can check your points anytime on the Passport tab 🛂✨ Now — are you ready to start learning?",
-      "voice_text": "By the way, you can check your points anytime on the Passport tab. Now then — are you ready to start learning?",
+      "display_text": "Check out your points from the “Passport” tab|Click start learning 👇",
+      "voice_text": "Check out your points from the Passport tab. Click start learning.",
       "options": [
         {
-          "label": "🚀 Start Learning",
+          "label": "Start Learning",
           "value": "start_learning",
           "next_flow": "activity_flow",
           "next_step": "AF-001"
