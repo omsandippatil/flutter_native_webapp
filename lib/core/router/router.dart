@@ -11,9 +11,6 @@ import '../../screens/home/home_screen.dart';
 import '../../screens/class/class_screen.dart';
 import '../../screens/passport/passport_screen.dart';
 import '../../screens/settings/settings_screen.dart';
-import '../../screens/content/video/video_screen.dart';
-import '../../screens/content/submission/submission_screen.dart';
-import '../../screens/content/quiz/quiz_screen.dart';
 import '../../screens/welcome/welcome_screen.dart';
 import '../../providers/profile_provider.dart';
 
@@ -29,9 +26,6 @@ class AppRoutes {
   static const String classroom = '/classroom';
   static const String passport = '/passport';
   static const String profile = '/profile';
-  static const String video = '/video';
-  static const String submission = '/submission';
-  static const String quiz = '/quiz';
   static const String error = '/error';
 
   static Page<void> page(Widget child) => NoTransitionPage<void>(child: child);
@@ -249,18 +243,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.profile,
         pageBuilder: (context, state) => AppRoutes.page(const SettingsScreen()),
-      ),
-      GoRoute(
-        path: AppRoutes.video,
-        pageBuilder: (context, state) => AppRoutes.page(const VideoScreen()),
-      ),
-      GoRoute(
-        path: AppRoutes.submission,
-        pageBuilder: (context, state) => AppRoutes.page(const SubmissionScreen()),
-      ),
-      GoRoute(
-        path: AppRoutes.quiz,
-        pageBuilder: (context, state) => AppRoutes.page(const QuizScreen()),
       ),
       GoRoute(
         path: AppRoutes.error,

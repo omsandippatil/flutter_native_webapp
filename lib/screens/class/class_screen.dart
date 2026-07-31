@@ -19,7 +19,9 @@ import '../../providers/class_chat_provider.dart';
 import '../../providers/class_session_bootstrap_provider.dart';
 import '../../providers/learner_state_provider.dart';
 import '../../providers/reveal_asset_resolver.dart';
+import '../../widgets/app_header.dart';
 import '../../widgets/app_nav.dart';
+import 'widgets/class_loading_skeleton.dart';
 
 class ClassScreen extends ConsumerStatefulWidget {
   const ClassScreen({super.key});
@@ -44,7 +46,7 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF6F6F9),
         body: controllerAsync.when(
-          loading: () => const _LoadingBody(),
+          loading: () => const ClassLoadingSkeleton(),
           error: (error, _) {
             if (error is NoUnitAvailableException) {
               return _WeeklyCapRevealBody(
@@ -64,15 +66,6 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
         ),
       ),
     );
-  }
-}
-
-class _LoadingBody extends StatelessWidget {
-  const _LoadingBody();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: CircularProgressIndicator(color: AppTheme.buttonColor));
   }
 }
 
@@ -96,7 +89,10 @@ class _ErrorBody extends StatelessWidget {
                   ? "You're not enrolled in a course yet."
                   : 'Something went wrong loading your class.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700),
+              style: GoogleFonts.inter(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 18),
             ElevatedButton(
@@ -115,7 +111,10 @@ class _ErrorBody extends StatelessWidget {
 }
 
 class _ClassChatView extends ConsumerStatefulWidget {
-  const _ClassChatView({required this.controller, required this.onStartNextActivity});
+  const _ClassChatView({
+    required this.controller,
+    required this.onStartNextActivity,
+  });
 
   final ClassChatController controller;
   final VoidCallback onStartNextActivity;
@@ -179,13 +178,17 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
           );
         }
 
-        final showChoiceReveal = widget.controller.outcome == ClassSessionOutcome.choice;
+        final showChoiceReveal =
+            widget.controller.outcome == ClassSessionOutcome.choice;
 
         return Column(
           children: [
-            _ClassHeader(
+            AppHeader(
               title: widget.controller.unitName,
               points: widget.controller.displayedTotalPoints,
+              showBack: true,
+              showPoints: true,
+              showAskBuddy: true,
               onBack: () => context.go(AppRoutes.home),
             ),
             Expanded(
@@ -198,7 +201,8 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
                     final chatColumn = ListView.builder(
                       controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(14, 20, 14, 24),
-                      itemCount: widget.controller.messages.length +
+                      itemCount:
+                          widget.controller.messages.length +
                           (showChoiceReveal ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index < widget.controller.messages.length) {
@@ -287,7 +291,9 @@ class _ContinueBar extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
               child: const Text('Continue'),
             ),
@@ -299,7 +305,11 @@ class _ContinueBar extends StatelessWidget {
 }
 
 class _RevealImage extends StatelessWidget {
-  const _RevealImage({required this.unitIndex, required this.revealed, this.height = 150});
+  const _RevealImage({
+    required this.unitIndex,
+    required this.revealed,
+    this.height = 150,
+  });
 
   final int unitIndex;
   final bool revealed;
@@ -313,7 +323,9 @@ class _RevealImage extends StatelessWidget {
         if (!snapshot.hasData) {
           return SizedBox(
             height: height,
-            child: const Center(child: CircularProgressIndicator(color: AppTheme.buttonColor)),
+            child: const Center(
+              child: CircularProgressIndicator(color: AppTheme.buttonColor),
+            ),
           );
         }
         return ClipRRect(
@@ -329,7 +341,11 @@ class _RevealImage extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   height: height,
                   color: const Color(0xFFEFEFF4),
-                  child: const Icon(Icons.image_rounded, size: 40, color: Color(0xFF9C9DAB)),
+                  child: const Icon(
+                    Icons.image_rounded,
+                    size: 40,
+                    color: Color(0xFF9C9DAB),
+                  ),
                 ),
               ),
               AnimatedOpacity(
@@ -338,7 +354,9 @@ class _RevealImage extends StatelessWidget {
                 child: Positioned.fill(
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 6, sigmaY: 6),
-                    child: Container(color: Colors.black.withValues(alpha: 0.12)),
+                    child: Container(
+                      color: Colors.black.withValues(alpha: 0.12),
+                    ),
                   ),
                 ),
               ),
@@ -346,7 +364,10 @@ class _RevealImage extends StatelessWidget {
                 Positioned(
                   bottom: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(999),
@@ -370,7 +391,10 @@ class _RevealImage extends StatelessWidget {
 }
 
 class _NextActivityInlineCard extends ConsumerWidget {
-  const _NextActivityInlineCard({required this.controller, required this.onStartNextActivity});
+  const _NextActivityInlineCard({
+    required this.controller,
+    required this.onStartNextActivity,
+  });
 
   final ClassChatController controller;
   final VoidCallback onStartNextActivity;
@@ -386,10 +410,17 @@ class _NextActivityInlineCard extends ConsumerWidget {
             children: [
               Text(
                 'Watch another video?',
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E6E7A)),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF6E6E7A),
+                ),
               ),
               const SizedBox(width: 6),
-              const Icon(Icons.volume_up_rounded, size: 16, color: Color(0xFF9C9DAB)),
+              const Icon(
+                Icons.volume_up_rounded,
+                size: 16,
+                color: Color(0xFF9C9DAB),
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -410,7 +441,11 @@ class _NextActivityInlineCard extends ConsumerWidget {
                     width: 96,
                     height: 96,
                     color: const Color(0xFFF4F4F6),
-                    child: const Icon(Icons.image_rounded, size: 30, color: Color(0xFF9C9DAB)),
+                    child: const Icon(
+                      Icons.image_rounded,
+                      size: 30,
+                      color: Color(0xFF9C9DAB),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -420,12 +455,18 @@ class _NextActivityInlineCard extends ConsumerWidget {
                     children: [
                       Text(
                         controller.courseDisplay,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9C9DAB)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF9C9DAB),
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         controller.unitName,
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800),
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Text(
@@ -472,7 +513,9 @@ class _NextActivityInlineCard extends ConsumerWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.buttonColor,
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text("Let's go 🎉"),
                   ),
@@ -484,14 +527,18 @@ class _NextActivityInlineCard extends ConsumerWidget {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      ref.invalidate(learnerStateDataProvider(controller.learnerId));
+                      ref.invalidate(
+                        learnerStateDataProvider(controller.learnerId),
+                      );
                       context.go(AppRoutes.home);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.mutedLavender,
                       foregroundColor: AppTheme.buttonColor,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: const Text('Maybe later'),
                   ),
@@ -506,7 +553,11 @@ class _NextActivityInlineCard extends ConsumerWidget {
 }
 
 class _EarnRow extends StatelessWidget {
-  const _EarnRow({required this.icon, required this.iconColor, required this.label});
+  const _EarnRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+  });
 
   final IconData icon;
   final Color iconColor;
@@ -518,7 +569,10 @@ class _EarnRow extends StatelessWidget {
       children: [
         Icon(icon, size: 15, color: iconColor),
         const SizedBox(width: 6),
-        Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }
@@ -548,13 +602,19 @@ class _WeeklyCapRevealBody extends StatelessWidget {
                   Text(
                     'You did really well this week! 🎉',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800),
+                    style: GoogleFonts.inter(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     "You've completed your activities for this week. See you next week!",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF6E6E7A)),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: const Color(0xFF6E6E7A),
+                    ),
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
@@ -565,7 +625,9 @@ class _WeeklyCapRevealBody extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.buttonColor,
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('Back to home'),
                     ),
@@ -585,7 +647,11 @@ class _WeeklyCapRevealBody extends StatelessWidget {
                 width: 220,
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
-                  child: _RevealRail(unitIndex: unitIndex, revealed: true, studentName: null),
+                  child: _RevealRail(
+                    unitIndex: unitIndex,
+                    revealed: true,
+                    studentName: null,
+                  ),
                 ),
               ),
             ],
@@ -597,7 +663,11 @@ class _WeeklyCapRevealBody extends StatelessWidget {
 }
 
 class _RevealRail extends StatelessWidget {
-  const _RevealRail({required this.unitIndex, required this.revealed, required this.studentName});
+  const _RevealRail({
+    required this.unitIndex,
+    required this.revealed,
+    required this.studentName,
+  });
 
   final int unitIndex;
   final bool revealed;
@@ -626,8 +696,11 @@ class _RevealRail extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: 28,
                     height: 28,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.emoji_events_rounded, size: 15, color: Color(0xFFE29A22)),
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.emoji_events_rounded,
+                      size: 15,
+                      color: Color(0xFFE29A22),
+                    ),
                   ),
                 ),
               ),
@@ -649,7 +722,11 @@ class _RevealRail extends StatelessWidget {
             revealed
                 ? 'Congratulations !!🎉 You have unlocked today\'s picture'
                 : 'Keep going${studentName != null ? ', $studentName' : ''} — finish today\'s activity to unlock this picture',
-            style: GoogleFonts.inter(fontSize: 12, height: 1.4, color: const Color(0xFF4A4A55)),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              height: 1.4,
+              color: const Color(0xFF4A4A55),
+            ),
           ),
           const SizedBox(height: 12),
           _RevealImage(unitIndex: unitIndex, revealed: revealed, height: 160),
@@ -659,121 +736,12 @@ class _RevealRail extends StatelessWidget {
   }
 }
 
-class _ClassHeader extends StatelessWidget {
-  const _ClassHeader({required this.title, required this.points, required this.onBack});
-
-  final String title;
-  final int points;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 720;
-        return Container(
-          height: compact ? 72 : 80,
-          color: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 24),
-          child: Row(
-            children: [
-              InkWell(
-                onTap: onBack,
-                borderRadius: BorderRadius.circular(999),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFD9DAE4)),
-                  ),
-                  child: const Icon(Icons.arrow_back_rounded, size: 20, color: Color(0xFF4A4A55)),
-                ),
-              ),
-              SizedBox(width: compact ? 12 : 20),
-              Expanded(
-                child: Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: compact ? 17 : 20,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF1C1C21),
-                  ),
-                ),
-              ),
-              _PointPill(points: points),
-              const SizedBox(width: 10),
-              const _AskTapBuddyPill(),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _AskTapBuddyPill extends StatelessWidget {
-  const _AskTapBuddyPill();
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => TapBuddyScope.maybeOpenOf(context)?.call(),
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        height: 34,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: AppTheme.mutedLavender,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.smart_toy_rounded, size: 16, color: AppTheme.buttonColor),
-            const SizedBox(width: 6),
-            Text(
-              'Ask TAP Buddy',
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: AppTheme.buttonColor),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PointPill extends StatelessWidget {
-  const _PointPill({required this.points});
-
-  final int points;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE1E2EA)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.stars_rounded, size: 16, color: Color(0xFFE29A22)),
-          const SizedBox(width: 6),
-          Text('$points', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
-  }
-}
-
 class _ChatBubbleRow extends StatelessWidget {
-  const _ChatBubbleRow({super.key, required this.message, required this.controller});
+  const _ChatBubbleRow({
+    super.key,
+    required this.message,
+    required this.controller,
+  });
 
   final ClassChatMessage message;
   final ClassChatController controller;
@@ -805,8 +773,14 @@ class _ChatBubbleRow extends StatelessWidget {
           children: [
             Flexible(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
-                child: _BubbleContent(message: message, controller: controller, isUser: true),
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                ),
+                child: _BubbleContent(
+                  message: message,
+                  controller: controller,
+                  isUser: true,
+                ),
               ),
             ),
             const SizedBox(width: 8),
@@ -824,7 +798,11 @@ class _ChatBubbleRow extends StatelessWidget {
           const _Avatar(isUser: false),
           const SizedBox(width: 8),
           Expanded(
-            child: _BubbleContent(message: message, controller: controller, isUser: false),
+            child: _BubbleContent(
+              message: message,
+              controller: controller,
+              isUser: false,
+            ),
           ),
         ],
       ),
@@ -848,7 +826,11 @@ class _Avatar extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: const Color(0xFFE1E2EA)),
         ),
-        child: const Icon(Icons.person_rounded, size: 16, color: AppTheme.buttonColor),
+        child: const Icon(
+          Icons.person_rounded,
+          size: 16,
+          color: AppTheme.buttonColor,
+        ),
       );
     }
 
@@ -861,8 +843,11 @@ class _Avatar extends StatelessWidget {
           fit: BoxFit.cover,
           width: 30,
           height: 30,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.smart_toy_rounded, size: 16, color: Colors.white),
+          errorBuilder: (context, error, stackTrace) => const Icon(
+            Icons.smart_toy_rounded,
+            size: 16,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -876,14 +861,17 @@ class _TypingIndicator extends StatefulWidget {
   State<_TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-class _TypingIndicatorState extends State<_TypingIndicator> with SingleTickerProviderStateMixin {
+class _TypingIndicatorState extends State<_TypingIndicator>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
   }
 
   @override
@@ -910,10 +898,14 @@ class _TypingIndicatorState extends State<_TypingIndicator> with SingleTickerPro
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(3, (i) {
                 final t = (_controller.value + (i * 0.2)) % 1.0;
-                final scale = 0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
+                final scale =
+                    0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
                 return Transform.scale(
                   scale: scale,
-                  child: const CircleAvatar(radius: 3, backgroundColor: Color(0xFF9C9DAB)),
+                  child: const CircleAvatar(
+                    radius: 3,
+                    backgroundColor: Color(0xFF9C9DAB),
+                  ),
                 );
               }),
             );
@@ -925,7 +917,11 @@ class _TypingIndicatorState extends State<_TypingIndicator> with SingleTickerPro
 }
 
 class _BubbleContent extends StatelessWidget {
-  const _BubbleContent({required this.message, required this.controller, required this.isUser});
+  const _BubbleContent({
+    required this.message,
+    required this.controller,
+    required this.isUser,
+  });
 
   final ClassChatMessage message;
   final ClassChatController controller;
@@ -940,13 +936,25 @@ class _BubbleContent extends StatelessWidget {
       case ClassChatContentType.checkpoint:
         return _CheckpointCard(message: message, controller: controller);
       case ClassChatContentType.video:
-        return _VideoCard(key: ValueKey('video_${message.id}'), message: message, controller: controller);
+        return _VideoCard(
+          key: ValueKey('video_${message.id}'),
+          message: message,
+          controller: controller,
+        );
       case ClassChatContentType.submission:
-        return _SubmissionCard(key: ValueKey('submission_${message.id}'), message: message, controller: controller);
+        return _SubmissionCard(
+          key: ValueKey('submission_${message.id}'),
+          message: message,
+          controller: controller,
+        );
       case ClassChatContentType.submissionAnswerEcho:
         return _TextBubble(text: message.text ?? '', isUser: true);
       case ClassChatContentType.submissionReviewing:
-        return const _TextBubble(text: 'Reviewing your submission...', isUser: false, isMuted: true);
+        return const _TextBubble(
+          text: 'Reviewing your submission...',
+          isUser: false,
+          isMuted: true,
+        );
       case ClassChatContentType.submissionReview:
         return _SubmissionReviewCard(message: message);
       case ClassChatContentType.quizQuestion:
@@ -1009,7 +1017,11 @@ class _CheckpointCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.volume_up_rounded, size: 15, color: AppTheme.buttonColor),
+                const Icon(
+                  Icons.volume_up_rounded,
+                  size: 15,
+                  color: AppTheme.buttonColor,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Hear again',
@@ -1029,7 +1041,8 @@ class _CheckpointCard extends StatelessWidget {
               child: Image.asset(
                 image,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                errorBuilder: (context, error, stackTrace) =>
+                    const SizedBox.shrink(),
               ),
             ),
           ],
@@ -1052,16 +1065,23 @@ class _CheckpointCard extends StatelessWidget {
             width: 280,
             height: 48,
             child: ElevatedButton(
-              onPressed: action.isEmpty ? null : () => controller.continueCheckpoint(action),
+              onPressed: action.isEmpty
+                  ? null
+                  : () => controller.continueCheckpoint(action),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
               child: Text(
                 buttonLabel,
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -1149,7 +1169,11 @@ class _TapBuddySpeakingOrb extends StatelessWidget {
 }
 
 class _TextBubble extends StatelessWidget {
-  const _TextBubble({required this.text, required this.isUser, this.isMuted = false});
+  const _TextBubble({
+    required this.text,
+    required this.isUser,
+    this.isMuted = false,
+  });
 
   final String text;
   final bool isUser;
@@ -1175,7 +1199,11 @@ class _TextBubble extends StatelessWidget {
         ),
         child: Text(
           text,
-          style: GoogleFonts.inter(fontSize: 15, height: 1.4, color: Colors.white),
+          style: GoogleFonts.inter(
+            fontSize: 15,
+            height: 1.4,
+            color: Colors.white,
+          ),
         ),
       );
     }
@@ -1208,7 +1236,11 @@ class _TextBubble extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Icon(Icons.volume_up_rounded, size: 18, color: Color(0xFF9C9DAB)),
+          const Icon(
+            Icons.volume_up_rounded,
+            size: 18,
+            color: Color(0xFF9C9DAB),
+          ),
         ],
       ),
     );
@@ -1230,7 +1262,11 @@ class _CardShell extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE1E2EA)),
         boxShadow: const [
-          BoxShadow(color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, 4)),
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
         ],
       ),
       child: child,
@@ -1239,7 +1275,11 @@ class _CardShell extends StatelessWidget {
 }
 
 class _VideoCard extends StatefulWidget {
-  const _VideoCard({super.key, required this.message, required this.controller});
+  const _VideoCard({
+    super.key,
+    required this.message,
+    required this.controller,
+  });
 
   final ClassChatMessage message;
   final ClassChatController controller;
@@ -1317,25 +1357,35 @@ class _VideoCardState extends State<_VideoCard> {
                     ),
                   )
                 : kIsWeb
-                    ? _WebVideoThumb(youtubeId: youtubeId, onTap: () => _openOnWeb(youtubeId))
-                    : AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: _ytController == null
-                            ? Container(color: Colors.black)
-                            : YoutubePlayer(
-                                key: ValueKey('yt_$youtubeId'),
-                                controller: _ytController!,
-                                showVideoProgressIndicator: true,
-                                progressIndicatorColor: AppTheme.buttonColor,
-                              ),
-                      ),
+                ? _WebVideoThumb(
+                    youtubeId: youtubeId,
+                    onTap: () => _openOnWeb(youtubeId),
+                  )
+                : AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: _ytController == null
+                        ? Container(color: Colors.black)
+                        : YoutubePlayer(
+                            key: ValueKey('yt_$youtubeId'),
+                            controller: _ytController!,
+                            showVideoProgressIndicator: true,
+                            progressIndicatorColor: AppTheme.buttonColor,
+                          ),
+                  ),
           ),
           const SizedBox(height: 12),
-          Text(title, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800)),
+          Text(
+            title,
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 6),
           Text(
             description,
-            style: GoogleFonts.inter(fontSize: 13, height: 1.4, color: const Color(0xFF6E6E7A)),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              height: 1.4,
+              color: const Color(0xFF6E6E7A),
+            ),
           ),
           const SizedBox(height: 14),
           SizedBox(
@@ -1351,9 +1401,13 @@ class _VideoCardState extends State<_VideoCard> {
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: const Color(0xFFD9DAE4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: Text(watched ? 'Watched' : 'I watched it • +$points points'),
+              child: Text(
+                watched ? 'Watched' : 'I watched it • +$points points',
+              ),
             ),
           ),
         ],
@@ -1385,7 +1439,11 @@ class _WebVideoThumb extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: Colors.black,
                   child: const Center(
-                    child: Icon(Icons.videocam_off_rounded, size: 40, color: Colors.white54),
+                    child: Icon(
+                      Icons.videocam_off_rounded,
+                      size: 40,
+                      color: Colors.white54,
+                    ),
                   ),
                 ),
               ),
@@ -1398,21 +1456,32 @@ class _WebVideoThumb extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.95),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.play_arrow_rounded, size: 34, color: Color(0xFF1C1C21)),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    size: 34,
+                    color: Color(0xFF1C1C21),
+                  ),
                 ),
               ),
               Positioned(
                 left: 12,
                 bottom: 10,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     'Watch on YouTube',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -1425,7 +1494,11 @@ class _WebVideoThumb extends StatelessWidget {
 }
 
 class _SubmissionCard extends StatefulWidget {
-  const _SubmissionCard({super.key, required this.message, required this.controller});
+  const _SubmissionCard({
+    super.key,
+    required this.message,
+    required this.controller,
+  });
 
   final ClassChatMessage message;
   final ClassChatController controller;
@@ -1476,7 +1549,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
       if (mounted) {
         setState(() => _pickError = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't access that. Please try again.")),
+          const SnackBar(
+            content: Text("Couldn't access that. Please try again."),
+          ),
         );
       }
     } finally {
@@ -1506,7 +1581,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
       if (mounted) {
         setState(() => _pickError = true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Couldn't access that. Please try again.")),
+          const SnackBar(
+            content: Text("Couldn't access that. Please try again."),
+          ),
         );
       }
     } finally {
@@ -1533,18 +1610,21 @@ class _SubmissionCardState extends State<_SubmissionCard> {
             ListTile(
               leading: const Icon(Icons.photo_library_outlined),
               title: const Text('Choose photo from gallery'),
-              onTap: () => Navigator.pop(context, _MediaPickChoice.galleryImage),
+              onTap: () =>
+                  Navigator.pop(context, _MediaPickChoice.galleryImage),
             ),
             if (allowVideo) ...[
               ListTile(
                 leading: const Icon(Icons.videocam_outlined),
                 title: const Text('Record a video'),
-                onTap: () => Navigator.pop(context, _MediaPickChoice.cameraVideo),
+                onTap: () =>
+                    Navigator.pop(context, _MediaPickChoice.cameraVideo),
               ),
               ListTile(
                 leading: const Icon(Icons.video_library_outlined),
                 title: const Text('Choose video from gallery'),
-                onTap: () => Navigator.pop(context, _MediaPickChoice.galleryVideo),
+                onTap: () =>
+                    Navigator.pop(context, _MediaPickChoice.galleryVideo),
               ),
             ],
             const SizedBox(height: 8),
@@ -1573,7 +1653,8 @@ class _SubmissionCardState extends State<_SubmissionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final assignmentName = widget.message.data['assignmentName'] as String? ?? '';
+    final assignmentName =
+        widget.message.data['assignmentName'] as String? ?? '';
     final unguidedText = widget.message.data['unguidedText'] as String? ?? '';
     final subTypes = widget.message.data['subTypes'] as String? ?? '';
     final kind = SubmissionKindResolver.fromSubTypes(subTypes);
@@ -1591,11 +1672,17 @@ class _SubmissionCardState extends State<_SubmissionCard> {
               Expanded(
                 child: Text(
                   assignmentName,
-                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w800),
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF4F4F6),
                   borderRadius: BorderRadius.circular(999),
@@ -1604,7 +1691,11 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                   stepNumber != null && stepTotal != null
                       ? 'Step $stepNumber/$stepTotal'
                       : "Today's activity",
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6E6E7A)),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF6E6E7A),
+                  ),
                 ),
               ),
             ],
@@ -1612,7 +1703,11 @@ class _SubmissionCardState extends State<_SubmissionCard> {
           const SizedBox(height: 12),
           Text(
             unguidedText,
-            style: GoogleFonts.inter(fontSize: 14, height: 1.4, color: const Color(0xFF6E6E7A)),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 1.4,
+              color: const Color(0xFF6E6E7A),
+            ),
           ),
           const SizedBox(height: 16),
           if (_pickError)
@@ -1628,12 +1723,19 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.error_outline_rounded, size: 18, color: AppTheme.dangerText),
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 18,
+                      color: AppTheme.dangerText,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         "We couldn't load that photo. Please try picking it again.",
-                        style: GoogleFonts.inter(fontSize: 13, color: AppTheme.dangerText),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: AppTheme.dangerText,
+                        ),
                       ),
                     ),
                   ],
@@ -1658,12 +1760,16 @@ class _SubmissionCardState extends State<_SubmissionCard> {
               children: ['👍', '👎', '😊', '😕', '💪', '🤔'].map((emoji) {
                 final selected = _selectedEmoji == emoji;
                 return InkWell(
-                  onTap: canInteract ? () => setState(() => _selectedEmoji = emoji) : null,
+                  onTap: canInteract
+                      ? () => setState(() => _selectedEmoji = emoji)
+                      : null,
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: selected ? const Color(0xFFE5E4FA) : const Color(0xFFF4F4F6),
+                      color: selected
+                          ? const Color(0xFFE5E4FA)
+                          : const Color(0xFFF4F4F6),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(emoji, style: const TextStyle(fontSize: 24)),
@@ -1743,7 +1849,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                   ? () {
                       if (_textController.text.trim().isEmpty) return;
                       widget.controller.submitAssignmentAnswer(
-                        SubmissionAnswer.audioTranscript(_textController.text.trim()),
+                        SubmissionAnswer.audioTranscript(
+                          _textController.text.trim(),
+                        ),
                       );
                       _markSubmitted();
                     }
@@ -1786,7 +1894,10 @@ class _SubmissionCardState extends State<_SubmissionCard> {
           onSubmit: () {
             if (_pickedMedia == null) return;
             widget.controller.submitAssignmentAnswer(
-              SubmissionAnswer.imageOrVideo(_pickedMedia!.path, isVideo: _isVideoPick),
+              SubmissionAnswer.imageOrVideo(
+                _pickedMedia!.path,
+                isVideo: _isVideoPick,
+              ),
             );
             _markSubmitted();
           },
@@ -1814,34 +1925,43 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                     height: 160,
                     color: const Color(0xFF1C1C21),
                     child: const Center(
-                      child: Icon(Icons.play_circle_fill_rounded, size: 48, color: Colors.white),
+                      child: Icon(
+                        Icons.play_circle_fill_rounded,
+                        size: 48,
+                        color: Colors.white,
+                      ),
                     ),
                   )
                 : (_pickedMediaBytes != null
-                    ? Image.memory(
-                        _pickedMediaBytes!,
-                        width: double.infinity,
-                        height: 160,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
+                      ? Image.memory(
+                          _pickedMediaBytes!,
+                          width: double.infinity,
+                          height: 160,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                width: double.infinity,
+                                height: 160,
+                                color: const Color(0xFFEFEFF4),
+                                child: const Icon(
+                                  Icons.broken_image_rounded,
+                                  size: 32,
+                                  color: Color(0xFF9C9DAB),
+                                ),
+                              ),
+                        )
+                      : Container(
                           width: double.infinity,
                           height: 160,
                           color: const Color(0xFFEFEFF4),
-                          child: const Icon(Icons.broken_image_rounded, size: 32, color: Color(0xFF9C9DAB)),
-                        ),
-                      )
-                    : Container(
-                        width: double.infinity,
-                        height: 160,
-                        color: const Color(0xFFEFEFF4),
-                        child: const Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
                           ),
-                        ),
-                      )),
+                        )),
           )
         else
           Container(
@@ -1869,12 +1989,20 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(hasMedia
-                  ? Icons.refresh_rounded
-                  : (forceVideo ? Icons.videocam_outlined : Icons.photo_camera_outlined)),
-          label: Text(hasMedia
-              ? 'Choose different file'
-              : (forceVideo ? 'Record or upload a video' : 'Take or upload a photo')),
+              : Icon(
+                  hasMedia
+                      ? Icons.refresh_rounded
+                      : (forceVideo
+                            ? Icons.videocam_outlined
+                            : Icons.photo_camera_outlined),
+                ),
+          label: Text(
+            hasMedia
+                ? 'Choose different file'
+                : (forceVideo
+                      ? 'Record or upload a video'
+                      : 'Take or upload a photo'),
+          ),
           style: OutlinedButton.styleFrom(
             foregroundColor: AppTheme.buttonColor,
             side: const BorderSide(color: AppTheme.buttonColor),
@@ -1899,7 +2027,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: const Color(0xFFD9DAE4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(_submitted ? 'Sent' : 'Submit'),
             ),
@@ -1913,7 +2043,9 @@ class _SubmissionCardState extends State<_SubmissionCard> {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFF6E6E7A),
               side: const BorderSide(color: Color(0xFFDCDDE7)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14),
             ),
             child: const Text('Submission Help'),
@@ -1956,7 +2088,11 @@ class _SubmissionReviewCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (failed) ...[
-                const Icon(Icons.error_outline_rounded, size: 18, color: AppTheme.dangerText),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 18,
+                  color: AppTheme.dangerText,
+                ),
                 const SizedBox(width: 8),
               ],
               Expanded(
@@ -1966,15 +2102,22 @@ class _SubmissionReviewCard extends StatelessWidget {
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     height: 1.4,
-                    color: failed ? AppTheme.dangerText : const Color(0xFF1C1C21),
+                    color: failed
+                        ? AppTheme.dangerText
+                        : const Color(0xFF1C1C21),
                   ),
                 ),
               ),
               if (score != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
-                    color: failed ? const Color(0xFFF9D9D3) : const Color(0xFFE7F7EE),
+                    color: failed
+                        ? const Color(0xFFF9D9D3)
+                        : const Color(0xFFE7F7EE),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -1982,7 +2125,9 @@ class _SubmissionReviewCard extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: failed ? AppTheme.dangerText : const Color(0xFF24A866),
+                      color: failed
+                          ? AppTheme.dangerText
+                          : const Color(0xFF24A866),
                     ),
                   ),
                 ),
@@ -2017,7 +2162,11 @@ class _SubmissionReviewCard extends StatelessWidget {
 }
 
 class _QuizQuestionCard extends StatefulWidget {
-  const _QuizQuestionCard({super.key, required this.message, required this.controller});
+  const _QuizQuestionCard({
+    super.key,
+    required this.message,
+    required this.controller,
+  });
 
   final ClassChatMessage message;
   final ClassChatController controller;
@@ -2035,7 +2184,9 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
     final questionIndex = widget.message.data['questionIndex'] as int? ?? 0;
     final totalQuestions = widget.message.data['totalQuestions'] as int? ?? 0;
     final question = widget.message.data['question'] as String? ?? '';
-    final options = (widget.message.data['options'] as Map?)?.cast<String, String>() ?? const {};
+    final options =
+        (widget.message.data['options'] as Map?)?.cast<String, String>() ??
+        const {};
     final answerKey = widget.message.data['answerKey'] as String?;
     final optionEntries = options.entries.toList();
 
@@ -2052,17 +2203,26 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
         children: [
           Text(
             'Q${questionIndex + 1}. $question',
-            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, height: 1.3),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Question ${questionIndex + 1} of $totalQuestions',
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF9C9DAB)),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: const Color(0xFF9C9DAB),
+            ),
           ),
           const SizedBox(height: 14),
           ...optionEntries.map((option) {
             final selected = _selectedKey == option.key;
-            final isCorrectOption = answerKey != null && option.key == answerKey;
+            final isCorrectOption =
+                answerKey != null && option.key == answerKey;
 
             Color fillColor = Colors.white;
             Color borderColor = const Color(0xFFE1E2EA);
@@ -2091,13 +2251,18 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
                 borderRadius: BorderRadius.circular(999),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 13,
+                    horizontal: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: fillColor,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
                       color: borderColor,
-                      width: selected || (_confirmed && isCorrectOption) ? 1.8 : 1,
+                      width: selected || (_confirmed && isCorrectOption)
+                          ? 1.8
+                          : 1,
                     ),
                   ),
                   child: Row(
@@ -2113,9 +2278,17 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
                         ),
                       ),
                       if (_confirmed && isCorrectOption)
-                        const Icon(Icons.check_circle_rounded, size: 18, color: Colors.white),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
                       if (_confirmed && selected && !isCorrectOption)
-                        Icon(Icons.cancel_rounded, size: 18, color: AppTheme.dangerText),
+                        Icon(
+                          Icons.cancel_rounded,
+                          size: 18,
+                          color: AppTheme.dangerText,
+                        ),
                     ],
                   ),
                 ),
@@ -2127,7 +2300,10 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: (widget.controller.isAwaitingInput && _selectedKey != null && !_confirmed)
+              onPressed:
+                  (widget.controller.isAwaitingInput &&
+                      _selectedKey != null &&
+                      !_confirmed)
                   ? () {
                       setState(() => _confirmed = true);
                       widget.controller.submitQuizAnswer(_selectedKey!);
@@ -2137,7 +2313,9 @@ class _QuizQuestionCardState extends State<_QuizQuestionCard> {
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
                 disabledBackgroundColor: const Color(0xFFE5E4FA),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('Confirm'),
             ),
@@ -2174,14 +2352,21 @@ class _QuizFeedbackCard extends StatelessWidget {
               Icon(
                 isCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
                 size: 18,
-                color: isCorrect ? const Color(0xFF24A866) : const Color(0xFFE29A22),
+                color: isCorrect
+                    ? const Color(0xFF24A866)
+                    : const Color(0xFFE29A22),
               ),
               const SizedBox(width: 6),
               Text(
                 isCorrect
-                    ? (earnedPoints != null ? 'Correct! +$earnedPoints points' : 'Correct!')
+                    ? (earnedPoints != null
+                          ? 'Correct! +$earnedPoints points'
+                          : 'Correct!')
                     : 'Not quite',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w800),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -2189,14 +2374,22 @@ class _QuizFeedbackCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Correct answer: $correctOptionText',
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF4A4A55)),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF4A4A55),
+              ),
             ),
           ],
           if (explanation != null && explanation.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               explanation,
-              style: GoogleFonts.inter(fontSize: 13, height: 1.4, color: const Color(0xFF4A4A55)),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                height: 1.4,
+                color: const Color(0xFF4A4A55),
+              ),
             ),
           ],
         ],
@@ -2218,12 +2411,20 @@ class _QuizSummaryCard extends StatelessWidget {
     return _CardShell(
       child: Row(
         children: [
-          const Icon(Icons.emoji_events_rounded, color: Color(0xFFF4AC38), size: 28),
+          const Icon(
+            Icons.emoji_events_rounded,
+            color: Color(0xFFF4AC38),
+            size: 28,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               '${message.text ?? 'Quiz done!'}\nYou got $correct out of $total correct.',
-              style: GoogleFonts.inter(fontSize: 14, height: 1.4, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -2246,7 +2447,11 @@ class _ErrorRetryCard extends StatelessWidget {
         children: [
           Text(
             message.text ?? 'Something went wrong.',
-            style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, height: 1.4),
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -2257,7 +2462,9 @@ class _ErrorRetryCard extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.buttonColor,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('Retry'),
             ),

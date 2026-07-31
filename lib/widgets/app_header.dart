@@ -14,6 +14,7 @@ class AppHeader extends StatelessWidget {
   final bool showAskBuddy;
   final bool showStudentSummary;
   final bool showBack;
+  final bool showPoints;
   final VoidCallback? onBack;
 
   const AppHeader({
@@ -27,6 +28,7 @@ class AppHeader extends StatelessWidget {
     this.showAskBuddy = false,
     this.showStudentSummary = false,
     this.showBack = false,
+    this.showPoints = false,
     this.onBack,
   });
 
@@ -63,6 +65,24 @@ class AppHeader extends StatelessWidget {
                 ),
               ),
             ),
+            if (showPoints) ...[
+              const SizedBox(width: 12),
+              _MetricPill(
+                icon: Icons.stars_rounded,
+                iconColor: const Color(0xFFE29A22),
+                label: '$points',
+              ),
+            ],
+            if (showAskBuddy) ...[
+              const SizedBox(width: 10),
+              _AskBuddyButton(
+                onPressed:
+                    onAskBuddy ??
+                    () {
+                      TapBuddyScope.maybeOpenOf(context)?.call();
+                    },
+              ),
+            ],
           ],
         ),
       );
