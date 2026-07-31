@@ -38,10 +38,7 @@ class HomeScreen extends ConsumerWidget {
                     size: 42,
                   ),
                   const SizedBox(height: 12),
-                  Text(
-                    _errorMessage(err),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text(_errorMessage(err), textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ref.invalidate(learningDashboardProvider),
@@ -73,7 +70,9 @@ class _HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = dashboard.progress;
-    final stage = dashboard.unit == null ? LearningStage.completed : progress.currentStage;
+    final stage = dashboard.unit == null
+        ? LearningStage.completed
+        : progress.currentStage;
     final unit = dashboard.unit;
 
     return LayoutBuilder(
@@ -90,6 +89,7 @@ class _HomeDashboard extends StatelessWidget {
           child: Center(
             child: Container(
               width: double.infinity,
+              height: double.infinity,
               constraints: const BoxConstraints(maxWidth: 1060),
               color: Colors.white,
               child: Column(
@@ -107,7 +107,7 @@ class _HomeDashboard extends StatelessWidget {
                       physics: const BouncingScrollPhysics(),
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
-                        isWide ? 54 : 28,
+                        isWide ? 56 : 38,
                         horizontalPadding,
                         34,
                       ),
@@ -116,7 +116,8 @@ class _HomeDashboard extends StatelessWidget {
                           : _StageContent(
                               stage: stage,
                               unit: unit,
-                              hasReachedWeeklyCap: dashboard.hasReachedWeeklyCap,
+                              hasReachedWeeklyCap:
+                                  dashboard.hasReachedWeeklyCap,
                               isWide: isWide,
                             ),
                     ),
@@ -181,7 +182,12 @@ class _StageContent extends StatelessWidget {
       unit: unit!,
       hasReachedWeeklyCap: hasReachedWeeklyCap,
     );
-    final artHeight = stage == LearningStage.startActivity ? 350.0 : 310.0;
+    final artHeight = switch (stage) {
+      LearningStage.startActivity => 440.0,
+      LearningStage.sendProject => 350.0,
+      LearningStage.quizPending => 370.0,
+      LearningStage.completed => 300.0,
+    };
 
     if (!isWide) {
       return Column(
@@ -196,26 +202,39 @@ class _StageContent extends StatelessWidget {
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Flexible(
-          flex: 11,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 450),
-            child: card,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final groupWidth = (constraints.maxWidth * 0.86).clamp(760.0, 920.0);
+        final gap = (groupWidth * 0.05).clamp(28.0, 38.0);
+
+        return Center(
+          child: SizedBox(
+            width: groupWidth,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: card,
+                    ),
+                  ),
+                ),
+                SizedBox(width: gap),
+                SizedBox(
+                  width: groupWidth * 0.3,
+                  child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: HomeBuddyArt(stage: stage, maxHeight: artHeight),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(width: 42),
-        Flexible(
-          flex: 8,
-          child: Align(
-            alignment: Alignment.topCenter,
-            child: HomeBuddyArt(stage: stage, maxHeight: artHeight),
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -293,7 +312,9 @@ class _ActiveCard extends StatelessWidget {
         courseDisplay: unit.courseDisplay,
         unitName: unit.unitName,
         points: unit.videoPoints,
-        onStart: hasReachedWeeklyCap ? null : () => context.go(AppRoutes.classroom),
+        onStart: hasReachedWeeklyCap
+            ? null
+            : () => context.go(AppRoutes.classroom),
       ),
       LearningStage.sendProject => SendProjectCard(
         courseDisplay: unit.courseDisplay,

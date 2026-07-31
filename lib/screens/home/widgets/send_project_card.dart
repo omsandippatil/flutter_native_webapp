@@ -21,42 +21,72 @@ class SendProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardDeckWrapper(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 34, 22, 26),
+      child: SizedBox(
+        height: 340,
         child: Column(
           children: [
-            _CardBody(
-              courseDisplay: courseDisplay,
-              unitName: unitName,
-              points: points,
-              badge: _TaskBadge(
-                icon: Icons.info_outline_rounded,
-                text: 'To do: Send project',
-                background: const Color(0xFFFFF2D5),
-                color: const Color(0xFF9E6C00),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 48, 22, 0),
+              child: _CardBody(
+                courseDisplay: courseDisplay,
+                unitName: unitName,
+                points: points,
+                badge: _TaskBadge(
+                  icon: Icons.info_outline_rounded,
+                  text: 'To do: Send project',
+                  background: const Color(0xFFFFF2D5),
+                  color: const Color(0xFF9E6C00),
+                ),
               ),
             ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: onSend,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B5BD6),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: onSend,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5B5BD6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    'Send my project',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0,
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Send my project',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                  ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 26),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(text: 'Send in '),
+                    TextSpan(
+                      text: '2days 15hrs',
+                      style: GoogleFonts.inter(color: const Color(0xFF28B36A)),
+                    ),
+                    const TextSpan(text: ' and earn '),
+                    TextSpan(
+                      text: 'extra 2💎',
+                      style: GoogleFonts.inter(color: const Color(0xFF5B5BD6)),
+                    ),
+                  ],
+                ),
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF1C1C21),
                 ),
               ),
             ),

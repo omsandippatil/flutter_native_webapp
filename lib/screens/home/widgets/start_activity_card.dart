@@ -20,125 +20,172 @@ class StartActivityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardDeckWrapper(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 14),
-            child: Container(
-              height: 136,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFAFAFC),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFE1E2EA), width: 8),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.image_outlined,
-                  color: Color(0xFFB9BBC8),
-                  size: 30,
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardHeight = (constraints.maxWidth * 0.98)
+              .clamp(440.0, 510.0)
+              .toDouble();
+          final mediaHeight = (constraints.maxWidth * 0.36)
+              .clamp(150.0, 182.0)
+              .toDouble();
+          final buttonHeight = (constraints.maxWidth * 0.12)
+              .clamp(52.0, 58.0)
+              .toDouble();
+          final horizontalPadding = (constraints.maxWidth * 0.05)
+              .clamp(18.0, 22.0)
+              .toDouble();
+          final topPadding = (constraints.maxWidth * 0.07)
+              .clamp(28.0, 34.0)
+              .toDouble();
+          final bottomPadding = (constraints.maxWidth * 0.07)
+              .clamp(28.0, 34.0)
+              .toDouble();
+
+          return SizedBox(
+            height: cardHeight,
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    topPadding,
+                    horizontalPadding,
+                    18,
+                  ),
+                  child: Container(
+                    height: mediaHeight,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFAFAFC),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFE8E8EC),
+                        width: 8,
+                      ),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.image_outlined,
+                        color: Color(0xFFB9BBC8),
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    12,
+                  ),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Core $courseDisplay 1',
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF747583),
-                          letterSpacing: 0,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Core $courseDisplay 1',
+                              style: GoogleFonts.inter(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFF747583),
+                                letterSpacing: 0,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              unitName,
+                              style: GoogleFonts.inter(
+                                fontSize: 27,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF1C1C21),
+                                height: 1.02,
+                                letterSpacing: 0,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        unitName,
-                        style: GoogleFonts.inter(
-                          fontSize: 27,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF1C1C21),
-                          height: 1.02,
-                          letterSpacing: 0,
+                      const SizedBox(width: 16),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 112),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "You'll earn",
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF8E8E9F),
+                                letterSpacing: 0,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            RewardItem(
+                              color: const Color(0xFFF5B041),
+                              icon: Icons.star_rounded,
+                              text: '$points Points',
+                            ),
+                            const SizedBox(height: 8),
+                            RewardItem(
+                              color: const Color(0xFF2ECC71),
+                              icon: Icons.local_fire_department,
+                              text: '1 streak',
+                            ),
+                            const SizedBox(height: 8),
+                            RewardItem(
+                              color: const Color(0xFF5B5BD6),
+                              icon: Icons.diamond_rounded,
+                              text: '1 skill gem',
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 112),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "You'll earn",
+                const Spacer(),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    0,
+                    horizontalPadding,
+                    bottomPadding,
+                  ),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: buttonHeight,
+                    child: ElevatedButton(
+                      onPressed: onStart,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5B5BD6),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        onStart == null
+                            ? 'Weekly limit reached'
+                            : 'Start Activity',
                         style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF8E8E9F),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                           letterSpacing: 0,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      RewardItem(
-                        color: const Color(0xFFF5B041),
-                        icon: Icons.star_rounded,
-                        text: '$points Points',
-                      ),
-                      const SizedBox(height: 8),
-                      RewardItem(
-                        color: const Color(0xFF2ECC71),
-                        icon: Icons.local_fire_department,
-                        text: '1 streak',
-                      ),
-                      const SizedBox(height: 8),
-                      RewardItem(
-                        color: const Color(0xFF5B5BD6),
-                        icon: Icons.diamond_rounded,
-                        text: '1 skill gem',
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: onStart,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5B5BD6),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  onStart == null ? 'Weekly limit reached' : 'Start Activity',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
