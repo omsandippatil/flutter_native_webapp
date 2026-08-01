@@ -13,6 +13,7 @@ enum ClassChatContentType {
   submissionAnswerEcho,
   submissionReviewing,
   submissionReview,
+  submissionReward,
   quizQuestion,
   quizAnswerEcho,
   quizFeedback,
@@ -47,14 +48,13 @@ class ClassChatMessage {
     Map<String, dynamic>? data,
     bool? isPending,
     String? text,
-  }) =>
-      ClassChatMessage(
-        id: id,
-        stepId: stepId,
-        sender: sender,
-        contentType: contentType,
-        text: text ?? this.text,
-        data: data ?? this.data,
-        isPending: isPending ?? this.isPending,
-      );
+  }) => ClassChatMessage(
+    id: id,
+    stepId: stepId,
+    sender: sender,
+    contentType: contentType,
+    text: text ?? this.text,
+    data: data ?? this.data,
+    isPending: isPending ?? this.isPending,
+  );
 }

@@ -103,19 +103,8 @@
               "unguided_text": "Click any picture around you and share it!",
               "valid_criteria": "Any Flower",
               "invalid_criteria": "Blur image / blank / no photo\n\nAnything other than a Flower"
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Type or send a voice note & explain your Business Idea Card and how Mudra loan will help your business"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Click a clear photo of your Business Idea Card and upload it"
             }
+            
           ]
         }
       ]

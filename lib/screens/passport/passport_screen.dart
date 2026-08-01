@@ -85,17 +85,23 @@ class _PassportDashboard extends StatelessWidget {
                             constraints: BoxConstraints(
                               minHeight: math.max(
                                 0,
-                                bodyConstraints.maxHeight - topPadding - bottomPadding,
+                                bodyConstraints.maxHeight -
+                                    topPadding -
+                                    bottomPadding,
                               ),
                             ),
                             child: Align(
                               alignment: Alignment.topCenter,
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 840),
+                                constraints: const BoxConstraints(
+                                  maxWidth: 840,
+                                ),
                                 child: isWide
                                     ? Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         children: [
                                           Expanded(
                                             child: _ProgressColumn(
@@ -112,7 +118,8 @@ class _PassportDashboard extends StatelessWidget {
                                       )
                                     : Column(
                                         mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
                                           _ProgressColumn(
                                             points: points,
@@ -227,10 +234,11 @@ class _ProgressColumn extends StatelessWidget {
             }
 
             return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 for (final card in cards) ...[
                   SizedBox(width: 150, child: card),
+                  if (card != cards.last) const SizedBox(width: 10),
                 ],
               ],
             );
@@ -295,8 +303,9 @@ class _RankProgressCard extends StatelessWidget {
                     value: target == 0 ? 0 : clamped / target,
                     minHeight: 4,
                     backgroundColor: AppTheme.chatBubble,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppTheme.buttonColor),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppTheme.buttonColor,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -379,7 +388,7 @@ class _AchievementCardState extends State<_AchievementCard> {
         onTap: () => setState(() => _hovered = !_hovered),
         child: SizedBox(
           width: double.infinity,
-          height: 132,
+          height: 140,
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             transitionBuilder: (child, animation) {
@@ -441,7 +450,7 @@ class _AchievementFront extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 132,
+      height: 140,
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -509,7 +518,7 @@ class _AchievementBack extends StatelessWidget {
           children: [
             Text(
               title,
-              maxLines: compact ? 2 : 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(
@@ -522,7 +531,7 @@ class _AchievementBack extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               description,
-              maxLines: compact ? 3 : 3,
+              maxLines: compact ? 4 : 5,
               overflow: TextOverflow.ellipsis,
               textAlign: compact ? TextAlign.center : TextAlign.left,
               style: GoogleFonts.inter(

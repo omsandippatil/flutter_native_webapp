@@ -21,77 +21,89 @@ class SendProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CardDeckWrapper(
-      child: SizedBox(
-        height: 340,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 48, 22, 0),
-              child: _CardBody(
-                courseDisplay: courseDisplay,
-                unitName: unitName,
-                points: points,
-                badge: _TaskBadge(
-                  icon: Icons.info_outline_rounded,
-                  text: 'To do: Send project',
-                  background: const Color(0xFFFFF2D5),
-                  color: const Color(0xFF9E6C00),
-                ),
-              ),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: onSend,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5B5BD6),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final cardHeight = (constraints.maxWidth * 0.98)
+              .clamp(440.0, 510.0)
+              .toDouble();
+
+          return SizedBox(
+            height: cardHeight,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 48, 22, 0),
+                  child: _CardBody(
+                    courseDisplay: courseDisplay,
+                    unitName: unitName,
+                    points: points,
+                    badge: _TaskBadge(
+                      icon: Icons.info_outline_rounded,
+                      text: 'To do: Send project',
+                      background: const Color(0xFFFFF2D5),
+                      color: const Color(0xFF9E6C00),
                     ),
                   ),
-                  child: Text(
-                    'Send my project',
+                ),
+                const Spacer(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 24),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: onSend,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5B5BD6),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        'Send my project',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 26),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: 'Send in '),
+                        TextSpan(
+                          text: '2days 15hrs',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF28B36A),
+                          ),
+                        ),
+                        const TextSpan(text: ' and earn '),
+                        TextSpan(
+                          text: 'extra 2💎',
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFF5B5BD6),
+                          ),
+                        ),
+                      ],
+                    ),
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xFF1C1C21),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 26),
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    const TextSpan(text: 'Send in '),
-                    TextSpan(
-                      text: '2days 15hrs',
-                      style: GoogleFonts.inter(color: const Color(0xFF28B36A)),
-                    ),
-                    const TextSpan(text: ' and earn '),
-                    TextSpan(
-                      text: 'extra 2💎',
-                      style: GoogleFonts.inter(color: const Color(0xFF5B5BD6)),
-                    ),
-                  ],
-                ),
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF1C1C21),
-                ),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

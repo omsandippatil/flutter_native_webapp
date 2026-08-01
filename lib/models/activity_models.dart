@@ -1,6 +1,16 @@
 import '../models/program_content/course_detail_model.dart';
+import 'classroom_progress_stage.dart';
 
 enum LearningStage { startActivity, sendProject, quizPending, completed }
+
+extension LearningStageClassroomMapper on ClassroomProgressStage {
+  LearningStage get homeStage => switch (this) {
+    ClassroomProgressStage.watchVideo => LearningStage.startActivity,
+    ClassroomProgressStage.submitProject => LearningStage.sendProject,
+    ClassroomProgressStage.takeQuiz => LearningStage.quizPending,
+    ClassroomProgressStage.unitCompleted => LearningStage.completed,
+  };
+}
 
 class CourseUnit {
   const CourseUnit({
@@ -26,7 +36,9 @@ class CourseUnit {
   factory CourseUnit.fromCourse(CourseDetailModel course, int unitIndex) {
     final unit = course.units[unitIndex];
     final video = unit.videos.isNotEmpty ? unit.videos.first : null;
-    final assignment = unit.assignments.isNotEmpty ? unit.assignments.first : null;
+    final assignment = unit.assignments.isNotEmpty
+        ? unit.assignments.first
+        : null;
     final assignmentStep = assignment != null && assignment.steps.isNotEmpty
         ? assignment.steps.first
         : null;
@@ -38,7 +50,8 @@ class CourseUnit {
       videoDescription: video?.description ?? unit.description,
       videoPoints: video?.points ?? unit.xp,
       submissionPoints: unit.xp,
-      submissionPrompt: assignmentStep?.unguidedText ?? assignment?.description ?? '',
+      submissionPrompt:
+          assignmentStep?.unguidedText ?? assignment?.description ?? '',
       totalPoints: unit.xp,
     );
   }
@@ -53,6 +66,7 @@ class LearningProgress {
     required this.videoDone,
     required this.submissionDone,
     required this.quizDone,
+    required this.classroomStage,
     required this.watchedVideosThisWeek,
   });
 
@@ -63,14 +77,10 @@ class LearningProgress {
   final bool videoDone;
   final bool submissionDone;
   final bool quizDone;
+  final ClassroomProgressStage classroomStage;
   final int watchedVideosThisWeek;
 
-  LearningStage get currentStage {
-    if (!videoDone) return LearningStage.startActivity;
-    if (!submissionDone) return LearningStage.sendProject;
-    if (!quizDone) return LearningStage.quizPending;
-    return LearningStage.completed;
-  }
+  LearningStage get currentStage => classroomStage.homeStage;
 }
 
 class LearningDashboard {

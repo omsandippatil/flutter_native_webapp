@@ -38,35 +38,49 @@ class AppHeader extends StatelessWidget {
 
     if (showBack) {
       return Container(
-        height: isCompact ? 64 : 72,
-        padding: EdgeInsets.symmetric(horizontal: isCompact ? 16 : 28),
+        height: isCompact ? 64 : 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(bottom: BorderSide(color: Color(0xFFE9E9F1))),
+          border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
         ),
         child: Row(
           children: [
-            IconButton(
-              onPressed: onBack ?? () => Navigator.of(context).maybePop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-              color: const Color(0xFF6E6E7A),
+            SizedBox(
+              width: isCompact ? 72 : 142,
+              child: Center(
+                child: IconButton(
+                  onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+                  icon: Icon(
+                    Icons.arrow_circle_left_outlined,
+                    size: isCompact ? 34 : 44,
+                  ),
+                  color: const Color(0xFF6E6E7A),
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
+            const VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: AppTheme.borderColor,
+            ),
+            SizedBox(width: isCompact ? 16 : 26),
             Expanded(
               child: Text(
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.inter(
-                  fontSize: isCompact ? 13 : 15,
+                  fontSize: isCompact ? 13 : 18,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.textColor,
+                  color: AppTheme.subheadingColor,
                   letterSpacing: 0,
                 ),
               ),
             ),
+            const SizedBox(width: 18),
+            Container(width: 1, height: 32, color: AppTheme.borderColor),
             if (showPoints) ...[
-              const SizedBox(width: 12),
+              const SizedBox(width: 18),
               _MetricPill(
                 icon: Icons.stars_rounded,
                 iconColor: const Color(0xFFE29A22),
@@ -74,7 +88,7 @@ class AppHeader extends StatelessWidget {
               ),
             ],
             if (showAskBuddy) ...[
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
               _AskBuddyButton(
                 onPressed:
                     onAskBuddy ??
@@ -83,6 +97,14 @@ class AppHeader extends StatelessWidget {
                     },
               ),
             ],
+            if (showPoints || showAskBuddy) ...[
+              const SizedBox(width: 18),
+              Container(width: 1, height: 32, color: AppTheme.borderColor),
+            ],
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: isCompact ? 14 : 24),
+              child: _PostOnboardingBrand(compact: isCompact),
+            ),
           ],
         ),
       );

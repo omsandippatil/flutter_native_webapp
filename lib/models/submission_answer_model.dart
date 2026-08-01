@@ -1,15 +1,7 @@
 /// The kind of input widget the submission step needs, derived from the
 /// course JSON's `sub_types` field (e.g. "emoji", "text,audio", "image",
 /// "image,video").
-enum SubmissionKind {
-  emoji,
-  text,
-  audio,
-  textAudio,
-  image,
-  video,
-  imageVideo,
-}
+enum SubmissionKind { emoji, text, audio, textAudio, image, video, imageVideo }
 
 class SubmissionAnswer {
   const SubmissionAnswer._({
@@ -40,10 +32,7 @@ class SubmissionAnswer {
       SubmissionAnswer._(kind: SubmissionKind.video, mediaPath: path);
 
   factory SubmissionAnswer.imageOrVideo(String path, {required bool isVideo}) =>
-      SubmissionAnswer._(
-        kind: SubmissionKind.imageVideo,
-        mediaPath: path,
-      );
+      SubmissionAnswer._(kind: SubmissionKind.imageVideo, mediaPath: path);
 
   /// A short, human-readable echo of what was submitted, for the chat
   /// bubble that shows what the *user* sent (never a form).

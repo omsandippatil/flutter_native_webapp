@@ -49,38 +49,61 @@ class LearnerStateModel {
   EnrollmentModel? enrollment;
   bool hasPendingConflict;
 
-  factory LearnerStateModel.fromFullJson(String learnerId, Map<String, dynamic> json) {
+  factory LearnerStateModel.fromFullJson(
+    String learnerId,
+    Map<String, dynamic> json,
+  ) {
     final model = LearnerStateModel(learnerId: learnerId);
     return model._applyJson(json, full: true);
   }
 
-  LearnerStateModel mergeFrom(Map<String, dynamic> json) => _applyJson(json, full: false);
+  LearnerStateModel mergeFrom(Map<String, dynamic> json) =>
+      _applyJson(json, full: false);
 
-  LearnerStateModel _applyJson(Map<String, dynamic> json, {required bool full}) {
+  LearnerStateModel _applyJson(
+    Map<String, dynamic> json, {
+    required bool full,
+  }) {
     if (full || json.containsKey('profile')) {
       final p = json['profile'];
-      profile = p is Map ? LearnerProfileFieldsModel.fromJson(Map<String, dynamic>.from(p)) : profile;
+      profile = p is Map
+          ? LearnerProfileFieldsModel.fromJson(Map<String, dynamic>.from(p))
+          : profile;
     }
-    if (full || json.containsKey('xp')) xp = (json['xp'] as num?)?.toInt() ?? xp;
-    if (full || json.containsKey('weekly_xp')) weeklyXp = (json['weekly_xp'] as num?)?.toInt() ?? weeklyXp;
+    if (full || json.containsKey('xp')) {
+      xp = (json['xp'] as num?)?.toInt() ?? xp;
+    }
+    if (full || json.containsKey('weekly_xp')) {
+      weeklyXp = (json['weekly_xp'] as num?)?.toInt() ?? weeklyXp;
+    }
     if (full || json.containsKey('xp_daily')) {
       final raw = json['xp_daily'];
-      if (raw is List) xpDaily = raw.map((e) => (e as num).toInt()).toList(growable: false);
+      if (raw is List) {
+        xpDaily = raw.map((e) => (e as num).toInt()).toList(growable: false);
+      }
     }
-    if (full || json.containsKey('level')) level = json['level'] as String? ?? level;
-    if (full || json.containsKey('streak')) streak = (json['streak'] as num?)?.toInt() ?? streak;
+    if (full || json.containsKey('level')) {
+      level = json['level'] as String? ?? level;
+    }
+    if (full || json.containsKey('streak')) {
+      streak = (json['streak'] as num?)?.toInt() ?? streak;
+    }
     if (full || json.containsKey('longest_streak')) {
-      longestStreak = (json['longest_streak'] as num?)?.toInt() ?? longestStreak;
+      longestStreak =
+          (json['longest_streak'] as num?)?.toInt() ?? longestStreak;
     }
     if (full || json.containsKey('last_activity_date')) {
-      lastActivityDate = json['last_activity_date'] as String? ?? lastActivityDate;
+      lastActivityDate =
+          json['last_activity_date'] as String? ?? lastActivityDate;
     }
     if (full || json.containsKey('units_completed_this_week')) {
       unitsCompletedThisWeek =
-          (json['units_completed_this_week'] as num?)?.toInt() ?? unitsCompletedThisWeek;
+          (json['units_completed_this_week'] as num?)?.toInt() ??
+          unitsCompletedThisWeek;
     }
     if (full || json.containsKey('max_weekly_units')) {
-      maxWeeklyUnits = (json['max_weekly_units'] as num?)?.toInt() ?? maxWeeklyUnits;
+      maxWeeklyUnits =
+          (json['max_weekly_units'] as num?)?.toInt() ?? maxWeeklyUnits;
     }
     if (full || json.containsKey('is_bingeing')) {
       isBingeing = json['is_bingeing'] as bool? ?? isBingeing;
@@ -92,23 +115,64 @@ class LearnerStateModel {
       windowResetsOn = json['window_resets_on'] as String? ?? windowResetsOn;
     }
     if (full || json.containsKey('units_remaining')) {
-      unitsRemaining = (json['units_remaining'] as num?)?.toInt() ?? unitsRemaining;
+      unitsRemaining =
+          (json['units_remaining'] as num?)?.toInt() ?? unitsRemaining;
     }
-    if (full || json.containsKey('archetype')) archetype = json['archetype'] as String? ?? archetype;
+    if (full || json.containsKey('archetype')) {
+      archetype = json['archetype'] as String? ?? archetype;
+    }
     if (full || json.containsKey('submission_gems')) {
-      submissionGems = (json['submission_gems'] as num?)?.toInt() ?? submissionGems;
+      submissionGems =
+          (json['submission_gems'] as num?)?.toInt() ?? submissionGems;
     }
     if (full || json.containsKey('submission_index')) {
-      submissionIndex = (json['submission_index'] as num?)?.toInt() ?? submissionIndex;
+      submissionIndex =
+          (json['submission_index'] as num?)?.toInt() ?? submissionIndex;
     }
     if (full || json.containsKey('achievements')) {
       achievements = AchievementModel.listFromJson(json['achievements']);
     }
     if (full || json.containsKey('enrollment')) {
       final e = json['enrollment'];
-      enrollment = e is Map ? EnrollmentModel.fromJson(Map<String, dynamic>.from(e)) : enrollment;
+      enrollment = e is Map
+          ? EnrollmentModel.fromJson(Map<String, dynamic>.from(e))
+          : enrollment;
     }
+    _syncProgressIntoEnrollment(json);
     return this;
+  }
+
+  void _syncProgressIntoEnrollment(Map<String, dynamic> json) {
+    final existing = enrollment;
+    if (existing == null) return;
+
+    final videoIndex = (json['video_index'] as num?)?.toInt();
+    final videosCompleted = (json['videos_completed'] as num?)?.toInt();
+    final quizIndex = (json['quiz_index'] as num?)?.toInt();
+    final quizzesCompleted = (json['quizzes_completed'] as num?)?.toInt();
+    final submissionProgressIndex = (json['submission_index'] as num?)?.toInt();
+
+    final nextVideosCompleted = [
+      existing.videosCompleted,
+      ?videoIndex,
+      ?videosCompleted,
+    ].reduce((a, b) => a > b ? a : b);
+    final nextQuizzesCompleted = [
+      existing.quizzesCompleted,
+      ?quizIndex,
+      ?quizzesCompleted,
+    ].reduce((a, b) => a > b ? a : b);
+    final nextSubmissionIndex = [
+      existing.submissionIndex,
+      ?submissionProgressIndex,
+      ?submissionIndex,
+    ].reduce((a, b) => a > b ? a : b);
+
+    enrollment = existing.copyWith(
+      videosCompleted: nextVideosCompleted,
+      quizzesCompleted: nextQuizzesCompleted,
+      submissionIndex: nextSubmissionIndex,
+    );
   }
 
   void upsertAchievement(String achievement, String level) {
@@ -124,28 +188,30 @@ class LearnerStateModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'learner_id': learnerId,
-        'profile': profile?.toJson(),
-        'xp': xp,
-        'weekly_xp': weeklyXp,
-        'xp_daily': xpDaily,
-        'level': level,
-        'streak': streak,
-        'longest_streak': longestStreak,
-        'last_activity_date': lastActivityDate,
-        'units_completed_this_week': unitsCompletedThisWeek,
-        'max_weekly_units': maxWeeklyUnits,
-        'is_bingeing': isBingeing,
-        'window_start_date': windowStartDate,
-        'window_resets_on': windowResetsOn,
-        'units_remaining': unitsRemaining,
-        'archetype': archetype,
-        'submission_gems': submissionGems,
-        'submission_index': submissionIndex,
-        'achievements': achievements == null ? null : AchievementModel.listToJson(achievements!),
-        'enrollment': enrollment?.toJson(),
-        'has_pending_conflict': hasPendingConflict,
-      };
+    'learner_id': learnerId,
+    'profile': profile?.toJson(),
+    'xp': xp,
+    'weekly_xp': weeklyXp,
+    'xp_daily': xpDaily,
+    'level': level,
+    'streak': streak,
+    'longest_streak': longestStreak,
+    'last_activity_date': lastActivityDate,
+    'units_completed_this_week': unitsCompletedThisWeek,
+    'max_weekly_units': maxWeeklyUnits,
+    'is_bingeing': isBingeing,
+    'window_start_date': windowStartDate,
+    'window_resets_on': windowResetsOn,
+    'units_remaining': unitsRemaining,
+    'archetype': archetype,
+    'submission_gems': submissionGems,
+    'submission_index': submissionIndex,
+    'achievements': achievements == null
+        ? null
+        : AchievementModel.listToJson(achievements!),
+    'enrollment': enrollment?.toJson(),
+    'has_pending_conflict': hasPendingConflict,
+  };
 
   factory LearnerStateModel.fromCache(Map<String, dynamic> json) {
     final model = LearnerStateModel(learnerId: json['learner_id'] as String);

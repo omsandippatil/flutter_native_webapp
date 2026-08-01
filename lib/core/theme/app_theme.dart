@@ -15,6 +15,8 @@ class AppTheme {
   static const Color softSurface = Color(0xFFF7F7FA);
   static const Color fieldBackground = Color(0xFFF1F1F4);
   static const Color chatBubble = Color(0xFFEFEFF4);
+  static const Color classroomBackground = Color(0xFFFFFFFF);
+  static const Color classroomMessageSurface = Color(0xFFEEEEF1);
   static const Color mutedLavender = Color(0xFFE5E4FA);
   static const Color profileBar = Color(0xFFE5E1F1);
   static const Color selectedSurface = Color(0xFFF4F3FF);

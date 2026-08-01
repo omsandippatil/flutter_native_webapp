@@ -3,7 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class RevealAssetResolver {
   RevealAssetResolver._();
 
-  static const String _basePath = 'reveal';
+  static const String _basePath = 'assets/reveal';
   static const String _fallbackAsset = '$_basePath/1.webp';
 
   static Future<String> resolve(int unitIndex) async {

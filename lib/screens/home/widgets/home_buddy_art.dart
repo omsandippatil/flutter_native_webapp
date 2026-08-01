@@ -17,7 +17,15 @@ class HomeBuddyArt extends StatelessWidget {
       LearningStage.completed => 'assets/home-screen/sussess_celebrate.png',
     };
 
-    return Image.asset(
+    // The project/quiz artwork is stored on a square canvas with substantial
+    // transparent space on both sides. Cropping only that empty space lets the
+    // character use the requested height without making the row any wider.
+    final cropTransparentSides = switch (stage) {
+      LearningStage.sendProject || LearningStage.quizPending => true,
+      _ => false,
+    };
+
+    final image = Image.asset(
       asset,
       height: maxHeight,
       fit: BoxFit.contain,
@@ -28,6 +36,23 @@ class HomeBuddyArt extends StatelessWidget {
             Icons.image_not_supported_outlined,
             color: Color(0xFFB9BBC8),
           ),
+        ),
+      ),
+    );
+
+    if (!cropTransparentSides) return image;
+
+    return SizedBox(
+      width: maxHeight * 0.72,
+      height: maxHeight,
+      child: ClipRect(
+        child: OverflowBox(
+          minWidth: maxHeight,
+          maxWidth: maxHeight,
+          minHeight: maxHeight,
+          maxHeight: maxHeight,
+          alignment: Alignment.center,
+          child: image,
         ),
       ),
     );

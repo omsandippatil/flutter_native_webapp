@@ -4,6 +4,7 @@ import '../data/repositories/archetype_progression_repository.dart';
 import 'activity_flow_provider.dart';
 import 'class_chat_controller.dart';
 import 'class_session_bootstrap_provider.dart';
+import 'home_dashboard_provider.dart';
 import 'language_provider.dart';
 import 'learner_state_provider.dart';
 import 'local_cache_provider.dart';
@@ -16,43 +17,62 @@ class NoUnitAvailableException implements Exception {
   String toString() => 'No unit is available to run right now.';
 }
 
-final archetypeProgressionRepositoryProvider = FutureProvider<ArchetypeProgressionRepository>((ref) async {
-  final localCache = await ref.watch(localCacheProvider.future);
-  return ArchetypeProgressionRepository(localCache);
-});
+final archetypeProgressionRepositoryProvider =
+    FutureProvider<ArchetypeProgressionRepository>((ref) async {
+      final localCache = await ref.watch(localCacheProvider.future);
+      return ArchetypeProgressionRepository(localCache);
+    });
 
-final classChatControllerProvider =
-    FutureProvider.autoDispose.family<ClassChatController, int>((ref, attempt) async {
-  final bootstrap = await ref.watch(classSessionBootstrapProvider.future);
-  if (bootstrap.unit == null) {
-    throw const NoUnitAvailableException();
-  }
+final classChatControllerProvider = FutureProvider.autoDispose
+    .family<ClassChatController, int>((ref, attempt) async {
+      final bootstrap = await ref.watch(classSessionBootstrapProvider.future);
+      if (bootstrap.unit == null) {
+        throw const NoUnitAvailableException();
+      }
 
-  final languageCode = ref.watch(languageProvider);
-  final flow = await ref.watch(activityFlowProvider(languageCode).future);
+      final languageCode = ref.watch(languageProvider);
+      final flow = await ref.watch(activityFlowProvider(languageCode).future);
 
-  final learnerStateRepository = await ref.watch(learnerStateRepositoryProvider.future);
-  final submissionReviewRepository = await ref.watch(submissionReviewRepositoryProvider.future);
-  final sessionWindowRepository = await ref.watch(classSessionWindowRepositoryProvider.future);
-  final archetypeProgressionRepository = await ref.watch(archetypeProgressionRepositoryProvider.future);
+      final learnerStateRepository = await ref.watch(
+        learnerStateRepositoryProvider.future,
+      );
+      final submissionReviewRepository = await ref.watch(
+        submissionReviewRepositoryProvider.future,
+      );
+      final sessionWindowRepository = await ref.watch(
+        classSessionWindowRepositoryProvider.future,
+      );
+      final archetypeProgressionRepository = await ref.watch(
+        archetypeProgressionRepositoryProvider.future,
+      );
 
-  final studentName = bootstrap.learnerState.profile?.studentName ?? 'Champ';
+      final studentName =
+          bootstrap.learnerState.profile?.studentName ?? 'Champ';
+      var providerIsActive = true;
 
-  final controller = ClassChatController(
-    learnerId: bootstrap.learnerId,
-    phone: bootstrap.phone,
-    studentName: studentName,
-    courseDisplay: bootstrap.courseName,
-    flow: flow,
-    unit: bootstrap.unit!,
-    unitIndex: bootstrap.unitIndex,
-    initialLearnerState: bootstrap.learnerState,
-    learnerStateRepository: learnerStateRepository,
-    submissionReviewRepository: submissionReviewRepository,
-    sessionWindowRepository: sessionWindowRepository,
-    archetypeProgressionRepository: archetypeProgressionRepository,
-  );
+      final controller = ClassChatController(
+        learnerId: bootstrap.learnerId,
+        phone: bootstrap.phone,
+        studentName: studentName,
+        courseDisplay: bootstrap.courseName,
+        flow: flow,
+        unit: bootstrap.unit!,
+        unitIndex: bootstrap.unitIndex,
+        initialLearnerState: bootstrap.learnerState,
+        learnerStateRepository: learnerStateRepository,
+        submissionReviewRepository: submissionReviewRepository,
+        sessionWindowRepository: sessionWindowRepository,
+        archetypeProgressionRepository: archetypeProgressionRepository,
+        onProgressSaved: () {
+          if (!providerIsActive) return;
+          ref.invalidate(learnerStateDataProvider(bootstrap.learnerId));
+          ref.invalidate(learningDashboardProvider);
+        },
+      );
 
-  ref.onDispose(controller.dispose);
-  return controller;
-});
+      ref.onDispose(() {
+        providerIsActive = false;
+        controller.dispose();
+      });
+      return controller;
+    });

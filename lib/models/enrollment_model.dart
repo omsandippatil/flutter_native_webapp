@@ -15,7 +15,24 @@ class EnrollmentModel {
   final int submissionIndex;
   final String? enrolledOn;
 
-  factory EnrollmentModel.fromJson(Map<String, dynamic> json) => EnrollmentModel(
+  EnrollmentModel copyWith({
+    String? course,
+    String? status,
+    int? videosCompleted,
+    int? quizzesCompleted,
+    int? submissionIndex,
+    String? enrolledOn,
+  }) => EnrollmentModel(
+    course: course ?? this.course,
+    status: status ?? this.status,
+    videosCompleted: videosCompleted ?? this.videosCompleted,
+    quizzesCompleted: quizzesCompleted ?? this.quizzesCompleted,
+    submissionIndex: submissionIndex ?? this.submissionIndex,
+    enrolledOn: enrolledOn ?? this.enrolledOn,
+  );
+
+  factory EnrollmentModel.fromJson(Map<String, dynamic> json) =>
+      EnrollmentModel(
         course: json['course'] as String?,
         status: json['status'] as String?,
         videosCompleted: (json['videos_completed'] as num?)?.toInt() ?? 0,
@@ -25,11 +42,11 @@ class EnrollmentModel {
       );
 
   Map<String, dynamic> toJson() => {
-        'course': course,
-        'status': status,
-        'videos_completed': videosCompleted,
-        'quizzes_completed': quizzesCompleted,
-        'submission_index': submissionIndex,
-        'enrolled_on': enrolledOn,
-      };
+    'course': course,
+    'status': status,
+    'videos_completed': videosCompleted,
+    'quizzes_completed': quizzesCompleted,
+    'submission_index': submissionIndex,
+    'enrolled_on': enrolledOn,
+  };
 }

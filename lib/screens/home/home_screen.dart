@@ -184,8 +184,8 @@ class _StageContent extends StatelessWidget {
     );
     final artHeight = switch (stage) {
       LearningStage.startActivity => 440.0,
-      LearningStage.sendProject => 350.0,
-      LearningStage.quizPending => 370.0,
+      LearningStage.sendProject => 400.0,
+      LearningStage.quizPending => 400.0,
       LearningStage.completed => 300.0,
     };
 
