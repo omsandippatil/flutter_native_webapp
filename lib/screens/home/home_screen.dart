@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/router.dart';
 import '../../models/activity_models.dart';
 import '../../providers/home_dashboard_provider.dart';
+import '../../providers/learner_state_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/app_nav.dart';
 import '../../widgets/loading_view.dart';
@@ -48,7 +50,21 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-          data: (dashboard) => _HomeDashboard(dashboard: dashboard),
+          data: (dashboard) => _HomeDashboard(
+            dashboard: dashboard,
+            onContinue: () async {
+              final activeProfile = await ref.read(
+                activeProfileProvider.future,
+              );
+              if (activeProfile == null) return;
+              final repository = await ref.read(
+                learnerStateRepositoryProvider.future,
+              );
+              await repository.clearHomeCelebration(activeProfile.learnerId);
+              ref.invalidate(learningDashboardProvider);
+              if (context.mounted) context.go(AppRoutes.classroom);
+            },
+          ),
         ),
       ),
     );
@@ -64,13 +80,14 @@ class HomeScreen extends ConsumerWidget {
 
 class _HomeDashboard extends StatelessWidget {
   final LearningDashboard dashboard;
+  final VoidCallback onContinue;
 
-  const _HomeDashboard({required this.dashboard});
+  const _HomeDashboard({required this.dashboard, required this.onContinue});
 
   @override
   Widget build(BuildContext context) {
     final progress = dashboard.progress;
-    final stage = dashboard.unit == null
+    final stage = dashboard.showCompletionCelebration || dashboard.unit == null
         ? LearningStage.completed
         : progress.currentStage;
     final unit = dashboard.unit;
@@ -119,6 +136,10 @@ class _HomeDashboard extends StatelessWidget {
                               hasReachedWeeklyCap:
                                   dashboard.hasReachedWeeklyCap,
                               isWide: isWide,
+                              completionPoints: dashboard.completionPoints,
+                              onContinue: dashboard.showCompletionCelebration
+                                  ? onContinue
+                                  : null,
                             ),
                     ),
                   ),
@@ -163,18 +184,27 @@ class _StageContent extends StatelessWidget {
   final CourseUnit? unit;
   final bool hasReachedWeeklyCap;
   final bool isWide;
+  final int completionPoints;
+  final VoidCallback? onContinue;
 
   const _StageContent({
     required this.stage,
     required this.unit,
     required this.hasReachedWeeklyCap,
     required this.isWide,
+    required this.completionPoints,
+    required this.onContinue,
   });
 
   @override
   Widget build(BuildContext context) {
     if (unit == null || stage == LearningStage.completed) {
-      return _CompletedStage(unit: unit, isWide: isWide);
+      return _CompletedStage(
+        unit: unit,
+        isWide: isWide,
+        points: completionPoints,
+        onContinue: onContinue,
+      );
     }
 
     final card = _ActiveCard(
@@ -242,12 +272,22 @@ class _StageContent extends StatelessWidget {
 class _CompletedStage extends StatelessWidget {
   final CourseUnit? unit;
   final bool isWide;
+  final int points;
+  final VoidCallback? onContinue;
 
-  const _CompletedStage({required this.unit, required this.isWide});
+  const _CompletedStage({
+    required this.unit,
+    required this.isWide,
+    required this.points,
+    required this.onContinue,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final card = CompletedCard(points: unit?.totalPoints ?? 0);
+    final card = CompletedCard(
+      points: points > 0 ? points : unit?.totalPoints ?? 0,
+      onContinue: onContinue,
+    );
 
     if (!isWide) {
       return Column(

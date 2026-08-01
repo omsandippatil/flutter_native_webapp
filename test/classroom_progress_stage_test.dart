@@ -94,4 +94,22 @@ void main() {
       ClassroomProgressStage.unitCompleted,
     );
   });
+
+  test(
+    'resolves takeQuiz when learnerSubmissionIndex is passed separately',
+    () {
+      expect(
+        ClassroomProgressResolver.resolve(
+          enrollment: const EnrollmentModel(
+            videosCompleted: 1,
+            submissionIndex: 0,
+          ),
+          unitIndex: 0,
+          unit: unit,
+          learnerSubmissionIndex: 1,
+        ).stage,
+        ClassroomProgressStage.takeQuiz,
+      );
+    },
+  );
 }

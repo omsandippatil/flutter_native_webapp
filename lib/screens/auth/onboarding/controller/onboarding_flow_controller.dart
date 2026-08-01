@@ -179,7 +179,7 @@ class OnboardingFlowController extends ChangeNotifier {
     if (step.inputMode == 'static') {
       _continueTo(step.nextStepId);
       if (step.nextStepId == null && step.nextFlow == 'activity_flow') {
-        _completeOnboardingAndAward().then((_) => onGoHome());
+        _completeOnboarding().then((_) => onGoHome());
       }
     }
   }
@@ -321,12 +321,12 @@ class OnboardingFlowController extends ChangeNotifier {
     _executeStep();
   }
 
-  Future<void> _completeOnboardingAndAward() async {
+  Future<void> _completeOnboarding() async {
     final service = _sessionService;
     final activeProfile = _activeProfile;
     if (service == null || activeProfile == null) return;
     try {
-      final result = await service.completeAndAward(
+      final result = await service.completeOnboarding(
         ref: ref,
         activeProfile: activeProfile,
         courseId: _selectedCourseId,
@@ -374,7 +374,7 @@ class OnboardingFlowController extends ChangeNotifier {
     _addUserMessage(selectedOption['label'] ?? selectedValue);
 
     if (selectedOption.containsKey('next_flow')) {
-      _completeOnboardingAndAward().then((_) => onGoHome());
+      _completeOnboarding().then((_) => onGoHome());
       return;
     }
 

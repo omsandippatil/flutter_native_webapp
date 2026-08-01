@@ -29,6 +29,7 @@ class ClassSessionBootstrap {
     required this.learnerState,
     required this.courseName,
     required this.unit,
+    required this.nextUnit,
     required this.unitIndex,
     required this.weeklyCapAlreadyReached,
   });
@@ -38,6 +39,7 @@ class ClassSessionBootstrap {
   final LearnerStateModel learnerState;
   final String courseName;
   final CourseUnitModel? unit;
+  final CourseUnitModel? nextUnit;
   final int unitIndex;
   final bool weeklyCapAlreadyReached;
 }
@@ -68,12 +70,20 @@ final classSessionBootstrapProvider =
       // one. The cached copy may predate the most recent unit completion (or a
       // completion made from another device), and a stale "not bingeing" read
       // here is exactly what lets a student slip past the weekly cap.
-      final learnerState = await learnerStateRepository.fetchState(
+      var learnerState = await learnerStateRepository.fetchState(
         learnerId: activeProfile.learnerId,
         forceRefresh: true,
       );
 
-      final enrollment = learnerState.enrollment;
+      if (!_serverSaysCapReached(learnerState) &&
+          learnerState.hasPendingLocalProgress) {
+        final synced = await learnerStateRepository.syncCompletedLocalProgress(
+          activeProfile.learnerId,
+        );
+        if (synced != null) learnerState = synced;
+      }
+
+      var enrollment = learnerState.enrollment;
       if (enrollment == null || enrollment.course == null) {
         throw const NoActiveEnrollmentException();
       }
@@ -88,6 +98,7 @@ final classSessionBootstrapProvider =
           learnerState: learnerState,
           courseName: course.name,
           unit: null,
+          nextUnit: null,
           unitIndex: 0,
           weeklyCapAlreadyReached: true,
         );
@@ -96,14 +107,52 @@ final classSessionBootstrapProvider =
       final startIndex = ClassroomProgressResolver.resolveUnitIndexForCourse(
         enrollment,
         course.units,
+        learnerSubmissionIndex: learnerState.submissionIndex,
       );
       final selectedUnit = course.units[startIndex];
-      final selectedProgress = ClassroomProgressResolver.resolve(
+      final nextUnit = startIndex + 1 < course.units.length
+          ? course.units[startIndex + 1]
+          : null;
+      var selectedProgress = ClassroomProgressResolver.resolve(
         enrollment: enrollment,
         unitIndex: startIndex,
         unit: selectedUnit,
+        learnerSubmissionIndex: learnerState.submissionIndex,
       );
+
+      if (!learnerState.hasPendingLocalProgress &&
+          selectedProgress.stage != ClassroomProgressStage.watchVideo &&
+          selectedProgress.stage != ClassroomProgressStage.unitCompleted) {
+        learnerState = await learnerStateRepository.prepareLocalUnit(
+          learnerId: activeProfile.learnerId,
+          unitIndex: startIndex,
+        );
+        enrollment = learnerState.enrollment!;
+        selectedProgress = ClassroomProgressResolver.resolve(
+          enrollment: enrollment,
+          unitIndex: startIndex,
+          unit: selectedUnit,
+          learnerSubmissionIndex: learnerState.submissionIndex,
+        );
+      }
       final capReached = _serverSaysCapReached(learnerState);
+
+      // Reaching the cap after watching the current unit's video must not
+      // strand the learner halfway through that unit. It only prevents
+      // starting another unit; pending submission/quiz work stays available.
+      if (capReached &&
+          selectedProgress.stage == ClassroomProgressStage.watchVideo) {
+        return ClassSessionBootstrap(
+          learnerId: activeProfile.learnerId,
+          phone: activeProfile.phone,
+          learnerState: learnerState,
+          courseName: course.name,
+          unit: null,
+          nextUnit: nextUnit,
+          unitIndex: startIndex,
+          weeklyCapAlreadyReached: true,
+        );
+      }
 
       if (selectedProgress.stage != ClassroomProgressStage.unitCompleted) {
         return ClassSessionBootstrap(
@@ -112,6 +161,7 @@ final classSessionBootstrapProvider =
           learnerState: learnerState,
           courseName: course.name,
           unit: selectedUnit,
+          nextUnit: nextUnit,
           unitIndex: startIndex,
           weeklyCapAlreadyReached: false,
         );
@@ -124,6 +174,7 @@ final classSessionBootstrapProvider =
           learnerState: learnerState,
           courseName: course.name,
           unit: null,
+          nextUnit: nextUnit,
           unitIndex: startIndex,
           weeklyCapAlreadyReached: true,
         );
@@ -135,6 +186,7 @@ final classSessionBootstrapProvider =
         learnerState: learnerState,
         courseName: course.name,
         unit: selectedUnit,
+        nextUnit: nextUnit,
         unitIndex: startIndex,
         weeklyCapAlreadyReached: false,
       );

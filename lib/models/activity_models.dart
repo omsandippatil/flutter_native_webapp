@@ -89,10 +89,14 @@ class LearningDashboard {
     required this.unit,
     required this.hasEnrollment,
     required this.hasReachedWeeklyCap,
+    this.showCompletionCelebration = false,
+    this.completionPoints = 0,
   });
 
   final LearningProgress progress;
   final CourseUnit? unit;
   final bool hasEnrollment;
   final bool hasReachedWeeklyCap;
+  final bool showCompletionCelebration;
+  final int completionPoints;
 }

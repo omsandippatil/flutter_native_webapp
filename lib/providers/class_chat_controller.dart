@@ -21,6 +21,20 @@ enum ClassSessionOutcome { none, choice, weeklyCapReached }
 
 const int _quizPointsPerCorrectAnswer = 5;
 
+class ClassQuizToast {
+  const ClassQuizToast({
+    required this.id,
+    required this.isCorrect,
+    required this.points,
+    this.correctAnswer,
+  });
+
+  final int id;
+  final bool isCorrect;
+  final int points;
+  final String? correctAnswer;
+}
+
 class ClassChatController extends ChangeNotifier {
   ClassChatController({
     required this.learnerId,
@@ -29,6 +43,7 @@ class ClassChatController extends ChangeNotifier {
     required this.courseDisplay,
     required ActivityFlowModel flow,
     required CourseUnitModel unit,
+    CourseUnitModel? nextUnit,
     required this.unitIndex,
     required LearnerStateModel initialLearnerState,
     required LearnerStateRepository learnerStateRepository,
@@ -38,6 +53,7 @@ class ClassChatController extends ChangeNotifier {
     VoidCallback? onProgressSaved,
   }) : _flow = flow,
        _unit = unit,
+       _nextUnit = nextUnit,
        _learnerStateRepository = learnerStateRepository,
        _submissionReviewRepository = submissionReviewRepository,
        _sessionWindowRepository = sessionWindowRepository,
@@ -55,9 +71,13 @@ class ClassChatController extends ChangeNotifier {
   final int unitIndex;
 
   String get unitName => _unit.name;
+  bool get hasNextUnit => _nextUnit != null;
+  String get nextUnitName => _nextUnit?.name ?? _unit.name;
+  int get nextUnitPoints => _nextUnit?.xp ?? 0;
 
   final ActivityFlowModel _flow;
   final CourseUnitModel _unit;
+  final CourseUnitModel? _nextUnit;
   final LearnerStateRepository _learnerStateRepository;
   final SubmissionReviewRepository _submissionReviewRepository;
   final ClassSessionWindowRepository _sessionWindowRepository;
@@ -92,12 +112,17 @@ class ClassChatController extends ChangeNotifier {
   int _accumulatedVideoPoints = 0;
   int _accumulatedSubmissionPoints = 0;
   int _accumulatedQuizPoints = 0;
+  int _completedUnitPoints = 0;
   bool _videoWatchedThisUnit = false;
   bool _submissionAcceptedThisUnit = false;
   bool _videoProgressSaved = false;
   bool _submissionProgressSaved = false;
   bool _quizProgressSaved = false;
   bool _archetypeProgressionApplied = false;
+  bool _submissionRewardShown = false;
+  int _quizToastId = 0;
+  ClassQuizToast? _quizToast;
+  ClassQuizToast? get quizToast => _quizToast;
 
   CourseAssignmentStepModel? _pendingAssignmentStep;
   CourseAssignmentModel? _pendingAssignment;
@@ -129,6 +154,9 @@ class ClassChatController extends ChangeNotifier {
   int get startingPoints => _startingPoints;
 
   int get displayedTotalPoints => startingPoints + sessionTotalPoints;
+
+  Future<void> deferNextActivity() => _learnerStateRepository
+      .showHomeCelebration(learnerId, points: _completedUnitPoints);
 
   ClassroomProgressStage get currentProgressStage {
     if (!_videoWatchedThisUnit) return ClassroomProgressStage.watchVideo;
@@ -173,6 +201,7 @@ class ClassChatController extends ChangeNotifier {
       enrollment: enrollment ?? const EnrollmentModel(),
       unitIndex: unitIndex,
       unit: _currentUnit,
+      learnerSubmissionIndex: _learnerState.submissionIndex,
     );
     _videoWatchedThisUnit = progress.videoDone;
     _submissionAcceptedThisUnit = progress.submissionDone;
@@ -191,6 +220,10 @@ class ClassChatController extends ChangeNotifier {
         _showQuizStartCheckpoint();
         return;
       case ClassroomProgressStage.unitCompleted:
+        if (_learnerState.hasPendingLocalProgress) {
+          unawaited(_completeUnitThenReveal());
+          return;
+        }
         _outcome = _stateSaysCapped(_learnerState)
             ? ClassSessionOutcome.weeklyCapReached
             : ClassSessionOutcome.choice;
@@ -350,7 +383,7 @@ class ClassChatController extends ChangeNotifier {
       text:
           'Wow! That’s amazing 🌟 $studentName, you just earned ${video.points} points for watching the video 🥳🥳🥳\n\nNow it’s time to do the activity submission 🌟',
       buttonLabel: 'Continue',
-      action: 'submission',
+      action: 'video_reward',
     );
     notifyListeners();
   }
@@ -647,30 +680,13 @@ class ClassChatController extends ChangeNotifier {
       _accumulatedQuizPoints += _quizPointsPerCorrectAnswer;
     }
 
-    final feedbackStepId = isCorrect ? 'AF-QUIZ-CORRECT' : 'AF-QUIZ-WRONG';
-    final feedbackStep = _flow.step(feedbackStepId);
-    _push(
-      ClassChatMessage(
-        id: _newId(),
-        stepId: feedbackStepId,
-        sender: ClassChatSender.bot,
-        contentType: ClassChatContentType.quizFeedback,
-        text: isCorrect
-            ? _interpolate(
-                feedbackStep?.displayText ??
-                    'Nailed it! +{{quiz_points}} points',
-                explicitPoints: _quizPointsPerCorrectAnswer,
-              )
-            : null,
-        data: {
-          'isCorrect': isCorrect,
-          'correctOption': question.answerKey,
-          'correctOptionText': question.options[question.answerKey],
-          'explanation': question.explanation,
-          'earnedPoints': isCorrect ? _quizPointsPerCorrectAnswer : null,
-        },
-      ),
+    _quizToast = ClassQuizToast(
+      id: ++_quizToastId,
+      isCorrect: isCorrect,
+      points: isCorrect ? _quizPointsPerCorrectAnswer : 0,
+      correctAnswer: isCorrect ? null : question.options[question.answerKey],
     );
+    notifyListeners();
 
     _quizIndex++;
     final hasMore = _quizIndex < _quizQuestions.length;
@@ -760,6 +776,10 @@ class ClassChatController extends ChangeNotifier {
         _messages.clear();
         _runStep('AF-006');
         return;
+      case 'video_reward':
+        _messages.clear();
+        _runStep('AF-006');
+        return;
       case 'submission_retry':
         _messages.clear();
         final step = _flow.step('AF-007');
@@ -767,7 +787,23 @@ class ClassChatController extends ChangeNotifier {
         return;
       case 'quiz':
         _messages.clear();
-        _runStep('AF-QUIZ-QUESTION');
+        _push(
+          ClassChatMessage(
+            id: _newId(),
+            stepId: 'QUIZ-START-ECHO',
+            sender: ClassChatSender.user,
+            contentType: ClassChatContentType.text,
+            text: 'Quiz',
+          ),
+        );
+        _pushCheckpoint(
+          stepId: 'QUIZ-BEGIN',
+          image: 'assets/class-screen/lets_begin.png',
+          text: '',
+          buttonLabel: '',
+          action: 'quiz_begin_art',
+        );
+        _scheduleAutoAdvance(1200, () => _runStep('AF-QUIZ-QUESTION'));
         return;
       case 'save_submission':
         _messages.removeWhere((m) => m.stepId == 'ERROR');
@@ -812,13 +848,22 @@ class ClassChatController extends ChangeNotifier {
       return;
     }
     _pushCheckpoint(
-      stepId: 'QUIZ-TOTALS',
-      image: null,
-      text:
-          'Great job Champ!\nDo you want to know your total points and gems collected so far?',
-      buttonLabel: 'Yes Yes Yes 😍',
-      action: 'totals',
+      stepId: 'QUIZ-COMPLETE-ART',
+      image: 'assets/class-screen/won-champ.png',
+      text: '',
+      buttonLabel: '',
+      action: 'quiz_complete_art',
     );
+    _scheduleAutoAdvance(1200, () {
+      _pushCheckpoint(
+        stepId: 'QUIZ-TOTALS',
+        image: null,
+        text:
+            'Great job Champ!\nDo you want to know your total points and gems collected so far?',
+        buttonLabel: 'Yes Yes Yes 😍',
+        action: 'totals',
+      );
+    });
   }
 
   void _showProgressSaveRetry(String message, {required String action}) {
@@ -875,6 +920,25 @@ class ClassChatController extends ChangeNotifier {
       }
       _archetypeProgressionApplied = true;
     }
+    if (!_submissionRewardShown) {
+      _messages.clear();
+      _push(
+        ClassChatMessage(
+          id: _newId(),
+          stepId: 'SUBMISSION-REWARD',
+          sender: ClassChatSender.bot,
+          contentType: ClassChatContentType.submissionReward,
+          data: {'studentName': studentName, 'points': _currentUnit.xp},
+        ),
+      );
+      _submissionRewardShown = true;
+      notifyListeners();
+    }
+  }
+
+  void continueAfterSubmissionReward() {
+    if (!_submissionRewardShown) return;
+    _messages.clear();
     _showQuizStartCheckpoint();
   }
 
@@ -898,7 +962,7 @@ class ClassChatController extends ChangeNotifier {
       text:
           'Wow! That’s amazing 🌟 $studentName, you completed the video.\n\nNow it’s time to do the activity submission 🌟',
       buttonLabel: 'Continue',
-      action: 'submission',
+      action: 'video_reward',
     );
   }
 
@@ -907,17 +971,14 @@ class ClassChatController extends ChangeNotifier {
     _videoProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.submitProgress(
+      _learnerState = await _learnerStateRepository.applyLocalProgress(
         learnerId: learnerId,
         xp: points,
-        activityType: 'video_complete',
         videoIndex: unitIndex + 1,
       );
       saved = true;
-    } on ProgressConflictException {
-      saved = await _refreshAndCheckVideoSaved();
     } catch (_) {
-      saved = await _refreshAndCheckVideoSaved();
+      saved = false;
     }
     _videoProgressSaved = saved;
     if (saved) _onProgressSaved?.call();
@@ -929,22 +990,14 @@ class ClassChatController extends ChangeNotifier {
     _submissionProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.submitProgress(
+      _learnerState = await _learnerStateRepository.applyLocalProgress(
         learnerId: learnerId,
         xp: points,
-        activityType: 'submission_complete',
         submissionIndex: unitIndex + 1,
       );
-      if ((_learnerState.enrollment?.submissionIndex ?? 0) > unitIndex ||
-          (_learnerState.submissionIndex ?? 0) > unitIndex) {
-        saved = true;
-      } else {
-        saved = await _refreshAndCheckSubmissionSaved();
-      }
-    } on ProgressConflictException {
-      saved = await _refreshAndCheckSubmissionSaved();
+      saved = true;
     } catch (_) {
-      saved = await _refreshAndCheckSubmissionSaved();
+      saved = false;
     }
     _submissionProgressSaved = saved;
     if (saved) _onProgressSaved?.call();
@@ -956,58 +1009,18 @@ class ClassChatController extends ChangeNotifier {
     _quizProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.submitProgress(
+      _learnerState = await _learnerStateRepository.applyLocalProgress(
         learnerId: learnerId,
         xp: points,
-        activityType: 'quiz_complete',
         quizIndex: unitIndex + 1,
       );
       saved = true;
-    } on ProgressConflictException {
-      saved = await _refreshAndCheckQuizSaved();
     } catch (_) {
-      saved = await _refreshAndCheckQuizSaved();
+      saved = false;
     }
     _quizProgressSaved = saved;
     if (saved) _onProgressSaved?.call();
     return saved;
-  }
-
-  Future<bool> _refreshAndCheckVideoSaved() async {
-    try {
-      _learnerState = await _learnerStateRepository.fetchState(
-        learnerId: learnerId,
-        forceRefresh: true,
-      );
-      return (_learnerState.enrollment?.videosCompleted ?? 0) > unitIndex;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> _refreshAndCheckSubmissionSaved() async {
-    try {
-      _learnerState = await _learnerStateRepository.fetchState(
-        learnerId: learnerId,
-        forceRefresh: true,
-      );
-      return (_learnerState.enrollment?.submissionIndex ?? 0) > unitIndex ||
-          (_learnerState.submissionIndex ?? 0) > unitIndex;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> _refreshAndCheckQuizSaved() async {
-    try {
-      _learnerState = await _learnerStateRepository.fetchState(
-        learnerId: learnerId,
-        forceRefresh: true,
-      );
-      return (_learnerState.enrollment?.quizzesCompleted ?? 0) > unitIndex;
-    } catch (_) {
-      return false;
-    }
   }
 
   void continueAfterReview() {
@@ -1059,9 +1072,14 @@ class ClassChatController extends ChangeNotifier {
 
     try {
       final unitKey = _currentUnit.name;
+      await _learnerStateRepository.markLocalProgressReady(learnerId);
+      _completedUnitPoints = _learnerState.pendingProgressXp > 0
+          ? _learnerState.pendingProgressXp
+          : sessionTotalPoints;
 
       final submittedState = await _learnerStateRepository.submitProgress(
         learnerId: learnerId,
+        xp: _completedUnitPoints > 0 ? _completedUnitPoints : null,
         activityType: 'unit_complete',
         videoIndex: _videoWatchedThisUnit ? unitIndex + 1 : null,
         quizIndex: _quizProgressSaved ? unitIndex + 1 : null,
@@ -1072,6 +1090,13 @@ class ClassChatController extends ChangeNotifier {
         submittedState,
       );
       _learnerState = _reconcileArchetype(confirmedState);
+      if (_nextUnit != null) {
+        _learnerState = await _learnerStateRepository.prepareLocalUnit(
+          learnerId: learnerId,
+          unitIndex: unitIndex + 1,
+        );
+      }
+      _onProgressSaved?.call();
 
       await _sessionWindowRepository.markUnitCompleted(
         learnerId: learnerId,
@@ -1080,13 +1105,9 @@ class ClassChatController extends ChangeNotifier {
         windowStartDate: _learnerState.windowStartDate,
       );
 
-      _messages.removeWhere((m) => m.stepId == 'SAVING');
+      _messages.clear();
 
-      final reachedCap = _stateSaysCapped(_learnerState);
-
-      _outcome = reachedCap
-          ? ClassSessionOutcome.weeklyCapReached
-          : ClassSessionOutcome.choice;
+      _outcome = ClassSessionOutcome.choice;
       notifyListeners();
     } on ProgressConflictException {
       _hasCompletedUnit = false;
@@ -1097,10 +1118,7 @@ class ClassChatController extends ChangeNotifier {
         );
         _learnerState = refreshed;
         _messages.removeWhere((m) => m.stepId == 'SAVING');
-        final reachedCap = _stateSaysCapped(_learnerState);
-        _outcome = reachedCap
-            ? ClassSessionOutcome.weeklyCapReached
-            : ClassSessionOutcome.choice;
+        _outcome = ClassSessionOutcome.choice;
         notifyListeners();
       } catch (_) {
         _messages.removeWhere((m) => m.stepId == 'SAVING');
@@ -1120,6 +1138,12 @@ class ClassChatController extends ChangeNotifier {
     } catch (_) {
       _hasCompletedUnit = false;
       _messages.removeWhere((m) => m.stepId == 'SAVING');
+      if (_stateSaysCapped(_learnerState) &&
+          _learnerState.hasPendingLocalProgress) {
+        _outcome = ClassSessionOutcome.choice;
+        notifyListeners();
+        return;
+      }
       _errorMessage = 'Something went wrong saving your progress.';
       _push(
         ClassChatMessage(

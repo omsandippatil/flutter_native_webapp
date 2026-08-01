@@ -15,12 +15,18 @@ class ProfileRepository {
   final LocalCache _localCache;
   final LearnerStateRepository _learnerStateRepository;
 
-  Future<List<ProfileSummaryModel>> readCachedProfilesPage(String phone, int page, int pageSize) async {
+  Future<List<ProfileSummaryModel>> readCachedProfilesPage(
+    String phone,
+    int page,
+    int pageSize,
+  ) async {
     final raw = _localCache.getForeverList(
       CacheKeys.profilesPage(phone, page, pageSize),
       (json) => json,
     );
-    return raw == null ? const [] : ProfileSummaryModel.listFromCache(raw);
+    return raw == null
+        ? const []
+        : _withLocalOnboardingState(ProfileSummaryModel.listFromCache(raw));
   }
 
   Future<List<ProfileSummaryModel>> fetchProfilesPage({
@@ -34,13 +40,17 @@ class ProfileRepository {
       return readCachedProfilesPage(phone, page, pageSize);
     }
 
-    final data = await _http.get(ApiEndpoints.profiles, query: {
-      'phone': phone,
-      'page': page,
-      'page_size': pageSize,
-    });
-    final rows = ProfileSummaryModel.listFromJson(phone, data['profiles']);
-    await _localCache.setForeverRawList(key, ProfileSummaryModel.listToJson(rows));
+    final data = await _http.get(
+      ApiEndpoints.profiles,
+      query: {'phone': phone, 'page': page, 'page_size': pageSize},
+    );
+    final rows = _withLocalOnboardingState(
+      ProfileSummaryModel.listFromJson(phone, data['profiles']),
+    );
+    await _localCache.setForeverRawList(
+      key,
+      ProfileSummaryModel.listToJson(rows),
+    );
     return rows;
   }
 
@@ -64,50 +74,72 @@ class ProfileRepository {
     );
     if (!forceRefresh && _localCache.has(key)) {
       final raw = _localCache.getForeverList(key, (json) => json);
-      return raw == null ? const [] : ProfileSummaryModel.listFromCache(raw);
+      return raw == null
+          ? const []
+          : _withLocalOnboardingState(ProfileSummaryModel.listFromCache(raw));
     }
 
-    final data = await _http.get(ApiEndpoints.profilesSearch, query: {
-      'phone': phone,
-      if (grade != null) 'grade': grade,
-      if (division != null) 'division': division,
-      if (rollNumber != null) 'roll_number': rollNumber,
-      if (query != null) 'query': query,
-      'page': page,
-      'page_size': pageSize,
-    });
-    final rows = ProfileSummaryModel.listFromJson(phone, data['profiles']);
-    await _localCache.setForeverRawList(key, ProfileSummaryModel.listToJson(rows));
+    final data = await _http.get(
+      ApiEndpoints.profilesSearch,
+      query: {
+        'phone': phone,
+        if (grade != null) 'grade': grade,
+        if (division != null) 'division': division,
+        if (rollNumber != null) 'roll_number': rollNumber,
+        if (query != null) 'query': query,
+        'page': page,
+        'page_size': pageSize,
+      },
+    );
+    final rows = _withLocalOnboardingState(
+      ProfileSummaryModel.listFromJson(phone, data['profiles']),
+    );
+    await _localCache.setForeverRawList(
+      key,
+      ProfileSummaryModel.listToJson(rows),
+    );
     return rows;
   }
 
   Future<LearnerStateModel> selectProfile({
     required String phone,
     required String learnerId,
-    bool forceRefresh = false,
   }) async {
-    if (!forceRefresh) {
-      final cached = await _learnerStateRepository.readCached(learnerId);
-      if (cached != null) return cached;
-    }
-
-    final data = await _http.post(ApiEndpoints.profilesSelect, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-    });
+    final data = await _http.post(
+      ApiEndpoints.profilesSelect,
+      body: {'phone': phone, 'learner_id': learnerId},
+    );
     final model = LearnerStateModel.fromFullJson(learnerId, data);
-    await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
-    return model;
+    final profileData = data['profile'];
+    if (data['onboarding_completed'] == true ||
+        (profileData is Map && profileData['onboarding_completed'] == true)) {
+      await _markOnboardingCompleted(learnerId);
+    }
+    await _localCache.setForeverRaw(
+      CacheKeys.learnerState(learnerId),
+      model.toJson(),
+    );
+    return _learnerStateRepository.restoreLocalProgress(model);
   }
 
   Future<void> setActiveProfile(ActiveProfileModel profile) async {
-    await _localCache.setForeverRaw(CacheKeys.activeProfile(), profile.toJson());
+    await _localCache.setForeverRaw(
+      CacheKeys.activeProfile(),
+      profile.toJson(),
+    );
+    if (profile.onboardingCompleted) {
+      await _markOnboardingCompleted(profile.learnerId);
+    }
   }
 
   Future<ActiveProfileModel?> readActiveProfile() async {
     final raw = _localCache.getForeverRaw(CacheKeys.activeProfile());
     if (raw == null) return null;
-    return ActiveProfileModel.fromJson(raw);
+    final profile = ActiveProfileModel.fromJson(raw);
+    if (profile.onboardingCompleted) {
+      await _markOnboardingCompleted(profile.learnerId);
+    }
+    return profile;
   }
 
   Future<void> clearActiveProfile() async {
@@ -119,11 +151,10 @@ class ProfileRepository {
     required String learnerId,
     required String avatar,
   }) async {
-    final data = await _http.post(ApiEndpoints.profilesAvatar, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-      'avatar': avatar,
-    });
+    final data = await _http.post(
+      ApiEndpoints.profilesAvatar,
+      body: {'phone': phone, 'learner_id': learnerId, 'avatar': avatar},
+    );
     final resolvedAvatar = data['avatar'] as String? ?? avatar;
     if (data['success'] == true) {
       await RosterCacheSync.patchRow(
@@ -141,11 +172,10 @@ class ProfileRepository {
     required String learnerId,
     required Map<String, dynamic> updates,
   }) async {
-    final data = await _http.post(ApiEndpoints.profilesUpdate, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-      'updates': updates,
-    });
+    final data = await _http.post(
+      ApiEndpoints.profilesUpdate,
+      body: {'phone': phone, 'learner_id': learnerId, 'updates': updates},
+    );
 
     if (updates.containsKey('student_name')) {
       await RosterCacheSync.patchRow(
@@ -160,7 +190,10 @@ class ProfileRepository {
     final model = existing == null
         ? LearnerStateModel.fromFullJson(learnerId, data)
         : existing.mergeFrom(data);
-    await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
+    await _localCache.setForeverRaw(
+      CacheKeys.learnerState(learnerId),
+      model.toJson(),
+    );
     return model;
   }
 
@@ -171,13 +204,26 @@ class ProfileRepository {
     String? course,
     bool markComplete = true,
   }) async {
-    await _http.post(ApiEndpoints.onboardingComplete, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-      if (updates != null && updates.isNotEmpty) 'updates': updates,
-      if (course != null) 'course': course,
-      'mark_complete': markComplete ? 1 : 0,
-    });
+    await _http.post(
+      ApiEndpoints.onboardingComplete,
+      body: {
+        'phone': phone,
+        'learner_id': learnerId,
+        if (updates != null && updates.isNotEmpty) 'updates': updates,
+        if (course != null) 'course': course,
+        'mark_complete': markComplete ? 1 : 0,
+      },
+    );
+
+    if (markComplete) {
+      await _markOnboardingCompleted(learnerId);
+      await RosterCacheSync.patchRow(
+        _localCache,
+        phone: phone,
+        learnerId: learnerId,
+        onboardingCompleted: true,
+      );
+    }
 
     if (updates != null && updates.containsKey('student_name')) {
       await RosterCacheSync.patchRow(
@@ -192,7 +238,36 @@ class ProfileRepository {
       learnerId: learnerId,
       forceRefresh: true,
     );
-    await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), refreshed.toJson());
+    await _localCache.setForeverRaw(
+      CacheKeys.learnerState(learnerId),
+      refreshed.toJson(),
+    );
     return refreshed;
   }
+
+  bool isOnboardingCompleted(String learnerId, {bool fallback = false}) =>
+      fallback ||
+      _localCache.getForeverRaw(
+            CacheKeys.onboardingCompleted(learnerId),
+          )?['completed'] ==
+          true;
+
+  List<ProfileSummaryModel> _withLocalOnboardingState(
+    List<ProfileSummaryModel> profiles,
+  ) => profiles
+      .map(
+        (profile) =>
+            isOnboardingCompleted(
+              profile.learnerId,
+              fallback: profile.onboardingCompleted,
+            )
+            ? profile.copyWith(onboardingCompleted: true)
+            : profile,
+      )
+      .toList(growable: false);
+
+  Future<void> _markOnboardingCompleted(String learnerId) =>
+      _localCache.setForeverRaw(CacheKeys.onboardingCompleted(learnerId), {
+        'completed': true,
+      });
 }

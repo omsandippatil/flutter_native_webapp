@@ -15,7 +15,8 @@ class ProfileSelectScreen extends ConsumerStatefulWidget {
   final String phone;
 
   @override
-  ConsumerState<ProfileSelectScreen> createState() => _ProfileSelectScreenState();
+  ConsumerState<ProfileSelectScreen> createState() =>
+      _ProfileSelectScreenState();
 }
 
 class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
@@ -35,6 +36,10 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
         phone: widget.phone,
         learnerId: profile.learnerId,
       );
+      final onboardingCompleted = repository.isOnboardingCompleted(
+        profile.learnerId,
+        fallback: profile.onboardingCompleted,
+      );
 
       await setActiveProfile(
         ref,
@@ -45,12 +50,12 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
           grade: profile.grade,
           division: profile.division,
           avatar: profile.avatar,
-          onboardingCompleted: profile.onboardingCompleted,
+          onboardingCompleted: onboardingCompleted,
         ),
       );
 
       if (!mounted) return;
-      context.go(profile.onboardingCompleted ? AppRoutes.home : AppRoutes.onboarding);
+      context.go(onboardingCompleted ? AppRoutes.home : AppRoutes.onboarding);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -106,7 +111,8 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
                         const SizedBox(height: 16),
                       ],
                       profilesAsync.when(
-                        data: (profiles) => _buildProfileGrid(profiles, isDesktop),
+                        data: (profiles) =>
+                            _buildProfileGrid(profiles, isDesktop),
                         loading: () => const Padding(
                           padding: EdgeInsets.symmetric(vertical: 48),
                           child: Center(child: CircularProgressIndicator()),
@@ -159,7 +165,9 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
         return _ProfileCard(
           profile: profile,
           isLoading: isSelecting,
-          onTap: _selectingLearnerId == null ? () => _selectProfile(profile) : null,
+          onTap: _selectingLearnerId == null
+              ? () => _selectProfile(profile)
+              : null,
         );
       },
     );
@@ -167,7 +175,11 @@ class _ProfileSelectScreenState extends ConsumerState<ProfileSelectScreen> {
 }
 
 class _ProfileCard extends StatelessWidget {
-  const _ProfileCard({required this.profile, required this.onTap, required this.isLoading});
+  const _ProfileCard({
+    required this.profile,
+    required this.onTap,
+    required this.isLoading,
+  });
 
   final ProfileSummaryModel profile;
   final VoidCallback? onTap;
@@ -215,7 +227,9 @@ class _ProfileCard extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    profile.studentName.isEmpty ? 'Student' : profile.studentName,
+                    profile.studentName.isEmpty
+                        ? 'Student'
+                        : profile.studentName,
                     style: GoogleFonts.inter(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -258,7 +272,8 @@ class _ProfileCard extends StatelessWidget {
     if (name.isEmpty) return '?';
     final parts = name.trim().split(RegExp(r'\s+'));
     if (parts.length == 1) return parts.first.substring(0, 1).toUpperCase();
-    return (parts.first.substring(0, 1) + parts.last.substring(0, 1)).toUpperCase();
+    return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
+        .toUpperCase();
   }
 }
 
@@ -278,7 +293,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Color(0xFFD34B40), size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFD34B40),
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

@@ -49,7 +49,8 @@ class LearnerStateRepository {
       query: {'learner_id': learnerId},
     );
 
-    return _writeFull(learnerId, data);
+    final serverState = await _writeFull(learnerId, data);
+    return restoreLocalProgress(serverState);
   }
 
   Future<LearnerStateModel> enrollCourse({
@@ -103,20 +104,207 @@ class LearnerStateRepository {
       throw ProgressNotRecordedException(data);
     }
 
-    return _writeProgressResult(learnerId, mergedProgress);
+    final model = await _writeProgressResult(learnerId, mergedProgress);
+    if (activityType == 'unit_complete') {
+      await _localCache.delete(CacheKeys.activityProgress(learnerId));
+      model.hasPendingLocalProgress = false;
+      model.pendingProgressXp = 0;
+      await _localCache.setForeverRaw(
+        CacheKeys.learnerState(learnerId),
+        model.toJson(),
+      );
+    }
+    return model;
   }
 
   Future<LearnerStateModel> applyLocalProgress({
     required String learnerId,
+    int xp = 0,
     int? videoIndex,
     int? quizIndex,
     int? submissionIndex,
-  }) {
-    return _writeProgressResult(learnerId, {
-      'video_index': ?videoIndex,
-      'quiz_index': ?quizIndex,
-      'submission_index': ?submissionIndex,
+  }) async {
+    final cachedState = await readCached(learnerId);
+    final existing = _localCache.getForeverRaw(
+      CacheKeys.activityProgress(learnerId),
+    );
+    final requestedIndex = videoIndex ?? submissionIndex ?? quizIndex;
+    if (requestedIndex == null || requestedIndex <= 0) {
+      throw ArgumentError('A positive unit progress index is required.');
+    }
+    final unitIndex = requestedIndex - 1;
+    final sameUnit = existing != null && _localUnitIndex(existing) == unitIndex;
+    final progress = <String, dynamic>{
+      if (sameUnit) ...existing,
+      'learner_id': learnerId,
+      'course': cachedState?.enrollment?.course,
+      'unit_index': unitIndex,
+      'video_done': sameUnit
+          ? (existing['video_done'] == true ||
+                ((existing['video_index'] as num?)?.toInt() ?? 0) > unitIndex)
+          : false,
+      'submission_done': sameUnit
+          ? (existing['submission_done'] == true ||
+                ((existing['submission_index'] as num?)?.toInt() ?? 0) >
+                    unitIndex)
+          : false,
+      'quiz_done': sameUnit
+          ? (existing['quiz_done'] == true ||
+                ((existing['quiz_index'] as num?)?.toInt() ?? 0) > unitIndex)
+          : false,
+      'ready_to_sync': false,
+    };
+    if (videoIndex != null) {
+      progress['video_done'] = true;
+      progress['video_xp'] = xp;
+    }
+    if (submissionIndex != null) {
+      progress['submission_done'] = true;
+      progress['submission_xp'] = xp;
+    }
+    if (quizIndex != null) {
+      progress['quiz_done'] = true;
+      progress['quiz_xp'] = xp;
+    }
+    progress['pending_xp'] =
+        ((progress['video_xp'] as num?)?.toInt() ?? 0) +
+        ((progress['submission_xp'] as num?)?.toInt() ?? 0) +
+        ((progress['quiz_xp'] as num?)?.toInt() ?? 0);
+    await _localCache.setForeverRaw(
+      CacheKeys.activityProgress(learnerId),
+      progress,
+    );
+
+    return restoreLocalProgress(
+      cachedState ?? LearnerStateModel(learnerId: learnerId),
+    );
+  }
+
+  Future<LearnerStateModel> restoreLocalProgress(
+    LearnerStateModel serverState,
+  ) async {
+    final progress = _localCache.getForeverRaw(
+      CacheKeys.activityProgress(serverState.learnerId),
+    );
+    if (progress == null) return serverState;
+
+    final pendingCourse = progress['course'] as String?;
+    if (pendingCourse != serverState.enrollment?.course) {
+      await _localCache.delete(
+        CacheKeys.activityProgress(serverState.learnerId),
+      );
+      return serverState;
+    }
+
+    final unitIndex = _localUnitIndex(progress);
+    if (unitIndex == null) return serverState;
+    final existingEnrollment = serverState.enrollment;
+    if (existingEnrollment == null) return serverState;
+
+    final videoDone =
+        progress['video_done'] == true ||
+        ((progress['video_index'] as num?)?.toInt() ?? 0) > unitIndex;
+    final submissionDone =
+        progress['submission_done'] == true ||
+        ((progress['submission_index'] as num?)?.toInt() ?? 0) > unitIndex;
+    final quizDone =
+        progress['quiz_done'] == true ||
+        ((progress['quiz_index'] as num?)?.toInt() ?? 0) > unitIndex;
+    serverState.enrollment = existingEnrollment.copyWith(
+      videosCompleted: unitIndex + (videoDone ? 1 : 0),
+      submissionIndex: unitIndex + (submissionDone ? 1 : 0),
+      quizzesCompleted: unitIndex + (quizDone ? 1 : 0),
+    );
+    serverState.submissionIndex = unitIndex + (submissionDone ? 1 : 0);
+    final model = serverState;
+    model.hasPendingLocalProgress = true;
+    model.pendingProgressXp = (progress['pending_xp'] as num?)?.toInt() ?? 0;
+    await _localCache.setForeverRaw(
+      CacheKeys.learnerState(serverState.learnerId),
+      model.toJson(),
+    );
+    return model;
+  }
+
+  int? _localUnitIndex(Map<String, dynamic> progress) {
+    final explicit = (progress['unit_index'] as num?)?.toInt();
+    if (explicit != null) return explicit;
+    final indexes = [
+      (progress['video_index'] as num?)?.toInt(),
+      (progress['submission_index'] as num?)?.toInt(),
+      (progress['quiz_index'] as num?)?.toInt(),
+    ].whereType<int>().where((value) => value > 0).toList();
+    if (indexes.isEmpty) return null;
+    return indexes.reduce((a, b) => a < b ? a : b) - 1;
+  }
+
+  Future<LearnerStateModel> prepareLocalUnit({
+    required String learnerId,
+    required int unitIndex,
+  }) async {
+    final state = await readCached(learnerId);
+    await _localCache.setForeverRaw(CacheKeys.activityProgress(learnerId), {
+      'learner_id': learnerId,
+      'course': state?.enrollment?.course,
+      'unit_index': unitIndex,
+      'video_done': false,
+      'submission_done': false,
+      'quiz_done': false,
+      'pending_xp': 0,
+      'ready_to_sync': false,
     });
+    return restoreLocalProgress(
+      state ?? LearnerStateModel(learnerId: learnerId),
+    );
+  }
+
+  Future<void> markLocalProgressReady(String learnerId) async {
+    final progress = _localCache.getForeverRaw(
+      CacheKeys.activityProgress(learnerId),
+    );
+    if (progress == null) return;
+    await _localCache.setForeverRaw(CacheKeys.activityProgress(learnerId), {
+      ...progress,
+      'ready_to_sync': true,
+    });
+  }
+
+  Future<void> showHomeCelebration(String learnerId, {required int points}) =>
+      _localCache.setForeverRaw(CacheKeys.homeCelebration(learnerId), {
+        'show': true,
+        'points': points,
+      });
+
+  Map<String, dynamic>? readHomeCelebration(String learnerId) =>
+      _localCache.getForeverRaw(CacheKeys.homeCelebration(learnerId));
+
+  Future<void> clearHomeCelebration(String learnerId) =>
+      _localCache.delete(CacheKeys.homeCelebration(learnerId));
+
+  Future<LearnerStateModel?> syncCompletedLocalProgress(
+    String learnerId,
+  ) async {
+    final progress = _localCache.getForeverRaw(
+      CacheKeys.activityProgress(learnerId),
+    );
+    if (progress == null || progress['ready_to_sync'] != true) return null;
+
+    final unitIndex = _localUnitIndex(progress);
+    final synced = await submitProgress(
+      learnerId: learnerId,
+      xp: (progress['pending_xp'] as num?)?.toInt(),
+      activityType: 'unit_complete',
+      videoIndex: progress['video_done'] == true && unitIndex != null
+          ? unitIndex + 1
+          : null,
+      quizIndex: progress['quiz_done'] == true && unitIndex != null
+          ? unitIndex + 1
+          : null,
+      submissionIndex: progress['submission_done'] == true && unitIndex != null
+          ? unitIndex + 1
+          : null,
+    );
+    return synced;
   }
 
   Future<void> applyAchievementAward(

@@ -8,7 +8,9 @@ import 'http_client_provider.dart';
 import 'learner_state_provider.dart';
 import 'local_cache_provider.dart';
 
-final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async {
+final profileRepositoryProvider = FutureProvider<ProfileRepository>((
+  ref,
+) async {
   // `ref.read(...future)` here, not `ref.watch`: these are one-time async
   // setup steps (open the Hive box, construct the repository), not values
   // this provider should keep re-running for. `ref.watch` on a `.future`
@@ -20,37 +22,72 @@ final profileRepositoryProvider = FutureProvider<ProfileRepository>((ref) async 
   // `redirect` while this is still mid-flight — producing an unbroken
   // loading loop that never settles into `AsyncData`.
   final localCache = await ref.read(localCacheProvider.future);
-  final learnerStateRepository = await ref.read(learnerStateRepositoryProvider.future);
-  return ProfileRepository(ref.read(httpClientProvider), localCache, learnerStateRepository);
+  final learnerStateRepository = await ref.read(
+    learnerStateRepositoryProvider.future,
+  );
+  return ProfileRepository(
+    ref.read(httpClientProvider),
+    localCache,
+    learnerStateRepository,
+  );
 });
 
 class ProfilesPageRequest {
-  const ProfilesPageRequest({required this.phone, this.page = 1, this.pageSize = 10});
+  const ProfilesPageRequest({
+    required this.phone,
+    this.page = 1,
+    this.pageSize = 10,
+  });
   final String phone;
   final int page;
   final int pageSize;
 
   @override
   bool operator ==(Object other) =>
-      other is ProfilesPageRequest && other.phone == phone && other.page == page && other.pageSize == pageSize;
+      other is ProfilesPageRequest &&
+      other.phone == phone &&
+      other.page == page &&
+      other.pageSize == pageSize;
 
   @override
   int get hashCode => Object.hash(phone, page, pageSize);
 }
 
-final profilesPageDataProvider =
-    FutureProvider.autoDispose.family<List<ProfileSummaryModel>, ProfilesPageRequest>((ref, request) async {
-  final repository = await ref.read(profileRepositoryProvider.future);
-  final cached = await repository.readCachedProfilesPage(request.phone, request.page, request.pageSize);
-  if (cached.isNotEmpty) return cached;
-  return repository.fetchProfilesPage(phone: request.phone, page: request.page, pageSize: request.pageSize);
-});
+final profilesPageDataProvider = FutureProvider.autoDispose
+    .family<List<ProfileSummaryModel>, ProfilesPageRequest>((
+      ref,
+      request,
+    ) async {
+      final repository = await ref.read(profileRepositoryProvider.future);
+      final cached = await repository.readCachedProfilesPage(
+        request.phone,
+        request.page,
+        request.pageSize,
+      );
+      try {
+        return await repository.fetchProfilesPage(
+          phone: request.phone,
+          page: request.page,
+          pageSize: request.pageSize,
+          forceRefresh: true,
+        );
+      } catch (_) {
+        if (cached.isNotEmpty) return cached;
+        rethrow;
+      }
+    });
 
-final selectProfileProvider =
-    FutureProvider.autoDispose.family<LearnerStateModel, ({String phone, String learnerId})>((ref, args) async {
-  final repository = await ref.read(profileRepositoryProvider.future);
-  return repository.selectProfile(phone: args.phone, learnerId: args.learnerId);
-});
+final selectProfileProvider = FutureProvider.autoDispose
+    .family<LearnerStateModel, ({String phone, String learnerId})>((
+      ref,
+      args,
+    ) async {
+      final repository = await ref.read(profileRepositoryProvider.future);
+      return repository.selectProfile(
+        phone: args.phone,
+        learnerId: args.learnerId,
+      );
+    });
 
 /// The profile the user picked on the profile-select screen. Persisted forever
 /// so the app can jump straight to Home on next launch without re-selecting.

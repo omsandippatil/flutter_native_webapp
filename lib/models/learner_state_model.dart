@@ -25,6 +25,8 @@ class LearnerStateModel {
     this.achievements,
     this.enrollment,
     this.hasPendingConflict = false,
+    this.hasPendingLocalProgress = false,
+    this.pendingProgressXp = 0,
   });
 
   final String learnerId;
@@ -48,6 +50,8 @@ class LearnerStateModel {
   List<AchievementModel>? achievements;
   EnrollmentModel? enrollment;
   bool hasPendingConflict;
+  bool hasPendingLocalProgress;
+  int pendingProgressXp;
 
   factory LearnerStateModel.fromFullJson(
     String learnerId,
@@ -96,14 +100,21 @@ class LearnerStateModel {
       lastActivityDate =
           json['last_activity_date'] as String? ?? lastActivityDate;
     }
-    if (full || json.containsKey('units_completed_this_week')) {
+    if (full ||
+        json.containsKey('units_completed_this_week') ||
+        json.containsKey('activities_watched_this_week')) {
       unitsCompletedThisWeek =
           (json['units_completed_this_week'] as num?)?.toInt() ??
+          (json['activities_watched_this_week'] as num?)?.toInt() ??
           unitsCompletedThisWeek;
     }
-    if (full || json.containsKey('max_weekly_units')) {
+    if (full ||
+        json.containsKey('max_weekly_units') ||
+        json.containsKey('max_weekly_activities')) {
       maxWeeklyUnits =
-          (json['max_weekly_units'] as num?)?.toInt() ?? maxWeeklyUnits;
+          (json['max_weekly_units'] as num?)?.toInt() ??
+          (json['max_weekly_activities'] as num?)?.toInt() ??
+          maxWeeklyUnits;
     }
     if (full || json.containsKey('is_bingeing')) {
       isBingeing = json['is_bingeing'] as bool? ?? isBingeing;
@@ -114,9 +125,13 @@ class LearnerStateModel {
     if (full || json.containsKey('window_resets_on')) {
       windowResetsOn = json['window_resets_on'] as String? ?? windowResetsOn;
     }
-    if (full || json.containsKey('units_remaining')) {
+    if (full ||
+        json.containsKey('units_remaining') ||
+        json.containsKey('activities_remaining')) {
       unitsRemaining =
-          (json['units_remaining'] as num?)?.toInt() ?? unitsRemaining;
+          (json['units_remaining'] as num?)?.toInt() ??
+          (json['activities_remaining'] as num?)?.toInt() ??
+          unitsRemaining;
     }
     if (full || json.containsKey('archetype')) {
       archetype = json['archetype'] as String? ?? archetype;
@@ -138,13 +153,19 @@ class LearnerStateModel {
           ? EnrollmentModel.fromJson(Map<String, dynamic>.from(e))
           : enrollment;
     }
+    if (json.containsKey('has_pending_local_progress')) {
+      hasPendingLocalProgress =
+          json['has_pending_local_progress'] as bool? ?? false;
+    }
+    if (json.containsKey('pending_progress_xp')) {
+      pendingProgressXp = (json['pending_progress_xp'] as num?)?.toInt() ?? 0;
+    }
     _syncProgressIntoEnrollment(json);
     return this;
   }
 
   void _syncProgressIntoEnrollment(Map<String, dynamic> json) {
-    final existing = enrollment;
-    if (existing == null) return;
+    final existing = enrollment ?? const EnrollmentModel();
 
     final videoIndex = (json['video_index'] as num?)?.toInt();
     final videosCompleted = (json['videos_completed'] as num?)?.toInt();
@@ -211,6 +232,8 @@ class LearnerStateModel {
         : AchievementModel.listToJson(achievements!),
     'enrollment': enrollment?.toJson(),
     'has_pending_conflict': hasPendingConflict,
+    'has_pending_local_progress': hasPendingLocalProgress,
+    'pending_progress_xp': pendingProgressXp,
   };
 
   factory LearnerStateModel.fromCache(Map<String, dynamic> json) {

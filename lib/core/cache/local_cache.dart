@@ -26,6 +26,8 @@ class LocalCacheOpenTimeoutException implements Exception {
 class LocalCache {
   LocalCache._(this._box, this._indexBox);
 
+  LocalCache.forTesting(this._box, this._indexBox);
+
   static const String _boxName = 'tap_forever_cache';
   static const String _indexBoxName = 'tap_forever_cache_index';
 
@@ -79,7 +81,10 @@ class LocalCache {
     return null;
   }
 
-  List<T>? getForeverList<T>(String key, T Function(Map<String, dynamic> json) fromJson) {
+  List<T>? getForeverList<T>(
+    String key,
+    T Function(Map<String, dynamic> json) fromJson,
+  ) {
     final raw = _box.get(key);
     if (raw == null) return null;
     try {
@@ -133,7 +138,10 @@ class LocalCache {
     await _touch(key);
   }
 
-  Future<void> setForeverRawList(String key, List<Map<String, dynamic>> value) async {
+  Future<void> setForeverRawList(
+    String key,
+    List<Map<String, dynamic>> value,
+  ) async {
     await _box.put(key, jsonEncode(value));
     await _touch(key);
   }
@@ -147,8 +155,10 @@ class LocalCache {
     await _indexBox.delete(key);
   }
 
-  List<String> keysWithPrefix(String prefix) =>
-      _box.keys.map((k) => k.toString()).where((k) => k.startsWith(prefix)).toList(growable: false);
+  List<String> keysWithPrefix(String prefix) => _box.keys
+      .map((k) => k.toString())
+      .where((k) => k.startsWith(prefix))
+      .toList(growable: false);
 
   Future<void> deletePrefix(String prefix) async {
     final keys = keysWithPrefix(prefix);
@@ -159,11 +169,17 @@ class LocalCache {
   List<Map<String, dynamic>>? getProfilesIndex(String phone) =>
       getForeverList(CacheKeys.profilesIndex(phone), (json) => json);
 
-  Future<void> setProfilesIndex(String phone, List<Map<String, dynamic>> profiles) async {
+  Future<void> setProfilesIndex(
+    String phone,
+    List<Map<String, dynamic>> profiles,
+  ) async {
     await setForeverRawList(CacheKeys.profilesIndex(phone), profiles);
   }
 
-  Future<void> mergeIntoProfilesIndex(String phone, List<Map<String, dynamic>> profiles) async {
+  Future<void> mergeIntoProfilesIndex(
+    String phone,
+    List<Map<String, dynamic>> profiles,
+  ) async {
     if (profiles.isEmpty) return;
     final existing = getProfilesIndex(phone) ?? const [];
     final byLearnerId = {

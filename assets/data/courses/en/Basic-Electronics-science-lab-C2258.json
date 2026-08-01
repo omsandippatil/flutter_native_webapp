@@ -107,18 +107,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains copper tape or a coin cell.",
               "invalid_criteria": "Anything other than the target objects."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note and tell us: How does the card light up?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Picture of your unique Glowing Card!!"
             }
           ]
         }
@@ -221,18 +209,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a DC motor.",
               "invalid_criteria": "Anything other than a motor."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note and tell us: Can the fan and light work together?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Picture of the Lamp + Fan setup!!"
             }
           ]
         }
@@ -327,19 +303,7 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains an LDR (Light Dependent Resistor).",
               "invalid_criteria": "Anything other than an LDR."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note and tell us: When does the LED glow?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video of the circuit working in darkness!!"
-            }
+            }      
           ]
         }
       ]

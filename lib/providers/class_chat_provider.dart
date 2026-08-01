@@ -36,6 +36,7 @@ final classChatControllerProvider = FutureProvider.autoDispose
       final learnerStateRepository = await ref.watch(
         learnerStateRepositoryProvider.future,
       );
+      await learnerStateRepository.clearHomeCelebration(bootstrap.learnerId);
       final submissionReviewRepository = await ref.watch(
         submissionReviewRepositoryProvider.future,
       );
@@ -57,6 +58,7 @@ final classChatControllerProvider = FutureProvider.autoDispose
         courseDisplay: bootstrap.courseName,
         flow: flow,
         unit: bootstrap.unit!,
+        nextUnit: bootstrap.nextUnit,
         unitIndex: bootstrap.unitIndex,
         initialLearnerState: bootstrap.learnerState,
         learnerStateRepository: learnerStateRepository,

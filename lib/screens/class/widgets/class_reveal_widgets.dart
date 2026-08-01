@@ -61,27 +61,85 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!controller.hasNextUnit) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Course complete! 🎉',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'You completed every activity in this course.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(color: AppTheme.subheadingColor),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(
+                      learnerStateDataProvider(controller.learnerId),
+                    );
+                    context.go(AppRoutes.home);
+                  },
+                  child: const Text('Back to home'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final isWide = MediaQuery.sizeOf(context).width >= 760;
+    final previewWidth = isWide ? 210.0 : 96.0;
+    final previewHeight = isWide ? 170.0 : 96.0;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'Watch another video?',
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: AppTheme.subheadingColor,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.classroomMessageSurface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Watch another video?',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: AppTheme.subheadingColor,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              const Icon(
-                Icons.volume_up_rounded,
-                size: 16,
-                color: AppTheme.imagePlaceholder,
-              ),
-            ],
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.volume_up_rounded,
+                  size: 16,
+                  color: AppTheme.buttonColor,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           Container(
@@ -98,8 +156,8 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    width: 96,
-                    height: 96,
+                    width: previewWidth,
+                    height: previewHeight,
                     color: AppTheme.classroomMessageSurface,
                     child: const Icon(
                       Icons.image_rounded,
@@ -122,7 +180,7 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        controller.unitName,
+                        controller.nextUnitName,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -142,7 +200,7 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                       _EarnRow(
                         icon: Icons.stars_rounded,
                         iconColor: const Color(0xFFE29A22),
-                        label: '${controller.sessionTotalPoints} Points',
+                        label: '${controller.nextUnitPoints} Points',
                       ),
                       const SizedBox(height: 4),
                       const _EarnRow(
@@ -186,7 +244,9 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                 child: SizedBox(
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
+                      await controller.deferNextActivity();
+                      if (!context.mounted) return;
                       ref.invalidate(
                         learnerStateDataProvider(controller.learnerId),
                       );

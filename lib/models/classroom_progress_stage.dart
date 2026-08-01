@@ -27,7 +27,6 @@ enum ClassroomProgressStage {
     ClassroomProgressStage.unitCompleted => 1,
   };
 }
-
 class ClassroomProgressSnapshot {
   const ClassroomProgressSnapshot({
     required this.stage,
@@ -49,11 +48,20 @@ class ClassroomProgressSnapshot {
 class ClassroomProgressResolver {
   const ClassroomProgressResolver._();
 
-  static int resolveUnitIndex(EnrollmentModel enrollment, int totalUnits) {
+  static int resolveUnitIndex(
+    EnrollmentModel enrollment,
+    int totalUnits, {
+    int? learnerSubmissionIndex,
+  }) {
+    final effectiveSubmissionIndex = [
+      enrollment.submissionIndex,
+      ?learnerSubmissionIndex,
+    ].reduce((a, b) => a > b ? a : b);
+
     final firstIncomplete = [
       enrollment.videosCompleted,
       enrollment.quizzesCompleted,
-      enrollment.submissionIndex,
+      effectiveSubmissionIndex,
     ].reduce((a, b) => a < b ? a : b);
     if (totalUnits == 0) return 0;
     return firstIncomplete >= totalUnits ? totalUnits - 1 : firstIncomplete;
@@ -61,14 +69,16 @@ class ClassroomProgressResolver {
 
   static int resolveUnitIndexForCourse(
     EnrollmentModel enrollment,
-    List<CourseUnitModel> units,
-  ) {
+    List<CourseUnitModel> units, {
+    int? learnerSubmissionIndex,
+  }) {
     if (units.isEmpty) return 0;
     for (var index = 0; index < units.length; index++) {
       final snapshot = resolve(
         enrollment: enrollment,
         unitIndex: index,
         unit: units[index],
+        learnerSubmissionIndex: learnerSubmissionIndex,
       );
       if (snapshot.stage != ClassroomProgressStage.unitCompleted) {
         return index;
@@ -81,9 +91,15 @@ class ClassroomProgressResolver {
     required EnrollmentModel enrollment,
     required int unitIndex,
     CourseUnitModel? unit,
+    int? learnerSubmissionIndex,
   }) {
+    final effectiveSubmissionIndex = [
+      enrollment.submissionIndex,
+      ?learnerSubmissionIndex,
+    ].reduce((a, b) => a > b ? a : b);
+
     final videoDone = enrollment.videosCompleted > unitIndex;
-    final submissionDone = enrollment.submissionIndex > unitIndex;
+    final submissionDone = effectiveSubmissionIndex > unitIndex;
     final quizDone = enrollment.quizzesCompleted > unitIndex;
     final hasSubmission = unit == null || unit.assignments.isNotEmpty;
     final hasQuiz = unit == null || (unit.quiz?.questions.isNotEmpty ?? true);

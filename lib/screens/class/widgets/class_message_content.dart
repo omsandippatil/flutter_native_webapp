@@ -53,7 +53,10 @@ class ClassMessageContent extends StatelessWidget {
       case ClassChatContentType.submissionReview:
         return ClassSubmissionReviewCard(message: message);
       case ClassChatContentType.submissionReward:
-        return ClassSubmissionRewardCard(message: message);
+        return ClassSubmissionRewardCard(
+          message: message,
+          controller: controller,
+        );
       case ClassChatContentType.quizQuestion:
         return isUser
             ? ClassTextBubble(text: message.text ?? '', isUser: true)
@@ -111,6 +114,76 @@ class ClassCheckpointCard extends StatelessWidget {
         buttonLabel: buttonLabel,
         onPressed: () => controller.continueCheckpoint(action),
         fillAvailableHeight: fillAvailableHeight,
+      );
+    }
+
+    if ((action == 'quiz_begin_art' || action == 'quiz_complete_art') &&
+        image != null) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 300),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppTheme.classroomMessageSurface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.asset(image, height: 260, fit: BoxFit.contain),
+          ),
+        ),
+      );
+    }
+
+    if ((action == 'finish' || action == 'video_reward') && image != null) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 320),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.classroomMessageSurface,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(image, height: 210, fit: BoxFit.contain),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message.text ?? '',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  height: 1.4,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textColor,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: () => controller.continueCheckpoint(action),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.buttonColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(buttonLabel),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -229,11 +302,7 @@ class ClassTextBubble extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppTheme.buttonColor, Color(0xFF6E6EE0)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: const Color(0xFFE2F5E9),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(4),
@@ -246,7 +315,7 @@ class ClassTextBubble extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 15,
             height: 1.4,
-            color: Colors.white,
+            color: AppTheme.textColor,
           ),
         ),
       );

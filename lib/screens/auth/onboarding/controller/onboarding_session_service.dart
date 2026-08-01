@@ -1,12 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../data/repositories/achievements_repository.dart';
+import '../../../../data/repositories/learner_state_repository.dart';
 import '../../../../data/repositories/profile_repository.dart';
 import '../../../../models/active_profile_model.dart';
 import '../../../../models/learner_state_model.dart';
 import '../../../../models/program_content/course_index_entry_model.dart';
-import '../../../../providers/achievements_provider.dart';
 import '../../../../providers/learner_state_provider.dart';
 import '../../../../providers/profile_provider.dart';
 import '../../../../providers/program_content_provider.dart';
@@ -52,20 +50,17 @@ class OnboardingCompletionResult {
 class OnboardingSessionService {
   const OnboardingSessionService._({
     required ProfileRepository profileRepository,
-    required AchievementsRepository achievementsRepository,
+    required LearnerStateRepository learnerStateRepository,
   }) : _profileRepository = profileRepository,
-       _achievementsRepository = achievementsRepository;
+       _learnerStateRepository = learnerStateRepository;
 
   final ProfileRepository _profileRepository;
-  final AchievementsRepository _achievementsRepository;
+  final LearnerStateRepository _learnerStateRepository;
 
   static Future<OnboardingBootstrapData> load(WidgetRef ref) async {
     final profileRepository = await ref.read(profileRepositoryProvider.future);
     final learnerStateRepository = await ref.read(
       learnerStateRepositoryProvider.future,
-    );
-    final achievementsRepository = await ref.read(
-      achievementsRepositoryProvider.future,
     );
     final programContentRepository = await ref.read(
       programContentRepositoryProvider.future,
@@ -91,7 +86,7 @@ class OnboardingSessionService {
       steps: steps,
       sessionService: OnboardingSessionService._(
         profileRepository: profileRepository,
-        achievementsRepository: achievementsRepository,
+        learnerStateRepository: learnerStateRepository,
       ),
     );
   }
@@ -145,17 +140,28 @@ class OnboardingSessionService {
     );
   }
 
-  Future<OnboardingCompletionResult> completeAndAward({
+  Future<OnboardingCompletionResult> completeOnboarding({
     required WidgetRef ref,
     required ActiveProfileModel activeProfile,
     required String? courseId,
   }) async {
-    final updatedState = await _profileRepository.completeOnboarding(
+    var updatedState = await _profileRepository.completeOnboarding(
       phone: activeProfile.phone,
       learnerId: activeProfile.learnerId,
       course: courseId,
       markComplete: true,
     );
+
+    // A newly onboarded learner always starts from the first unit's video.
+    // Some legacy enrollment responses contain cumulative video counters;
+    // pinning the local transaction to unit zero prevents those counters from
+    // incorrectly opening the submission screen on the learner's first visit.
+    if (courseId != null && courseId.isNotEmpty) {
+      updatedState = await _learnerStateRepository.prepareLocalUnit(
+        learnerId: activeProfile.learnerId,
+        unitIndex: 0,
+      );
+    }
 
     final updatedProfile = ActiveProfileModel(
       phone: activeProfile.phone,
@@ -170,24 +176,11 @@ class OnboardingSessionService {
 
     await setActiveProfile(ref, updatedProfile);
     ref.invalidate(learnerStateDataProvider(activeProfile.learnerId));
-    await awardCompletionBonus(activeProfile.learnerId);
 
     return OnboardingCompletionResult(
       activeProfile: updatedProfile,
       learnerState: updatedState,
     );
-  }
-
-  Future<void> awardCompletionBonus(String learnerId) async {
-    try {
-      await _achievementsRepository.awardAchievement(
-        learnerId: learnerId,
-        achievement: 'onboarding_complete',
-        level: 1,
-      );
-    } catch (e) {
-      debugPrint('Achievement award failed: $e');
-    }
   }
 }
 

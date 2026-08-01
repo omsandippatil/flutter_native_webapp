@@ -35,6 +35,7 @@ LearningProgress _buildProgress({
     enrollment: enrollment,
     unitIndex: unitIndex,
     unit: unit,
+    learnerSubmissionIndex: learnerState.submissionIndex,
   );
 
   return LearningProgress(
@@ -58,11 +59,11 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
       throw const NoActiveProfileException();
     }
 
-    final learnerState = await ref.watch(
+    var learnerState = await ref.watch(
       learnerStateDataProvider(activeProfile.learnerId).future,
     );
 
-    final enrollment = learnerState.enrollment;
+    var enrollment = learnerState.enrollment;
     if (enrollment == null || enrollment.course == null) {
       return LearningDashboard(
         progress: _buildProgress(
@@ -98,9 +99,10 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
     final unitIndex = ClassroomProgressResolver.resolveUnitIndexForCourse(
       enrollment,
       course.units,
+      learnerSubmissionIndex: learnerState.submissionIndex,
     );
     final courseUnit = course.units[unitIndex];
-    final progress = _buildProgress(
+    var progress = _buildProgress(
       profile: activeProfile,
       learnerState: learnerState,
       enrollment: enrollment,
@@ -108,17 +110,46 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
       unit: courseUnit,
     );
 
+    // Partial unit progress belongs to the learner-specific local transaction.
+    // A server-only partial counter is legacy/inconsistent data and must not
+    // skip a newly onboarded learner directly to submission or quiz.
+    if (!learnerState.hasPendingLocalProgress &&
+        progress.classroomStage != ClassroomProgressStage.watchVideo &&
+        progress.classroomStage != ClassroomProgressStage.unitCompleted) {
+      final repository = await ref.read(learnerStateRepositoryProvider.future);
+      learnerState = await repository.prepareLocalUnit(
+        learnerId: activeProfile.learnerId,
+        unitIndex: unitIndex,
+      );
+      enrollment = learnerState.enrollment!;
+      progress = _buildProgress(
+        profile: activeProfile,
+        learnerState: learnerState,
+        enrollment: enrollment,
+        unitIndex: unitIndex,
+        unit: courseUnit,
+      );
+    }
+
     final allUnitsDone =
         unitIndex >= course.units.length - 1 &&
         progress.videoDone &&
         progress.submissionDone &&
         progress.quizDone;
+    final learnerStateRepository = await ref.read(
+      learnerStateRepositoryProvider.future,
+    );
+    final celebration = learnerStateRepository.readHomeCelebration(
+      activeProfile.learnerId,
+    );
 
     return LearningDashboard(
       progress: progress,
       unit: allUnitsDone ? null : CourseUnit.fromCourse(course, unitIndex),
       hasEnrollment: true,
       hasReachedWeeklyCap: learnerState.isBingeing ?? false,
+      showCompletionCelebration: celebration?['show'] == true,
+      completionPoints: (celebration?['points'] as num?)?.toInt() ?? 0,
     );
   },
 );

@@ -1,4 +1,3 @@
-
 import '../../core/cache/local_cache.dart';
 import '../../models/profile_summary_model.dart';
 
@@ -14,11 +13,9 @@ class RosterCacheSync {
     String? grade,
     String? division,
     String? avatar,
+    bool? onboardingCompleted,
   }) async {
-    final prefixes = [
-      'v2:roster:$phone:',
-      'v2:profiles:$phone:',
-    ];
+    final prefixes = ['v2:roster:$phone:', 'v2:profiles:$phone:'];
 
     for (final prefix in prefixes) {
       for (final key in localCache.keysWithPrefix(prefix)) {
@@ -34,9 +31,13 @@ class RosterCacheSync {
           grade: grade,
           division: division,
           avatar: avatar,
+          onboardingCompleted: onboardingCompleted,
         );
         final newRows = List<ProfileSummaryModel>.from(rows)..[idx] = updated;
-        await localCache.setForeverRawList(key, ProfileSummaryModel.listToJson(newRows));
+        await localCache.setForeverRawList(
+          key,
+          ProfileSummaryModel.listToJson(newRows),
+        );
       }
     }
   }
@@ -46,10 +47,7 @@ class RosterCacheSync {
     required String phone,
     required Map<String, Map<String, dynamic>> updatesByLearnerId,
   }) async {
-    final prefixes = [
-      'v2:roster:$phone:',
-      'v2:profiles:$phone:',
-    ];
+    final prefixes = ['v2:roster:$phone:', 'v2:profiles:$phone:'];
 
     for (final prefix in prefixes) {
       for (final key in localCache.keysWithPrefix(prefix)) {
@@ -74,7 +72,10 @@ class RosterCacheSync {
         }
 
         if (changed) {
-          await localCache.setForeverRawList(key, ProfileSummaryModel.listToJson(rows));
+          await localCache.setForeverRawList(
+            key,
+            ProfileSummaryModel.listToJson(rows),
+          );
         }
       }
     }

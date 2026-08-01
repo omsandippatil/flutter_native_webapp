@@ -173,20 +173,27 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
     Map<String, dynamic> profileJson,
   ) async {
     try {
-      final profileRepository = await ref.read(profileRepositoryProvider.future);
+      final profileRepository = await ref.read(
+        profileRepositoryProvider.future,
+      );
       final learnerState = await profileRepository.selectProfile(
         phone: _phone,
         learnerId: learnerId,
       );
 
-      final onboardingCompleted = profileJson['onboarding_completed'] as bool? ?? false;
+      final onboardingCompleted = profileRepository.isOnboardingCompleted(
+        learnerId,
+        fallback: profileJson['onboarding_completed'] as bool? ?? false,
+      );
 
       await setActiveProfile(
         ref,
         ActiveProfileModel(
           phone: _phone,
           learnerId: learnerId,
-          studentName: learnerState.profile?.studentName ?? profileJson['student_name'] as String?,
+          studentName:
+              learnerState.profile?.studentName ??
+              profileJson['student_name'] as String?,
           grade: profileJson['grade']?.toString(),
           division: profileJson['division'] as String?,
           avatar: profileJson['avatar']?.toString(),
@@ -377,7 +384,8 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
           onSubmitted: (_) => _submitPassword(),
           suffixIcon: _VisibilityToggle(
             obscured: _obscurePassword,
-            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggle: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ),
         const SizedBox(height: 24),
@@ -387,7 +395,10 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
           onPressed: _submitPassword,
         ),
         const SizedBox(height: 12),
-        _TextLinkButton(label: 'Use a different number', onPressed: _backToPhone),
+        _TextLinkButton(
+          label: 'Use a different number',
+          onPressed: _backToPhone,
+        ),
       ],
     );
   }
@@ -406,7 +417,8 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
           autofocus: true,
           suffixIcon: _VisibilityToggle(
             obscured: _obscurePassword,
-            onToggle: () => setState(() => _obscurePassword = !_obscurePassword),
+            onToggle: () =>
+                setState(() => _obscurePassword = !_obscurePassword),
           ),
         ),
         const SizedBox(height: 16),
@@ -431,7 +443,10 @@ class _AuthCheckScreenState extends ConsumerState<AuthCheckScreen> {
           onPressed: _submitCreatePassword,
         ),
         const SizedBox(height: 12),
-        _TextLinkButton(label: 'Use a different number', onPressed: _backToPhone),
+        _TextLinkButton(
+          label: 'Use a different number',
+          onPressed: _backToPhone,
+        ),
       ],
     );
   }
@@ -576,17 +591,25 @@ class _PrimaryButton extends StatelessWidget {
           backgroundColor: AppTheme.buttonColor,
           foregroundColor: Colors.white,
           elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: isLoading
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
               )
             : Text(
                 label,
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
       ),
     );
@@ -633,7 +656,11 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Color(0xFFD34B40), size: 18),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Color(0xFFD34B40),
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

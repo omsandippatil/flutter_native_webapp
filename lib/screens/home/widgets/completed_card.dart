@@ -6,8 +6,9 @@ import 'reward_item.dart';
 
 class CompletedCard extends StatelessWidget {
   final int points;
+  final VoidCallback? onContinue;
 
-  const CompletedCard({super.key, required this.points});
+  const CompletedCard({super.key, required this.points, this.onContinue});
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +35,9 @@ class CompletedCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Done for the\nweek 🥳',
+                  onContinue != null
+                      ? 'Activity\ncomplete 🥳'
+                      : 'Done for the\nweek 🥳',
                   textAlign: compact ? TextAlign.center : TextAlign.left,
                   style: GoogleFonts.inter(
                     fontSize: 28,
@@ -99,7 +102,9 @@ class CompletedCard extends StatelessWidget {
                       ),
                 const SizedBox(height: 34),
                 Text(
-                  'See you next week champ with a new activity video!',
+                  onContinue != null
+                      ? 'Ready to continue with your next activity?'
+                      : 'See you next week champ with a new activity video!',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -107,6 +112,17 @@ class CompletedCard extends StatelessWidget {
                     letterSpacing: 0,
                   ),
                 ),
+                if (onContinue != null) ...[
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: onContinue,
+                      child: const Text("Let's go 🎉"),
+                    ),
+                  ),
+                ],
               ],
             );
           },

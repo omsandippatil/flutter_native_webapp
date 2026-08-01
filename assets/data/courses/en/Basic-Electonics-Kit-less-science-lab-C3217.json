@@ -107,19 +107,8 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
+           
           ]
         }
       ]
@@ -213,19 +202,8 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
+           
           ]
         }
       ]
@@ -323,18 +301,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -437,18 +403,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -547,18 +501,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -665,18 +607,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -771,18 +701,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -889,18 +807,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -1003,18 +909,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }
@@ -1121,18 +1015,6 @@
               "unguided_text": "Share a picture of anything around you!!",
               "valid_criteria": "Image contains a charging cable or any electrical wire.",
               "invalid_criteria": "Anything other than a charging cable or wire."
-            },
-            {
-              "step": 4,
-              "label": "Voice/text",
-              "sub_types": "text,audio",
-              "unguided_text": "Share a voice note/text and tell us: What is the role of a fuse in the circuit?"
-            },
-            {
-              "step": 5,
-              "label": "image/video",
-              "sub_types": "image,video",
-              "unguided_text": "Share a Video / Picture of the fuse protection circuit working!!"
             }
           ]
         }

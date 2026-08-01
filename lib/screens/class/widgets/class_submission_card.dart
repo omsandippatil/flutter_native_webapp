@@ -927,9 +927,14 @@ class ClassSubmissionReviewCard extends StatelessWidget {
 }
 
 class ClassSubmissionRewardCard extends StatelessWidget {
-  const ClassSubmissionRewardCard({required this.message, super.key});
+  const ClassSubmissionRewardCard({
+    required this.message,
+    required this.controller,
+    super.key,
+  });
 
   final ClassChatMessage message;
+  final ClassChatController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -955,7 +960,7 @@ class ClassSubmissionRewardCard extends StatelessWidget {
             ),
           ),
           Image.asset(
-            'assets/class-screen/you-won.png',
+            'assets/class-screen/Skill Passport 1.png',
             height: 235,
             fit: BoxFit.contain,
           ),
@@ -993,6 +998,15 @@ class ClassSubmissionRewardCard extends StatelessWidget {
               fontSize: 15,
               height: 1.35,
               color: AppTheme.textColor,
+            ),
+          ),
+          const SizedBox(height: 18),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: ElevatedButton(
+              onPressed: controller.continueAfterSubmissionReward,
+              child: const Text('Continue'),
             ),
           ),
         ],
