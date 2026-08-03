@@ -34,10 +34,9 @@ class _ErrorViewState extends State<ErrorView> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    // Standard responsive breakpoint (mobile vs desktop/tablet)
+
     final isDesktop = size.width > 600;
 
-    // Resolve which content to show based on screen width
     final displayTitle = isDesktop
         ? (widget.desktopTitle ?? widget.title)
         : widget.title;
@@ -48,7 +47,6 @@ class _ErrorViewState extends State<ErrorView> {
         ? (widget.desktopButtonText ?? widget.buttonText)
         : widget.buttonText;
 
-    // Custom text styles following user requirements
     final titleStyle = GoogleFonts.inter(
       fontSize: isDesktop ? 26 : 28,
       fontWeight: FontWeight.w700,
@@ -78,7 +76,7 @@ class _ErrorViewState extends State<ErrorView> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Image container
+
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: isDesktop ? 280 : 260,
@@ -110,21 +108,21 @@ class _ErrorViewState extends State<ErrorView> {
                   ),
                 ),
                 const SizedBox(height: 36),
-                // Title text
+
                 Text(
                   displayTitle,
                   style: titleStyle,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
-                // Subheading text
+
                 Text(
                   displayMessage,
                   style: messageStyle,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 40),
-                // Animated Interactive Retry Button
+
                 Container(
                   constraints: BoxConstraints(
                     maxWidth: isDesktop ? 300 : double.infinity,

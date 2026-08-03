@@ -5,11 +5,7 @@ enum ClassChatContentType {
   checkpoint,
   video,
   submission,
-  // NEW: the user's reply to a submission is rendered as a short echo
-  // bubble ("what I sent"), never as the full form again. This is what
-  // was previously reusing `submission`, which caused the same
-  // full-form widget to render twice in the chat (once for the bot's
-  // prompt, once for the user's answer).
+
   submissionAnswerEcho,
   submissionReviewing,
   submissionReview,

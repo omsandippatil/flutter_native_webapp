@@ -17,7 +17,8 @@ class LearnerProfileFieldsModel {
   final String? schoolName;
   final String? birthdate;
 
-  factory LearnerProfileFieldsModel.fromJson(Map<String, dynamic> json) => LearnerProfileFieldsModel(
+  factory LearnerProfileFieldsModel.fromJson(Map<String, dynamic> json) =>
+      LearnerProfileFieldsModel(
         studentName: json['student_name'] as String?,
         language: json['language'] as String?,
         district: json['district'] as String?,
@@ -28,12 +29,12 @@ class LearnerProfileFieldsModel {
       );
 
   Map<String, dynamic> toJson() => {
-        'student_name': studentName,
-        'language': language,
-        'district': district,
-        'state': state,
-        'school_id': schoolId,
-        'school_name': schoolName,
-        'birthdate': birthdate,
-      };
+    'student_name': studentName,
+    'language': language,
+    'district': district,
+    'state': state,
+    'school_id': schoolId,
+    'school_name': schoolName,
+    'birthdate': birthdate,
+  };
 }

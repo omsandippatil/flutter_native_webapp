@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
 
 void main() {
-  // Ensure Flutter engine is initialized
+
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const ProviderScope(child: App()));

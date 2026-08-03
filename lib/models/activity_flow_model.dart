@@ -21,14 +21,14 @@ class FlowStepModel {
   bool get isDynamic => type == 'dynamic';
 
   factory FlowStepModel.fromJson(Map<String, dynamic> json) => FlowStepModel(
-        stepId: json['step_id'] as String? ?? '',
-        type: json['type'] as String? ?? 'static',
-        displayText: json['display_text'] as String?,
-        voiceText: json['voice_text'] as String?,
-        nextStep: json['next_step'] as String?,
-        autoAdvanceMs: (json['auto_advance_ms'] as num?)?.toInt(),
-        component: json['component'] as String?,
-      );
+    stepId: json['step_id'] as String? ?? '',
+    type: json['type'] as String? ?? 'static',
+    displayText: json['display_text'] as String?,
+    voiceText: json['voice_text'] as String?,
+    nextStep: json['next_step'] as String?,
+    autoAdvanceMs: (json['auto_advance_ms'] as num?)?.toInt(),
+    component: json['component'] as String?,
+  );
 }
 
 class ActivityFlowModel {

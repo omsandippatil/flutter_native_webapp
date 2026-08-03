@@ -44,11 +44,6 @@ class ClassSessionBootstrap {
   final bool weeklyCapAlreadyReached;
 }
 
-/// The server is the only source of truth for whether the weekly cap has
-/// been hit. `is_bingeing` and `activities_remaining` are computed
-/// server-side from the learner's actual window state; a local unit-count
-/// guess (`maxWeeklyUnits ?? 2`) can drift from that and either let the
-/// student through when they shouldn't be, or block them one unit early.
 bool _serverSaysCapReached(LearnerStateModel state) {
   final bingeing = state.isBingeing ?? false;
   final remaining = state.unitsRemaining;
@@ -66,10 +61,6 @@ final classSessionBootstrapProvider =
         learnerStateRepositoryProvider.future,
       );
 
-      // Always start a new session from a freshly-fetched state, not the cached
-      // one. The cached copy may predate the most recent unit completion (or a
-      // completion made from another device), and a stale "not bingeing" read
-      // here is exactly what lets a student slip past the weekly cap.
       var learnerState = await learnerStateRepository.fetchState(
         learnerId: activeProfile.learnerId,
         forceRefresh: true,
@@ -137,9 +128,6 @@ final classSessionBootstrapProvider =
       }
       final capReached = _serverSaysCapReached(learnerState);
 
-      // Reaching the cap after watching the current unit's video must not
-      // strand the learner halfway through that unit. It only prevents
-      // starting another unit; pending submission/quiz work stays available.
       if (capReached &&
           selectedProgress.stage == ClassroomProgressStage.watchVideo) {
         return ClassSessionBootstrap(

@@ -4,9 +4,6 @@ import 'package:flutter/services.dart';
 
 import '../models/onboarding_flow_step.dart';
 
-/// Loads onboarding definitions from bundled JSON. Keeping parsing here makes
-/// it possible to swap to a remotely-configured flow later without changing
-/// the UI or controller.
 class OnboardingFlowRepository {
   const OnboardingFlowRepository();
 

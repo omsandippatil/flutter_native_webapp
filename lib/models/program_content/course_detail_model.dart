@@ -11,11 +11,14 @@ class CourseQuizQuestionModel {
   final String answerKey;
   final String? explanation;
 
-  factory CourseQuizQuestionModel.fromJson(Map<String, dynamic> json) => CourseQuizQuestionModel(
+  factory CourseQuizQuestionModel.fromJson(Map<String, dynamic> json) =>
+      CourseQuizQuestionModel(
         question: json['q'] as String? ?? '',
         options: json['opts'] is Map
             ? Map<String, String>.from(
-                (json['opts'] as Map).map((k, v) => MapEntry(k.toString(), v.toString())),
+                (json['opts'] as Map).map(
+                  (k, v) => MapEntry(k.toString(), v.toString()),
+                ),
               )
             : const {},
         answerKey: json['ans']?.toString() ?? '',
@@ -26,19 +29,26 @@ class CourseQuizQuestionModel {
     if (raw is! List) return const [];
     return raw
         .whereType<Map>()
-        .map((m) => CourseQuizQuestionModel.fromJson(Map<String, dynamic>.from(m)))
+        .map(
+          (m) => CourseQuizQuestionModel.fromJson(Map<String, dynamic>.from(m)),
+        )
         .toList(growable: false);
   }
 }
 
 class CourseQuizModel {
-  const CourseQuizModel({required this.id, required this.name, required this.questions});
+  const CourseQuizModel({
+    required this.id,
+    required this.name,
+    required this.questions,
+  });
 
   final int id;
   final String name;
   final List<CourseQuizQuestionModel> questions;
 
-  factory CourseQuizModel.fromJson(Map<String, dynamic> json) => CourseQuizModel(
+  factory CourseQuizModel.fromJson(Map<String, dynamic> json) =>
+      CourseQuizModel(
         id: (json['id'] as num?)?.toInt() ?? 0,
         name: json['nm'] as String? ?? '',
         questions: CourseQuizQuestionModel.listFromJson(json['qs']),
@@ -62,14 +72,17 @@ class CourseVideoModel {
   final int points;
   final CourseQuizModel? postQuiz;
 
-  factory CourseVideoModel.fromJson(Map<String, dynamic> json) => CourseVideoModel(
+  factory CourseVideoModel.fromJson(Map<String, dynamic> json) =>
+      CourseVideoModel(
         id: (json['id'] as num?)?.toInt() ?? 0,
         name: json['nm'] as String? ?? '',
         description: json['desc'] as String? ?? '',
         youtubeId: json['yt'] as String? ?? '',
         points: (json['pts'] as num?)?.toInt() ?? 0,
         postQuiz: json['pq'] is Map
-            ? CourseQuizModel.fromJson(Map<String, dynamic>.from(json['pq'] as Map))
+            ? CourseQuizModel.fromJson(
+                Map<String, dynamic>.from(json['pq'] as Map),
+              )
             : null,
       );
 
@@ -101,7 +114,8 @@ class CourseAssignmentStepModel {
   final String? validCriteria;
   final String? invalidCriteria;
 
-  factory CourseAssignmentStepModel.fromJson(Map<String, dynamic> json) => CourseAssignmentStepModel(
+  factory CourseAssignmentStepModel.fromJson(Map<String, dynamic> json) =>
+      CourseAssignmentStepModel(
         step: (json['step'] as num?)?.toInt() ?? 0,
         label: json['label'] as String? ?? '',
         subTypes: json['sub_types'] as String? ?? '',
@@ -115,7 +129,10 @@ class CourseAssignmentStepModel {
     if (raw is! List) return const [];
     return raw
         .whereType<Map>()
-        .map((m) => CourseAssignmentStepModel.fromJson(Map<String, dynamic>.from(m)))
+        .map(
+          (m) =>
+              CourseAssignmentStepModel.fromJson(Map<String, dynamic>.from(m)),
+        )
         .toList(growable: false);
   }
 }
@@ -139,7 +156,8 @@ class CourseAssignmentModel {
   final String difficulty;
   final List<CourseAssignmentStepModel> steps;
 
-  factory CourseAssignmentModel.fromJson(Map<String, dynamic> json) => CourseAssignmentModel(
+  factory CourseAssignmentModel.fromJson(Map<String, dynamic> json) =>
+      CourseAssignmentModel(
         id: json['id'] as String? ?? '',
         sequence: (json['seq'] as num?)?.toInt() ?? 0,
         name: json['nm'] as String? ?? '',
@@ -153,7 +171,9 @@ class CourseAssignmentModel {
     if (raw is! List) return const [];
     return raw
         .whereType<Map>()
-        .map((m) => CourseAssignmentModel.fromJson(Map<String, dynamic>.from(m)))
+        .map(
+          (m) => CourseAssignmentModel.fromJson(Map<String, dynamic>.from(m)),
+        )
         .toList(growable: false);
   }
 }
@@ -179,7 +199,8 @@ class CourseUnitModel {
   final CourseQuizModel? quiz;
   final List<CourseAssignmentModel> assignments;
 
-  factory CourseUnitModel.fromJson(Map<String, dynamic> json) => CourseUnitModel(
+  factory CourseUnitModel.fromJson(Map<String, dynamic> json) =>
+      CourseUnitModel(
         name: json['nm'] as String? ?? '',
         description: json['desc'] as String? ?? '',
         requiredComponents: json['rwc'] as String? ?? '',
@@ -187,7 +208,9 @@ class CourseUnitModel {
         xp: (json['xp'] as num?)?.toInt() ?? 0,
         videos: CourseVideoModel.listFromJson(json['vids']),
         quiz: json['quiz'] is Map
-            ? CourseQuizModel.fromJson(Map<String, dynamic>.from(json['quiz'] as Map))
+            ? CourseQuizModel.fromJson(
+                Map<String, dynamic>.from(json['quiz'] as Map),
+              )
             : null,
         assignments: CourseAssignmentModel.listFromJson(json['assigns']),
       );
@@ -220,7 +243,8 @@ class CourseDetailModel {
   final String description;
   final List<CourseUnitModel> units;
 
-  factory CourseDetailModel.fromJson(Map<String, dynamic> json) => CourseDetailModel(
+  factory CourseDetailModel.fromJson(Map<String, dynamic> json) =>
+      CourseDetailModel(
         id: json['id'] as String? ?? '',
         name: json['nm'] as String? ?? '',
         level: json['lvl'] as String? ?? '',

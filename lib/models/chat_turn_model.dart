@@ -4,13 +4,15 @@ class ChatTurnModel {
   final String role;
   final String content;
 
-  factory ChatTurnModel.user(String content) => ChatTurnModel(role: 'user', content: content);
-  factory ChatTurnModel.assistant(String content) => ChatTurnModel(role: 'assistant', content: content);
+  factory ChatTurnModel.user(String content) =>
+      ChatTurnModel(role: 'user', content: content);
+  factory ChatTurnModel.assistant(String content) =>
+      ChatTurnModel(role: 'assistant', content: content);
 
   factory ChatTurnModel.fromJson(Map<String, dynamic> json) => ChatTurnModel(
-        role: json['role'] as String? ?? 'user',
-        content: json['content'] as String? ?? '',
-      );
+    role: json['role'] as String? ?? 'user',
+    content: json['content'] as String? ?? '',
+  );
 
   Map<String, dynamic> toJson() => {'role': role, 'content': content};
 

@@ -13,7 +13,9 @@ class LanguageNotifier extends Notifier<String> {
 
   Future<void> _restore() async {
     final localCache = await ref.read(localCacheProvider.future);
-    final stored = localCache.getForeverRaw(CacheKeys.languageSetting())?['code'] as String?;
+    final stored =
+        localCache.getForeverRaw(CacheKeys.languageSetting())?['code']
+            as String?;
     if (stored != null && AppConstants.isSupportedLanguage(stored)) {
       state = stored;
     }

@@ -1,4 +1,3 @@
-
 import '../core/cache/local_cache.dart';
 
 class DataLoader {
@@ -54,5 +53,6 @@ class DataLoader {
 
   Future<void> invalidate(String cacheKey) => _localCache.delete(cacheKey);
 
-  Future<void> invalidatePrefix(String prefix) => _localCache.deletePrefix(prefix);
+  Future<void> invalidatePrefix(String prefix) =>
+      _localCache.deletePrefix(prefix);
 }

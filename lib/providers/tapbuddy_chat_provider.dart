@@ -5,7 +5,9 @@ import '../data/repositories/tapbuddy_chat_repository.dart';
 import 'http_client_provider.dart';
 import 'local_cache_provider.dart';
 
-final tapbuddyChatRepositoryProvider = FutureProvider<TapbuddyChatRepository>((ref) async {
+final tapbuddyChatRepositoryProvider = FutureProvider<TapbuddyChatRepository>((
+  ref,
+) async {
   final localCache = await ref.watch(localCacheProvider.future);
   return TapbuddyChatRepository(ref.watch(httpClientProvider), localCache);
 });
@@ -17,14 +19,16 @@ class ChatTranscriptRequest {
 
   @override
   bool operator ==(Object other) =>
-      other is ChatTranscriptRequest && other.phone == phone && other.learnerId == learnerId;
+      other is ChatTranscriptRequest &&
+      other.phone == phone &&
+      other.learnerId == learnerId;
 
   @override
   int get hashCode => Object.hash(phone, learnerId);
 }
 
-final chatTranscriptDataProvider =
-    FutureProvider.autoDispose.family<List<ChatTurnModel>, ChatTranscriptRequest>((ref, request) async {
-  final repository = await ref.watch(tapbuddyChatRepositoryProvider.future);
-  return repository.readTranscript(request.phone, request.learnerId);
-});
+final chatTranscriptDataProvider = FutureProvider.autoDispose
+    .family<List<ChatTurnModel>, ChatTranscriptRequest>((ref, request) async {
+      final repository = await ref.watch(tapbuddyChatRepositoryProvider.future);
+      return repository.readTranscript(request.phone, request.learnerId);
+    });

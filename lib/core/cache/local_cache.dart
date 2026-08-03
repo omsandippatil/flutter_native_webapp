@@ -31,15 +31,6 @@ class LocalCache {
   static const String _boxName = 'tap_forever_cache';
   static const String _indexBoxName = 'tap_forever_cache_index';
 
-  // A blocked `Hive.openBox` (most commonly on web, where it maps to a
-  // blocked `indexedDB.open()` call left waiting on a stale connection
-  // from a previous session/tab) never throws and never completes — it
-  // just hangs forever with no console output. Every provider that
-  // depends on `localCacheProvider` chains through this call, and the
-  // router's first-load splash guard waits on that whole chain, so a
-  // silent hang here silently hangs the entire app on the splash screen.
-  // Bounding this with a timeout turns that silent, undiagnosable hang
-  // into a concrete, catchable exception instead.
   static const Duration _openTimeout = Duration(seconds: 10);
 
   final Box<String> _box;

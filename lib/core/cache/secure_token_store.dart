@@ -17,11 +17,14 @@ class SecureTokenStore {
     await Future.wait([
       _storage.write(key: _phoneKey, value: phone),
       _storage.write(key: _tokenKey, value: token),
-      ?adminCode != null ? _storage.write(key: _adminCodeKey, value: adminCode) : null,
+      ?adminCode != null
+          ? _storage.write(key: _adminCodeKey, value: adminCode)
+          : null,
     ]);
   }
 
-  Future<void> saveRefreshedToken(String token) => _storage.write(key: _tokenKey, value: token);
+  Future<void> saveRefreshedToken(String token) =>
+      _storage.write(key: _tokenKey, value: token);
 
   Future<String?> readToken() => _storage.read(key: _tokenKey);
   Future<String?> readPhone() => _storage.read(key: _phoneKey);
@@ -33,8 +36,8 @@ class SecureTokenStore {
   }
 
   Future<void> clear() => Future.wait([
-        _storage.delete(key: _phoneKey),
-        _storage.delete(key: _tokenKey),
-        _storage.delete(key: _adminCodeKey),
-      ]);
+    _storage.delete(key: _phoneKey),
+    _storage.delete(key: _tokenKey),
+    _storage.delete(key: _adminCodeKey),
+  ]);
 }

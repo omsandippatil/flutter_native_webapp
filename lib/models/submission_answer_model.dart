@@ -1,6 +1,4 @@
-/// The kind of input widget the submission step needs, derived from the
-/// course JSON's `sub_types` field (e.g. "emoji", "text,audio", "image",
-/// "image,video").
+
 enum SubmissionKind { emoji, text, audio, textAudio, image, video, imageVideo }
 
 class SubmissionAnswer {
@@ -34,8 +32,6 @@ class SubmissionAnswer {
   factory SubmissionAnswer.imageOrVideo(String path, {required bool isVideo}) =>
       SubmissionAnswer._(kind: SubmissionKind.imageVideo, mediaPath: path);
 
-  /// A short, human-readable echo of what was submitted, for the chat
-  /// bubble that shows what the *user* sent (never a form).
   String get displaySummary {
     switch (kind) {
       case SubmissionKind.emoji:
@@ -56,9 +52,6 @@ class SubmissionAnswer {
     }
   }
 
-  /// Simple local matching against a step's `valid_criteria` for kinds that
-  /// don't need an AI review (emoji / short fixed-vocabulary text answers).
-  /// Case-insensitive, comma-or-"or"-separated criteria list.
   bool matchesCriteria(String? validCriteria) {
     if (validCriteria == null || validCriteria.trim().isEmpty) return true;
 
@@ -83,8 +76,6 @@ class SubmissionAnswer {
 class SubmissionKindResolver {
   SubmissionKindResolver._();
 
-  /// Parses the course JSON's `sub_types` string (e.g. "text,audio",
-  /// "image,video", "emoji", "image") into a [SubmissionKind].
   static SubmissionKind fromSubTypes(String subTypes) {
     final normalized = subTypes.toLowerCase();
     final hasEmoji = normalized.contains('emoji');
@@ -102,9 +93,6 @@ class SubmissionKindResolver {
     return SubmissionKind.text;
   }
 
-  /// Whether this kind needs an AI-graded review (open-ended text/audio,
-  /// image, video) versus simple local criteria matching (emoji, fixed
-  /// vocabulary word/voice answers already handled by hardcoded replies).
   static bool requiresAiReview(SubmissionKind kind) {
     switch (kind) {
       case SubmissionKind.emoji:

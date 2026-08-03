@@ -37,8 +37,6 @@ class OnboardingFlowStep {
   final String? nextFlow;
   final List<OnboardingOption> options;
 
-  /// Temporary compatibility access for complex form definitions while those
-  /// are migrated to dedicated typed form models.
   final Map<String, dynamic> raw;
 }
 

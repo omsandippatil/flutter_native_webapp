@@ -11,7 +11,8 @@ class AppLanguage {
 }
 
 class AppConstants {
-  static const String workerBaseUrl = 'https://tapapp-worker.tapapp-middleware.workers.dev';
+  static const String workerBaseUrl =
+      'https://tapapp-worker.tapapp-middleware.workers.dev';
 
   static const String defaultLanguageCode = 'en';
 
@@ -36,8 +37,11 @@ class AppConstants {
   static String flowManifestPath(String languageCode) =>
       'assets/flows/$languageCode/flow_manifest.json';
 
-  static String flowAssetPath(String languageCode, String category, String fileName) =>
-      'assets/flows/$languageCode/$category/$fileName';
+  static String flowAssetPath(
+    String languageCode,
+    String category,
+    String fileName,
+  ) => 'assets/flows/$languageCode/$category/$fileName';
 
   static const int maxOtpRetries = 5;
   static const String appVersion = '1.0.0';

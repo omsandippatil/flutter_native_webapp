@@ -9,19 +9,18 @@ class ErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ErrorView(
-      // Mobile text configuration (from top mockup)
+
       title: 'Something went wrong',
       message:
           'We had trouble loading this page. Please check your internet connection and try again.',
       buttonText: 'Try Again',
 
-      // Desktop/Web text configuration (from bottom mockup)
       desktopTitle: 'Hey Champ\nI am not able to talk to you',
       desktopMessage: "Looks like you're offline. Click below to try again.",
       desktopButtonText: 'Retry',
 
       onRetry: () {
-        // Navigate back to splash screen to simulate reloading
+
         context.go(AppRoutes.splash);
       },
     );

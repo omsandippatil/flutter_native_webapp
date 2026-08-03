@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Brand
+
   static const Color imageBgColor = Color(0xFFE8E8FB);
   static const Color buttonColor = Color(0xFF5B5BD6);
   static const Color bgColor = Color(0xFFFFFFFF);
   static const Color textColor = Color(0xFF1C1C21);
   static const Color subheadingColor = Color(0xFF6E6E7A);
 
-  // Surfaces
   static const Color appBackground = Color(0xFFF4F4F6);
   static const Color cardBackground = Color(0xFFFFFFFF);
   static const Color softSurface = Color(0xFFF7F7FA);
@@ -27,14 +26,12 @@ class AppTheme {
   static const Color imagePlaceholder = Color(0xFFB9BBC8);
   static const Color subtleShadow = Color(0xFF000000);
 
-  // Borders and text
   static const Color borderColor = Color(0xFFE1E2EA);
   static const Color dividerColor = Color(0xFFD9DAE4);
   static const Color mutedText = Color(0xFF777887);
   static const Color faintText = Color(0xFF8E8E9F);
   static const Color headingText = Color(0xFF111116);
 
-  // Rewards
   static const Color pointColor = Color(0xFFF4A22E);
   static const Color pointBg = Color(0xFFFFEBCF);
   static const Color gemBg = Color(0xFFE8E5FF);
@@ -58,7 +55,7 @@ class AppTheme {
         onSurface: textColor,
       ),
       textTheme: TextTheme(
-        // Main title styles (Inter Bold, 28px, line-height 36px, letter-spacing -0.5%)
+
         headlineLarge: GoogleFonts.inter(
           fontSize: 28,
           fontWeight: FontWeight.w700,
@@ -66,7 +63,7 @@ class AppTheme {
           height: 36 / 28,
           letterSpacing: -0.005 * 28,
         ),
-        // Subheading styles (Inter Regular, 18px, line-height 27px, letter-spacing 0%)
+
         bodyLarge: GoogleFonts.inter(
           fontSize: 18,
           fontWeight: FontWeight.w400,

@@ -17,21 +17,26 @@ class SubmissionReviewModel {
 
   bool get passed => verdict == 'pass';
 
-  factory SubmissionReviewModel.fromJson(Map<String, dynamic> json) => SubmissionReviewModel(
+  factory SubmissionReviewModel.fromJson(Map<String, dynamic> json) =>
+      SubmissionReviewModel(
         score: (json['score'] as num?)?.toInt() ?? 0,
         verdict: json['verdict'] as String?,
         feedback: json['feedback'] as String? ?? '',
         smsText: json['sms_text'] as String?,
-        strengths: (json['strengths'] as List?)?.whereType<String>().toList() ?? const [],
-        improvements: (json['improvements'] as List?)?.whereType<String>().toList() ?? const [],
+        strengths:
+            (json['strengths'] as List?)?.whereType<String>().toList() ??
+            const [],
+        improvements:
+            (json['improvements'] as List?)?.whereType<String>().toList() ??
+            const [],
       );
 
   Map<String, dynamic> toJson() => {
-        'score': score,
-        'verdict': verdict,
-        'feedback': feedback,
-        'sms_text': smsText,
-        'strengths': strengths,
-        'improvements': improvements,
-      };
+    'score': score,
+    'verdict': verdict,
+    'feedback': feedback,
+    'sms_text': smsText,
+    'strengths': strengths,
+    'improvements': improvements,
+  };
 }

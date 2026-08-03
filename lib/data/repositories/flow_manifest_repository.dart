@@ -25,7 +25,9 @@ class FlowManifestRepository {
 
     Map<String, dynamic> json;
     try {
-      json = await _assetLoader.loadJson(AppConstants.flowManifestPath(languageCode));
+      json = await _assetLoader.loadJson(
+        AppConstants.flowManifestPath(languageCode),
+      );
     } on AssetLoadException {
       if (languageCode == AppConstants.defaultLanguageCode) rethrow;
       json = await _assetLoader.loadJson(

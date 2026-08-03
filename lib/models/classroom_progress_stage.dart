@@ -27,6 +27,7 @@ enum ClassroomProgressStage {
     ClassroomProgressStage.unitCompleted => 1,
   };
 }
+
 class ClassroomProgressSnapshot {
   const ClassroomProgressSnapshot({
     required this.stage,

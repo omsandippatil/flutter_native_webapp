@@ -17,9 +17,6 @@ class HomeBuddyArt extends StatelessWidget {
       LearningStage.completed => 'assets/home-screen/sussess_celebrate.png',
     };
 
-    // The project/quiz artwork is stored on a square canvas with substantial
-    // transparent space on both sides. Cropping only that empty space lets the
-    // character use the requested height without making the row any wider.
     final cropTransparentSides = switch (stage) {
       LearningStage.sendProject || LearningStage.quizPending => true,
       _ => false,

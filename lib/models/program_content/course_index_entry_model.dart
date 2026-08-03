@@ -15,7 +15,8 @@ class CourseIndexEntryModel {
   final bool kitLess;
   final int unitsCount;
 
-  factory CourseIndexEntryModel.fromJson(Map<String, dynamic> json) => CourseIndexEntryModel(
+  factory CourseIndexEntryModel.fromJson(Map<String, dynamic> json) =>
+      CourseIndexEntryModel(
         id: json['id'] as String? ?? '',
         name: json['nm'] as String? ?? '',
         level: json['lvl'] as String? ?? '',
@@ -25,22 +26,25 @@ class CourseIndexEntryModel {
       );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nm': name,
-        'lvl': level,
-        'vrt': vertical,
-        'kit_less': kitLess,
-        'units_count': unitsCount,
-      };
+    'id': id,
+    'nm': name,
+    'lvl': level,
+    'vrt': vertical,
+    'kit_less': kitLess,
+    'units_count': unitsCount,
+  };
 
   static List<CourseIndexEntryModel> listFromJson(dynamic raw) {
     if (raw is! List) return const [];
     return raw
         .whereType<Map>()
-        .map((m) => CourseIndexEntryModel.fromJson(Map<String, dynamic>.from(m)))
+        .map(
+          (m) => CourseIndexEntryModel.fromJson(Map<String, dynamic>.from(m)),
+        )
         .toList(growable: false);
   }
 
-  static List<Map<String, dynamic>> listToJson(List<CourseIndexEntryModel> list) =>
-      list.map((c) => c.toJson()).toList(growable: false);
+  static List<Map<String, dynamic>> listToJson(
+    List<CourseIndexEntryModel> list,
+  ) => list.map((c) => c.toJson()).toList(growable: false);
 }

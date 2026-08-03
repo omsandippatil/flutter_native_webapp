@@ -6,7 +6,9 @@ class FlowManifestFileEntry {
 
   factory FlowManifestFileEntry.fromJson(Map<String, dynamic> json) {
     final raw = json['languages'];
-    final languages = raw is List ? raw.whereType<String>().toList() : <String>[];
+    final languages = raw is List
+        ? raw.whereType<String>().toList()
+        : <String>[];
     return FlowManifestFileEntry(languages: languages);
   }
 
@@ -20,13 +22,19 @@ class FlowManifest {
   FlowManifestFileEntry? entryFor(String category, String fileName) =>
       categories[category]?[fileName];
 
-  String resolveLanguage(String category, String fileName, String requestedLanguage) {
+  String resolveLanguage(
+    String category,
+    String fileName,
+    String requestedLanguage,
+  ) {
     final entry = entryFor(category, fileName);
-    if (entry != null && entry.hasLanguage(requestedLanguage)) return requestedLanguage;
+    if (entry != null && entry.hasLanguage(requestedLanguage))
+      return requestedLanguage;
     return 'en';
   }
 
-  List<String> fileNamesFor(String category) => categories[category]?.keys.toList() ?? const [];
+  List<String> fileNamesFor(String category) =>
+      categories[category]?.keys.toList() ?? const [];
 
   List<String> allCategories() => categories.keys.toList();
 
@@ -39,8 +47,9 @@ class FlowManifest {
           final fileMap = <String, FlowManifestFileEntry>{};
           files.forEach((fileName, entry) {
             if (entry is Map) {
-              fileMap[fileName.toString()] =
-                  FlowManifestFileEntry.fromJson(Map<String, dynamic>.from(entry));
+              fileMap[fileName.toString()] = FlowManifestFileEntry.fromJson(
+                Map<String, dynamic>.from(entry),
+              );
             }
           });
           categories[category.toString()] = fileMap;
@@ -51,11 +60,11 @@ class FlowManifest {
   }
 
   Map<String, dynamic> toJson() => {
-        'flows': categories.map(
-          (category, files) => MapEntry(
-            category,
-            files.map((fileName, entry) => MapEntry(fileName, entry.toJson())),
-          ),
-        ),
-      };
+    'flows': categories.map(
+      (category, files) => MapEntry(
+        category,
+        files.map((fileName, entry) => MapEntry(fileName, entry.toJson())),
+      ),
+    ),
+  };
 }

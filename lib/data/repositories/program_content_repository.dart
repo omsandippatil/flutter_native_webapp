@@ -1,4 +1,3 @@
-
 import '../../core/cache/domain_cache/program_content_cache.dart';
 import '../../core/cache/local_cache.dart';
 import '../../data_loader/asset_data_source.dart';
@@ -16,8 +15,7 @@ class ProgramContentRepository {
   static ProgramContentRepository create(
     LocalCache localCache,
     AssetDataSource assetDataSource,
-  ) =>
-      ProgramContentRepository(DataLoader(localCache), assetDataSource);
+  ) => ProgramContentRepository(DataLoader(localCache), assetDataSource);
 
   Future<List<CourseIndexEntryModel>> fetchCourseIndex({
     String lang = 'en',

@@ -15,12 +15,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
-    // Purely decorative now — this screen no longer decides where to
-    // navigate. The router's `redirect` watches auth state and moves on
-    // as soon as it resolves (login / onboarding / welcome / home), so
-    // this animation just fills the time while that resolves. It repeats
-    // instead of running once, in case the profile lookup takes longer
-    // than one cycle.
+
     _progressController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -45,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             children: [
-              // 1. Top Header Row (logos on left and right)
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -69,7 +64,6 @@ class _SplashScreenState extends State<SplashScreen>
 
               const Spacer(flex: 2),
 
-              // 2. Centered Content (Title, Subtitle, Circular GIF, Progress Bar)
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -95,7 +89,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 36),
 
-                  // Circular loader GIF
                   Container(
                     width: isDesktop ? 280 : 220,
                     height: isDesktop ? 280 : 220,
@@ -116,7 +109,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                   const SizedBox(height: 36),
 
-                  // Animated Progress Indicator (matches design spec)
                   SizedBox(
                     width: 160,
                     child: AnimatedBuilder(
@@ -139,7 +131,6 @@ class _SplashScreenState extends State<SplashScreen>
 
               const Spacer(flex: 3),
 
-              // 3. Bottom Footer Initiative Text
               Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: Text(

@@ -15,12 +15,21 @@ class AuthRepository {
   final SecureTokenStore _secureTokenStore;
 
   Future<Map<String, dynamic>> checkPhone(String phone) async {
-    final data = await _http.post(ApiEndpoints.checkPhone, body: {'phone': phone});
+    final data = await _http.post(
+      ApiEndpoints.checkPhone,
+      body: {'phone': phone},
+    );
     return data;
   }
 
-  Future<Map<String, dynamic>> login({required String phone, required String password}) async {
-    final data = await _http.post(ApiEndpoints.login, body: {'phone': phone, 'password': password});
+  Future<Map<String, dynamic>> login({
+    required String phone,
+    required String password,
+  }) async {
+    final data = await _http.post(
+      ApiEndpoints.login,
+      body: {'phone': phone, 'password': password},
+    );
     if (data['success'] == true) {
       await _persistLoginPayload(data);
     }
@@ -30,8 +39,13 @@ class AuthRepository {
   Future<Map<String, dynamic>> sendForgotPasswordOtp(String phone) =>
       _http.post(ApiEndpoints.forgotPasswordSendOtp, body: {'phone': phone});
 
-  Future<Map<String, dynamic>> verifyForgotPasswordOtp({required String phone, required String otp}) =>
-      _http.post(ApiEndpoints.forgotPasswordVerifyOtp, body: {'phone': phone, 'otp': otp});
+  Future<Map<String, dynamic>> verifyForgotPasswordOtp({
+    required String phone,
+    required String otp,
+  }) => _http.post(
+    ApiEndpoints.forgotPasswordVerifyOtp,
+    body: {'phone': phone, 'otp': otp},
+  );
 
   Future<Map<String, dynamic>> resetPassword({
     required String phone,
@@ -39,7 +53,10 @@ class AuthRepository {
     required String resetToken,
   }) async {
     await _secureTokenStore.saveRefreshedToken(resetToken);
-    final data = await _http.post(ApiEndpoints.resetPassword, body: {'phone': phone, 'password': newPassword});
+    final data = await _http.post(
+      ApiEndpoints.resetPassword,
+      body: {'phone': phone, 'password': newPassword},
+    );
     if (data['success'] == true) {
       await _persistLoginPayload(data);
     }
@@ -61,10 +78,17 @@ class AuthRepository {
     final token = data['token'] as String;
     final adminCode = data['admin_code'] as String?;
 
-    await _secureTokenStore.saveSession(phone: phone, token: token, adminCode: adminCode);
+    await _secureTokenStore.saveSession(
+      phone: phone,
+      token: token,
+      adminCode: adminCode,
+    );
 
     final session = AuthSessionModel.fromJson(data);
-    await _localCache.setForeverRaw(CacheKeys.authSession(phone), session.toJson());
+    await _localCache.setForeverRaw(
+      CacheKeys.authSession(phone),
+      session.toJson(),
+    );
 
     final rawProfiles = data['profiles'];
     if (rawProfiles is List) {
@@ -80,7 +104,11 @@ class AuthRepository {
       }
 
       await _localCache.setForeverRawList(
-        CacheKeys.profilesPage(phone, data['page'] as int? ?? 1, data['page_size'] as int? ?? 10),
+        CacheKeys.profilesPage(
+          phone,
+          data['page'] as int? ?? 1,
+          data['page_size'] as int? ?? 10,
+        ),
         ProfileSummaryModel.listToJson(summaries),
       );
 
@@ -89,8 +117,14 @@ class AuthRepository {
         final state = raw['state'];
         if (learnerId == null || state is! Map) continue;
         try {
-          final model = LearnerStateModel.fromFullJson(learnerId, Map<String, dynamic>.from(state));
-          await _localCache.setForeverRaw(CacheKeys.learnerState(learnerId), model.toJson());
+          final model = LearnerStateModel.fromFullJson(
+            learnerId,
+            Map<String, dynamic>.from(state),
+          );
+          await _localCache.setForeverRaw(
+            CacheKeys.learnerState(learnerId),
+            model.toJson(),
+          );
         } catch (_) {
           continue;
         }

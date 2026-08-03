@@ -110,9 +110,6 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
       unit: courseUnit,
     );
 
-    // Partial unit progress belongs to the learner-specific local transaction.
-    // A server-only partial counter is legacy/inconsistent data and must not
-    // skip a newly onboarded learner directly to submission or quiz.
     if (!learnerState.hasPendingLocalProgress &&
         progress.classroomStage != ClassroomProgressStage.watchVideo &&
         progress.classroomStage != ClassroomProgressStage.unitCompleted) {

@@ -1,7 +1,14 @@
-enum ProgramContentErrorReason { courseNotFound, languageNotAvailable, malformedContent }
+enum ProgramContentErrorReason {
+  courseNotFound,
+  languageNotAvailable,
+  malformedContent,
+}
 
 class ExportProgramContentErrorModel implements Exception {
-  const ExportProgramContentErrorModel({required this.reason, required this.detail});
+  const ExportProgramContentErrorModel({
+    required this.reason,
+    required this.detail,
+  });
 
   final ProgramContentErrorReason reason;
   final String detail;
@@ -25,5 +32,6 @@ class ExportProgramContentErrorModel implements Exception {
       );
 
   @override
-  String toString() => 'ExportProgramContentErrorModel(${reason.name}: $detail)';
+  String toString() =>
+      'ExportProgramContentErrorModel(${reason.name}: $detail)';
 }

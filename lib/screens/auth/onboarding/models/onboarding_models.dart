@@ -1,9 +1,5 @@
 import 'package:flutter/widgets.dart';
 
-/// A rendered item in the onboarding transcript.
-///
-/// The JSON flow is the source of truth. This model only represents the
-/// resolved, user-facing result of a flow step.
 class OnboardingMessage {
   const OnboardingMessage({
     required this.isBot,
@@ -17,8 +13,6 @@ class OnboardingMessage {
   final Widget? content;
   final bool hasVoice;
 
-  // Temporary presentation aliases keep the transcript renderer independent
-  // while it is migrated component-by-component.
   String get sender => isBot ? 'bot' : 'user';
   Widget? get customContent => content;
 }

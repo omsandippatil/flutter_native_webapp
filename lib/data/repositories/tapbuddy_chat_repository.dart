@@ -12,7 +12,10 @@ class TapbuddyChatRepository {
 
   static const int _maxHistoryMessages = 12;
 
-  Future<List<ChatTurnModel>> readTranscript(String phone, String learnerId) async {
+  Future<List<ChatTurnModel>> readTranscript(
+    String phone,
+    String learnerId,
+  ) async {
     final raw = _localCache.getForeverList(
       CacheKeys.chatTranscript(phone, learnerId),
       (json) => json,
@@ -34,15 +37,18 @@ class TapbuddyChatRepository {
         ? history.sublist(history.length - _maxHistoryMessages)
         : history;
 
-    final data = await _http.post(ApiEndpoints.tapbuddyChat, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-      'message': message,
-      if (grade != null) 'grade': grade,
-      if (language != null) 'language': language,
-      if (context != null && context.isNotEmpty) 'context': context,
-      'history': ChatTurnModel.listToJson(recentHistory),
-    });
+    final data = await _http.post(
+      ApiEndpoints.tapbuddyChat,
+      body: {
+        'phone': phone,
+        'learner_id': learnerId,
+        'message': message,
+        if (grade != null) 'grade': grade,
+        if (language != null) 'language': language,
+        if (context != null && context.isNotEmpty) 'context': context,
+        'history': ChatTurnModel.listToJson(recentHistory),
+      },
+    );
 
     final reply = data['reply'] as String? ?? '';
 

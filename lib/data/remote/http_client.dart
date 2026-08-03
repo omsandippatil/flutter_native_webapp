@@ -7,7 +7,8 @@ class AuthException implements Exception {
   AuthException(this.code);
   final String code;
 
-  bool get requiresReLogin => code == 'token_phone_mismatch' || code == 'invalid_signature';
+  bool get requiresReLogin =>
+      code == 'token_phone_mismatch' || code == 'invalid_signature';
 
   @override
   String toString() => 'AuthException($code)';
@@ -19,7 +20,8 @@ class RateLimitedException implements Exception {
 
   static String bucketForPath(String path) {
     if (path.startsWith('/auth/forgot-password/send-otp')) return 'otp';
-    if (path.startsWith('/tapbuddy/chat') || path.startsWith('/submission-review/review')) {
+    if (path.startsWith('/tapbuddy/chat') ||
+        path.startsWith('/submission-review/review')) {
       return 'groq';
     }
     return 'default';
@@ -34,6 +36,7 @@ class HttpClient {
     _dio.options.baseUrl = AppConstants.workerBaseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 15);
     _dio.options.receiveTimeout = const Duration(seconds: 20);
+    _dio.options.contentType = Headers.jsonContentType;
 
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -65,11 +68,15 @@ class HttpClient {
     }
   }
 
-  Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) =>
-      _send('GET', path, query: query);
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, dynamic>? query,
+  }) => _send('GET', path, query: query);
 
-  Future<Map<String, dynamic>> post(String path, {Map<String, dynamic>? body}) =>
-      _send('POST', path, body: body);
+  Future<Map<String, dynamic>> post(
+    String path, {
+    Map<String, dynamic>? body,
+  }) => _send('POST', path, body: body);
 
   Future<Map<String, dynamic>> _send(
     String method,
@@ -88,10 +95,14 @@ class HttpClient {
     } on DioException catch (e) {
       final status = e.response?.statusCode;
       final data = e.response?.data;
-      final map = data is Map ? Map<String, dynamic>.from(data) : const <String, dynamic>{};
+      final map = data is Map
+          ? Map<String, dynamic>.from(data)
+          : const <String, dynamic>{};
 
       if (status == 401) {
-        throw AuthException(map['error'] as String? ?? 'invalid_or_expired_token');
+        throw AuthException(
+          map['error'] as String? ?? 'invalid_or_expired_token',
+        );
       }
       if (status == 429) {
         throw RateLimitedException(RateLimitedException.bucketForPath(path));

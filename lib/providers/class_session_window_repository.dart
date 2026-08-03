@@ -23,7 +23,10 @@ class ClassSessionWindowRepository {
     return existing.completedUnitKeysThisWindow.contains(unitKey);
   }
 
-  int completedUnitCountThisWindow(String learnerId, String? currentWindowStartDate) {
+  int completedUnitCountThisWindow(
+    String learnerId,
+    String? currentWindowStartDate,
+  ) {
     final existing = read(learnerId);
     if (!existing.coversWindow(currentWindowStartDate)) return 0;
     return existing.completedUnitKeysThisWindow.length;
@@ -37,7 +40,9 @@ class ClassSessionWindowRepository {
   }) async {
     final existing = read(learnerId);
     final sameWindow = existing.coversWindow(windowStartDate);
-    final base = sameWindow ? existing : ClassSessionWindowModel.empty(learnerId);
+    final base = sameWindow
+        ? existing
+        : ClassSessionWindowModel.empty(learnerId);
 
     final updated = base.withUnitCompleted(
       unitKey,
@@ -45,7 +50,10 @@ class ClassSessionWindowRepository {
       windowStartDate: windowStartDate,
     );
 
-    await _localCache.setForeverRaw(CacheKeys.sessionWindow(learnerId), updated.toJson());
+    await _localCache.setForeverRaw(
+      CacheKeys.sessionWindow(learnerId),
+      updated.toJson(),
+    );
   }
 
   Future<void> reset(String learnerId) async {

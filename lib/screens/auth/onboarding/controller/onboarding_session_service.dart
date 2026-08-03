@@ -152,10 +152,6 @@ class OnboardingSessionService {
       markComplete: true,
     );
 
-    // A newly onboarded learner always starts from the first unit's video.
-    // Some legacy enrollment responses contain cumulative video counters;
-    // pinning the local transaction to unit zero prevents those counters from
-    // incorrectly opening the submission screen on the learner's first visit.
     if (courseId != null && courseId.isNotEmpty) {
       updatedState = await _learnerStateRepository.prepareLocalUnit(
         learnerId: activeProfile.learnerId,

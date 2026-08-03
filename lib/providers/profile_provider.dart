@@ -11,16 +11,7 @@ import 'local_cache_provider.dart';
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((
   ref,
 ) async {
-  // `ref.read(...future)` here, not `ref.watch`: these are one-time async
-  // setup steps (open the Hive box, construct the repository), not values
-  // this provider should keep re-running for. `ref.watch` on a `.future`
-  // makes this provider rebuild every time `localCacheProvider` or
-  // `learnerStateRepositoryProvider` rebuild for any reason — and since
-  // `activeProfileProvider` below watches this provider's `.future` in
-  // turn, that rebuild cascades straight into `activeProfileProvider`,
-  // which notifies the router's `refreshListenable`, which re-runs
-  // `redirect` while this is still mid-flight — producing an unbroken
-  // loading loop that never settles into `AsyncData`.
+
   final localCache = await ref.read(localCacheProvider.future);
   final learnerStateRepository = await ref.read(
     learnerStateRepositoryProvider.future,
@@ -89,14 +80,6 @@ final selectProfileProvider = FutureProvider.autoDispose
       );
     });
 
-/// The profile the user picked on the profile-select screen. Persisted forever
-/// so the app can jump straight to Home on next launch without re-selecting.
-///
-/// Reads `profileRepositoryProvider.future` rather than watching it — this
-/// provider's job is to reflect the *active profile*, not to rebuild every
-/// time the repository provider itself rebuilds. The repository, once
-/// constructed, is stable for the app's lifetime; nothing here needs to
-/// react to it changing.
 final activeProfileProvider = FutureProvider<ActiveProfileModel?>((ref) async {
   final repository = await ref.read(profileRepositoryProvider.future);
   return repository.readActiveProfile();

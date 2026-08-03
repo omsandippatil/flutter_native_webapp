@@ -10,7 +10,8 @@ class FlowNotFoundException implements Exception {
   final String fileName;
 
   @override
-  String toString() => 'FlowNotFoundException: no manifest entry for "$category/$fileName"';
+  String toString() =>
+      'FlowNotFoundException: no manifest entry for "$category/$fileName"';
 }
 
 class ResolvedFlow {
@@ -36,9 +37,17 @@ class FlowRepository {
     final entry = manifest.entryFor(category, fileName);
     if (entry == null) throw FlowNotFoundException(category, fileName);
 
-    final resolvedLanguage = manifest.resolveLanguage(category, fileName, languageCode);
+    final resolvedLanguage = manifest.resolveLanguage(
+      category,
+      fileName,
+      languageCode,
+    );
     final isFallback = resolvedLanguage != languageCode;
-    final assetPath = AppConstants.flowAssetPath(resolvedLanguage, category, fileName);
+    final assetPath = AppConstants.flowAssetPath(
+      resolvedLanguage,
+      category,
+      fileName,
+    );
     final cacheKey = CacheKeys.flow(resolvedLanguage, category, fileName);
 
     final memory = _memoryCache[assetPath];
@@ -58,12 +67,17 @@ class FlowRepository {
     return resolved;
   }
 
-  Future<List<String>> fileNamesFor(String category, {String languageCode = AppConstants.defaultLanguageCode}) async {
+  Future<List<String>> fileNamesFor(
+    String category, {
+    String languageCode = AppConstants.defaultLanguageCode,
+  }) async {
     final manifest = await _manifestRepository.load(languageCode);
     return manifest.fileNamesFor(category);
   }
 
-  Future<List<String>> allCategories({String languageCode = AppConstants.defaultLanguageCode}) async {
+  Future<List<String>> allCategories({
+    String languageCode = AppConstants.defaultLanguageCode,
+  }) async {
     final manifest = await _manifestRepository.load(languageCode);
     return manifest.allCategories();
   }

@@ -4,7 +4,8 @@ class AchievementModel {
   final String achievement;
   final String level;
 
-  factory AchievementModel.fromJson(Map<String, dynamic> json) => AchievementModel(
+  factory AchievementModel.fromJson(Map<String, dynamic> json) =>
+      AchievementModel(
         achievement: json['achievement']?.toString() ?? '',
         level: json['level']?.toString() ?? '',
       );

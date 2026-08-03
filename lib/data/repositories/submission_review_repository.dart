@@ -1,4 +1,3 @@
-
 import '../../core/cache/cache_keys.dart';
 import '../../core/cache/local_cache.dart';
 import '../../models/submission_review_model.dart';
@@ -19,7 +18,11 @@ class SubmissionReviewRepository {
     String? expectedAnswer,
     String? rubric,
   }) async {
-    final key = CacheKeys.submissionReview(learnerId, question ?? '', submissionText);
+    final key = CacheKeys.submissionReview(
+      learnerId,
+      question ?? '',
+      submissionText,
+    );
 
     final cachedRaw = _localCache.getForeverRaw(key);
     if (cachedRaw != null) {
@@ -31,18 +34,23 @@ class SubmissionReviewRepository {
       };
     }
 
-    final data = await _http.post(ApiEndpoints.submissionReview, body: {
-      'phone': phone,
-      'learner_id': learnerId,
-      'submission_text': submissionText,
-      if (question != null) 'question': question,
-      if (expectedAnswer != null) 'expected_answer': expectedAnswer,
-      if (rubric != null) 'rubric': rubric,
-    });
+    final data = await _http.post(
+      ApiEndpoints.submissionReview,
+      body: {
+        'phone': phone,
+        'learner_id': learnerId,
+        'submission_text': submissionText,
+        if (question != null) 'question': question,
+        if (expectedAnswer != null) 'expected_answer': expectedAnswer,
+        if (rubric != null) 'rubric': rubric,
+      },
+    );
 
     final review = data['review'];
     if (data['success'] == true && review is Map) {
-      final model = SubmissionReviewModel.fromJson(Map<String, dynamic>.from(review));
+      final model = SubmissionReviewModel.fromJson(
+        Map<String, dynamic>.from(review),
+      );
       await _localCache.setForeverRaw(key, model.toJson());
     }
     return data;

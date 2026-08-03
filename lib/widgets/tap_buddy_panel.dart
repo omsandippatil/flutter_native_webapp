@@ -44,14 +44,17 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
   }
 
   Future<void> _bootstrap() async {
-    final activeProfile = await ref.read(profileRepositoryProvider.future).then(
-          (repository) => repository.readActiveProfile(),
-        );
+    final activeProfile = await ref
+        .read(profileRepositoryProvider.future)
+        .then((repository) => repository.readActiveProfile());
     if (!mounted || activeProfile == null) return;
 
     final repository = await ref.read(tapbuddyChatRepositoryProvider.future);
     final resolvedProfile = activeProfile;
-    final transcript = await repository.readTranscript(resolvedProfile.phone, resolvedProfile.learnerId);
+    final transcript = await repository.readTranscript(
+      resolvedProfile.phone,
+      resolvedProfile.learnerId,
+    );
 
     if (!mounted) return;
     setState(() {
@@ -154,8 +157,12 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
                             const Center(child: _DatePill()),
                             const SizedBox(height: 10),
                             if (_messages.isEmpty) ...const [
-                              _BuddyMessage('Hey there Champ!\nHow may I help you?'),
-                              _BuddyMessage('Type your question below and I\'ll help you out.'),
+                              _BuddyMessage(
+                                'Hey there Champ!\nHow may I help you?',
+                              ),
+                              _BuddyMessage(
+                                'Type your question below and I\'ll help you out.',
+                              ),
                             ],
                             for (final turn in _messages)
                               turn.role == 'user'
@@ -358,11 +365,7 @@ class _TypingBubble extends StatelessWidget {
           color: const Color(0xFFEFEFF4),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: const SizedBox(
-          width: 28,
-          height: 12,
-          child: _TypingDots(),
-        ),
+        child: const SizedBox(width: 28, height: 12, child: _TypingDots()),
       ),
     );
   }
@@ -375,14 +378,17 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))
-      ..repeat();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
   }
 
   @override
@@ -403,7 +409,10 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
             final scale = 0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
             return Transform.scale(
               scale: scale,
-              child: const CircleAvatar(radius: 2.6, backgroundColor: Color(0xFF9C9DAB)),
+              child: const CircleAvatar(
+                radius: 2.6,
+                backgroundColor: Color(0xFF9C9DAB),
+              ),
             );
           }),
         );
@@ -468,7 +477,11 @@ class _InputBar extends StatelessWidget {
   final bool enabled;
   final VoidCallback onSend;
 
-  const _InputBar({required this.controller, required this.enabled, required this.onSend});
+  const _InputBar({
+    required this.controller,
+    required this.enabled,
+    required this.onSend,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -495,7 +508,10 @@ class _InputBar extends StatelessWidget {
                     color: const Color(0xFF9A9BA8),
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
                 ),
               ),
             ),
@@ -511,7 +527,11 @@ class _InputBar extends StatelessWidget {
                 color: const Color(0xFF5B5BD6),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.send_rounded, size: 17, color: Colors.white),
+              child: const Icon(
+                Icons.send_rounded,
+                size: 17,
+                color: Colors.white,
+              ),
             ),
           ),
         ],

@@ -10,13 +10,19 @@ final assetDataSourceProvider = Provider<AssetDataSource>((ref) {
   return AssetDataSource(const AssetLoader());
 });
 
-final programContentRepositoryProvider = FutureProvider<ProgramContentRepository>((ref) async {
-  final localCache = await ref.watch(localCacheProvider.future);
-  return ProgramContentRepository.create(localCache, ref.watch(assetDataSourceProvider));
-});
+final programContentRepositoryProvider =
+    FutureProvider<ProgramContentRepository>((ref) async {
+      final localCache = await ref.watch(localCacheProvider.future);
+      return ProgramContentRepository.create(
+        localCache,
+        ref.watch(assetDataSourceProvider),
+      );
+    });
 
-final courseDetailDataProvider =
-    FutureProvider.autoDispose.family<CourseDetailModel, String>((ref, courseId) async {
-  final repository = await ref.watch(programContentRepositoryProvider.future);
-  return repository.fetchCourseDetail(courseId);
-});
+final courseDetailDataProvider = FutureProvider.autoDispose
+    .family<CourseDetailModel, String>((ref, courseId) async {
+      final repository = await ref.watch(
+        programContentRepositoryProvider.future,
+      );
+      return repository.fetchCourseDetail(courseId);
+    });

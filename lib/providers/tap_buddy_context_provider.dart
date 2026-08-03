@@ -29,25 +29,29 @@ class TapBuddyContext {
   final bool hasActiveClassSession;
 
   Map<String, dynamic> toJson() => {
-        if (studentName != null) 'student_name': studentName,
-        if (grade != null) 'grade': grade,
-        if (courseName != null) 'course_name': courseName,
-        if (unitName != null) 'unit_name': unitName,
-        if (unitDescription != null) 'unit_description': unitDescription,
-        if (xp != null) 'xp': xp,
-        if (streak != null) 'streak': streak,
-        'has_reached_weekly_cap': hasReachedWeeklyCap,
-        'has_active_class_session': hasActiveClassSession,
-      };
+    if (studentName != null) 'student_name': studentName,
+    if (grade != null) 'grade': grade,
+    if (courseName != null) 'course_name': courseName,
+    if (unitName != null) 'unit_name': unitName,
+    if (unitDescription != null) 'unit_description': unitDescription,
+    if (xp != null) 'xp': xp,
+    if (streak != null) 'streak': streak,
+    'has_reached_weekly_cap': hasReachedWeeklyCap,
+    'has_active_class_session': hasActiveClassSession,
+  };
 }
 
-final tapBuddyContextProvider = FutureProvider.autoDispose<TapBuddyContext>((ref) async {
+final tapBuddyContextProvider = FutureProvider.autoDispose<TapBuddyContext>((
+  ref,
+) async {
   final activeProfile = await ref.watch(activeProfileProvider.future);
   if (activeProfile == null) return const TapBuddyContext();
 
   LearnerStateModel? learnerState;
   try {
-    learnerState = await ref.watch(learnerStateDataProvider(activeProfile.learnerId).future);
+    learnerState = await ref.watch(
+      learnerStateDataProvider(activeProfile.learnerId).future,
+    );
   } catch (_) {
     learnerState = null;
   }
@@ -55,7 +59,9 @@ final tapBuddyContextProvider = FutureProvider.autoDispose<TapBuddyContext>((ref
   try {
     final bootstrap = await ref.watch(classSessionBootstrapProvider.future);
     return TapBuddyContext(
-      studentName: bootstrap.learnerState.profile?.studentName ?? activeProfile.studentName,
+      studentName:
+          bootstrap.learnerState.profile?.studentName ??
+          activeProfile.studentName,
       grade: activeProfile.grade,
       courseName: bootstrap.courseName,
       unitName: bootstrap.unit?.name,
@@ -67,7 +73,8 @@ final tapBuddyContextProvider = FutureProvider.autoDispose<TapBuddyContext>((ref
     );
   } catch (_) {
     return TapBuddyContext(
-      studentName: learnerState?.profile?.studentName ?? activeProfile.studentName,
+      studentName:
+          learnerState?.profile?.studentName ?? activeProfile.studentName,
       grade: activeProfile.grade,
       courseName: learnerState?.enrollment?.course,
       xp: learnerState?.xp,

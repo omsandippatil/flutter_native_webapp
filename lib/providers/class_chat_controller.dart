@@ -595,9 +595,7 @@ class ClassChatController extends ChangeNotifier {
 
       _submissionAcceptedThisUnit = true;
       _accumulatedSubmissionPoints += _currentUnit.xp;
-      // The final compact review card has already been emitted above. Persist
-      // the checkpoint only after that reward is visible, and expose the quiz
-      // only after the persisted state confirms the submission is complete.
+
       final saved = await _saveSubmissionProgress(_currentUnit.xp);
       if (_disposed) return;
       if (!saved) {
@@ -754,7 +752,7 @@ class ClassChatController extends ChangeNotifier {
         contentType: ClassChatContentType.checkpoint,
         text: text,
         data: {
-          // ignore: use_null_aware_elements
+
           if (image != null) 'image': image,
           'buttonLabel': buttonLabel,
           'action': action,
@@ -915,8 +913,7 @@ class ClassChatController extends ChangeNotifier {
         if (_disposed) return;
         _learnerState.archetype = bumped;
       } catch (_) {
-        // Archetype decoration is secondary; the server-confirmed submission
-        // checkpoint must still advance to the quiz.
+
       }
       _archetypeProgressionApplied = true;
     }
