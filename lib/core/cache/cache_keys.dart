@@ -84,9 +84,6 @@ class CacheKeys {
   static String sessionWindow(String learnerId) =>
       _k('class_session:$learnerId:window');
 
-  static String localArchetype(String learnerId) =>
-      _k('learner:$learnerId:local_archetype');
-
   static bool belongsToPhone(String key, String phone) =>
       key.contains(':$phone:');
 

@@ -26,11 +26,25 @@ class ArchetypeStepSelector {
     if (steps.isEmpty) return null;
 
     final normalized = LearnerArchetype.normalize(archetype);
-    for (final step in steps) {
-      if (step.label.toLowerCase().contains(normalized)) {
-        return step;
+    final preferredKinds = switch (normalized) {
+      LearnerArchetype.dormant => const ['emoji'],
+      LearnerArchetype.fenceSitter => const ['text,audio', 'audio', 'text'],
+      LearnerArchetype.irregularSubmitter => const ['image'],
+      LearnerArchetype.submitter => const ['image,video', 'video'],
+      _ => const ['emoji'],
+    };
+
+    for (final preferred in preferredKinds) {
+      for (final step in steps) {
+        if (_normalizeSubTypes(step.subTypes) == preferred) return step;
       }
     }
     return steps.first;
   }
+
+  static String _normalizeSubTypes(String value) => value
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+      .where((part) => part.isNotEmpty)
+      .join(',');
 }

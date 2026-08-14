@@ -16,18 +16,6 @@ class LearnerArchetype {
 
   static bool isValid(String value) => ladder.contains(value);
 
-  static int levelOf(String? value) {
-    if (value == null) return 0;
-    final idx = ladder.indexOf(value);
-    return idx == -1 ? 0 : idx;
-  }
-
-  static String next(String? current) {
-    final level = levelOf(current);
-    final nextLevel = (level + 1).clamp(0, ladder.length - 1);
-    return ladder[nextLevel];
-  }
-
   static String normalize(String? value) =>
       isValid(value ?? '') ? value! : dormant;
 }

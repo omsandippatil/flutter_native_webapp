@@ -30,7 +30,10 @@ class SubmissionAnswer {
       SubmissionAnswer._(kind: SubmissionKind.video, mediaPath: path);
 
   factory SubmissionAnswer.imageOrVideo(String path, {required bool isVideo}) =>
-      SubmissionAnswer._(kind: SubmissionKind.imageVideo, mediaPath: path);
+      SubmissionAnswer._(
+        kind: isVideo ? SubmissionKind.video : SubmissionKind.image,
+        mediaPath: path,
+      );
 
   String get displaySummary {
     switch (kind) {
@@ -93,36 +96,6 @@ class SubmissionKindResolver {
     return SubmissionKind.text;
   }
 
-  static bool requiresAiReview(SubmissionKind kind) {
-    switch (kind) {
-      case SubmissionKind.emoji:
-        return false;
-      case SubmissionKind.text:
-      case SubmissionKind.textAudio:
-      case SubmissionKind.audio:
-      case SubmissionKind.image:
-      case SubmissionKind.video:
-      case SubmissionKind.imageVideo:
-        return true;
-    }
-  }
-
-  static String aiSubmissionType(SubmissionKind kind) {
-    switch (kind) {
-      case SubmissionKind.emoji:
-        return 'emoji';
-      case SubmissionKind.text:
-        return 'text';
-      case SubmissionKind.textAudio:
-        return 'text_audio';
-      case SubmissionKind.audio:
-        return 'audio';
-      case SubmissionKind.image:
-        return 'image';
-      case SubmissionKind.video:
-        return 'video';
-      case SubmissionKind.imageVideo:
-        return 'image_video';
-    }
-  }
+  static bool requiresAiReview(SubmissionKind kind) =>
+      kind != SubmissionKind.emoji;
 }

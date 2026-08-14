@@ -136,7 +136,89 @@ class ClassCheckpointCard extends StatelessWidget {
       );
     }
 
-    if ((action == 'finish' || action == 'video_reward') && image != null) {
+    if (action == 'video_reward' && image != null) {
+      return Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 430),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.classroomMessageSurface,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(2),
+                  child: AspectRatio(
+                    aspectRatio: 1,
+                    child: Image.asset(image, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 14, 14),
+                decoration: BoxDecoration(
+                  color: AppTheme.classroomMessageSurface,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        message.text ?? '',
+                        textAlign: TextAlign.left,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          height: 1.35,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.textColor,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      Icons.volume_up_rounded,
+                      size: 22,
+                      color: AppTheme.buttonColor,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 76,
+                child: ElevatedButton(
+                  onPressed: () => controller.continueCheckpoint(action),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.buttonColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                  child: Text(
+                    buttonLabel,
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (action == 'finish' && image != null) {
       return Align(
         alignment: Alignment.centerLeft,
         child: Container(
