@@ -110,16 +110,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onboarded = loggedIn && (profile.onboardingCompleted == true);
 
       if (!loggedIn) {
-
-        if (target != AppRoutes.splash && _publicRoutes.contains(target))
+        if (target != AppRoutes.splash && _publicRoutes.contains(target)) {
           return null;
+        }
         return AppRoutes.login;
       }
 
       if (!onboarded) {
-
-        if (target == AppRoutes.onboarding || target == AppRoutes.error)
+        if (target == AppRoutes.onboarding || target == AppRoutes.error) {
           return null;
+        }
         return AppRoutes.onboarding;
       }
 

@@ -465,13 +465,13 @@ class _Logos extends StatelessWidget {
         Image.asset(
           'assets/logos/gov-logo.png',
           height: isDesktop ? 48 : 40,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
         const SizedBox(width: 12),
         Image.asset(
           'assets/logos/tap_logo.png',
           height: isDesktop ? 38 : 32,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
       ],
     );

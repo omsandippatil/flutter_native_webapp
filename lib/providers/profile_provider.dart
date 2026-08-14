@@ -11,7 +11,6 @@ import 'local_cache_provider.dart';
 final profileRepositoryProvider = FutureProvider<ProfileRepository>((
   ref,
 ) async {
-
   final localCache = await ref.read(localCacheProvider.future);
   final learnerStateRepository = await ref.read(
     learnerStateRepositoryProvider.future,

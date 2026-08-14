@@ -28,8 +28,9 @@ class FlowManifest {
     String requestedLanguage,
   ) {
     final entry = entryFor(category, fileName);
-    if (entry != null && entry.hasLanguage(requestedLanguage))
+    if (entry != null && entry.hasLanguage(requestedLanguage)) {
       return requestedLanguage;
+    }
     return 'en';
   }
 

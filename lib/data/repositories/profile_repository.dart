@@ -83,10 +83,10 @@ class ProfileRepository {
       ApiEndpoints.profilesSearch,
       query: {
         'phone': phone,
-        if (grade != null) 'grade': grade,
-        if (division != null) 'division': division,
-        if (rollNumber != null) 'roll_number': rollNumber,
-        if (query != null) 'query': query,
+        'grade': ?grade,
+        'division': ?division,
+        'roll_number': ?rollNumber,
+        'query': ?query,
         'page': page,
         'page_size': pageSize,
       },
@@ -210,7 +210,7 @@ class ProfileRepository {
         'phone': phone,
         'learner_id': learnerId,
         if (updates != null && updates.isNotEmpty) 'updates': updates,
-        if (course != null) 'course': course,
+        'course': ?course,
         'mark_complete': markComplete ? 1 : 0,
       },
     );

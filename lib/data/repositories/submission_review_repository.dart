@@ -40,9 +40,9 @@ class SubmissionReviewRepository {
         'phone': phone,
         'learner_id': learnerId,
         'submission_text': submissionText,
-        if (question != null) 'question': question,
-        if (expectedAnswer != null) 'expected_answer': expectedAnswer,
-        if (rubric != null) 'rubric': rubric,
+        'question': ?question,
+        'expected_answer': ?expectedAnswer,
+        'rubric': ?rubric,
       },
     );
 
