@@ -25,6 +25,7 @@ dependencies:
   youtube_player_flutter: ^9.0.4
   url_launcher: ^6.3.2
 
+  web: ^1.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -45,13 +46,9 @@ flutter:
     - assets/profile-screen/
     - assets/data/content/
     - assets/data/content/thumbnail/
-    - assets/flows/
     - assets/flows/en/
-
-    - assets/flows/en/onboarding/
     - assets/flows/en/activity/
-
-    - assets/flows/
+    - assets/flows/en/onboarding/
     - assets/data/courses/en/
     - assets/data/courses/hi/
     - assets/data/courses/mr/
