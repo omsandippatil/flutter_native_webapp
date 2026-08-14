@@ -5,8 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/router/router.dart';
 import '../../models/activity_models.dart';
 import '../../providers/home_dashboard_provider.dart';
-import '../../providers/learner_state_provider.dart';
-import '../../providers/profile_provider.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/app_nav.dart';
 import '../../widgets/loading_view.dart';
@@ -52,18 +50,7 @@ class HomeScreen extends ConsumerWidget {
           ),
           data: (dashboard) => _HomeDashboard(
             dashboard: dashboard,
-            onContinue: () async {
-              final activeProfile = await ref.read(
-                activeProfileProvider.future,
-              );
-              if (activeProfile == null) return;
-              final repository = await ref.read(
-                learnerStateRepositoryProvider.future,
-              );
-              await repository.clearHomeCelebration(activeProfile.learnerId);
-              ref.invalidate(learningDashboardProvider);
-              if (context.mounted) context.go(AppRoutes.classroom);
-            },
+            onContinue: () => context.go(AppRoutes.classroom),
           ),
         ),
       ),
@@ -87,7 +74,9 @@ class _HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = dashboard.progress;
-    final stage = dashboard.showCompletionCelebration || dashboard.unit == null
+    final stage = dashboard.showCompletionCelebration ||
+            dashboard.hasReachedWeeklyCap ||
+            dashboard.unit == null
         ? LearningStage.completed
         : progress.currentStage;
     final unit = dashboard.unit;
@@ -351,6 +340,7 @@ class _ActiveCard extends StatelessWidget {
       LearningStage.startActivity => StartActivityCard(
         courseDisplay: unit.courseDisplay,
         unitName: unit.unitName,
+        thumbnailAsset: unit.thumbnailAsset,
         points: unit.videoPoints,
         onStart: hasReachedWeeklyCap
             ? null

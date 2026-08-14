@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/router/router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../models/activity_models.dart';
 import '../../../providers/class_chat_controller.dart';
 import '../../../providers/learner_state_provider.dart';
 import '../../../providers/reveal_asset_resolver.dart';
@@ -41,6 +42,137 @@ class ClassContinueBar extends StatelessWidget {
                 ),
               ),
               child: const Text('Continue'),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ClassPendingActivityChoiceBody extends StatelessWidget {
+  const ClassPendingActivityChoiceBody({
+    super.key,
+    required this.unit,
+    required this.onStart,
+    required this.onMaybeLater,
+  });
+
+  final CourseUnit unit;
+  final VoidCallback onStart;
+  final VoidCallback onMaybeLater;
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Column(
+              children: [
+                Text(
+                  'Want to continue?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Start the next activity when you are ready.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(color: AppTheme.subheadingColor),
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppTheme.borderColor),
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          unit.thumbnailAsset,
+                          width: 112,
+                          height: 96,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Container(
+                            width: 112,
+                            height: 96,
+                            color: AppTheme.classroomMessageSurface,
+                            child: const Icon(
+                              Icons.play_circle_fill_rounded,
+                              color: AppTheme.buttonColor,
+                              size: 36,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              unit.courseDisplay,
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppTheme.imagePlaceholder,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              unit.unitName,
+                              style: GoogleFonts.inter(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _EarnRow(
+                              icon: Icons.stars_rounded,
+                              iconColor: const Color(0xFFE29A22),
+                              label: '${unit.totalPoints} Points',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: onStart,
+                          child: const Text("Let's go"),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: onMaybeLater,
+                          child: const Text('Maybe later'),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -244,9 +376,7 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                 child: SizedBox(
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      await controller.deferNextActivity();
-                      if (!context.mounted) return;
+                    onPressed: () {
                       ref.invalidate(
                         learnerStateDataProvider(controller.learnerId),
                       );

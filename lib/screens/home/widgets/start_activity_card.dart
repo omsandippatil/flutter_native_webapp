@@ -6,6 +6,7 @@ import 'card_deck_wrapper.dart';
 class StartActivityCard extends StatelessWidget {
   final String courseDisplay;
   final String unitName;
+  final String thumbnailAsset;
   final int points;
   final VoidCallback? onStart;
 
@@ -13,6 +14,7 @@ class StartActivityCard extends StatelessWidget {
     super.key,
     required this.courseDisplay,
     required this.unitName,
+    required this.thumbnailAsset,
     required this.points,
     required this.onStart,
   });
@@ -63,11 +65,17 @@ class StartActivityCard extends StatelessWidget {
                         width: 8,
                       ),
                     ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.image_outlined,
-                        color: Color(0xFFB9BBC8),
-                        size: 30,
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      thumbnailAsset,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(
+                          Icons.image_outlined,
+                          color: Color(0xFFB9BBC8),
+                          size: 30,
+                        ),
                       ),
                     ),
                   ),

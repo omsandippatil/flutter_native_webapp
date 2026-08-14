@@ -11,6 +11,9 @@ import '../../models/class_chat_message_model.dart';
 import '../../providers/class_chat_controller.dart';
 import '../../providers/class_chat_provider.dart';
 import '../../providers/class_session_bootstrap_provider.dart';
+import '../../providers/home_dashboard_provider.dart';
+import '../../providers/learner_state_provider.dart';
+import '../../providers/profile_provider.dart';
 import '../../widgets/app_header.dart';
 import '../../widgets/app_nav.dart';
 import 'widgets/class_chat_row.dart';
@@ -28,40 +31,76 @@ class ClassScreen extends ConsumerStatefulWidget {
 class _ClassScreenState extends ConsumerState<ClassScreen> {
   int _attempt = 0;
 
-  void _startNextActivity() {
-    setState(() => _attempt++);
+  Future<void> _startNextActivity() async {
+    final profile = await ref.read(activeProfileProvider.future);
+    if (profile == null) return;
+    final repository = await ref.read(learnerStateRepositoryProvider.future);
+    await repository.clearHomeCelebration(profile.learnerId);
+    ref.invalidate(learningDashboardProvider);
     ref.invalidate(classSessionBootstrapProvider);
+    if (!mounted) return;
+    setState(() => _attempt++);
   }
 
   @override
   Widget build(BuildContext context) {
+    final dashboardAsync = ref.watch(learningDashboardProvider);
+
+    return dashboardAsync.when(
+      loading: () => _scaffold(const ClassLoadingSkeleton()),
+      error: (_, _) => _buildClassSession(),
+      data: (dashboard) {
+        if (dashboard.hasReachedWeeklyCap) {
+          return _scaffold(
+            ClassWeeklyCapRevealBody(
+              unitIndex: 0,
+              onHome: () => context.go(AppRoutes.home),
+            ),
+          );
+        }
+        if (dashboard.showCompletionCelebration && dashboard.unit != null) {
+          return _scaffold(
+            ClassPendingActivityChoiceBody(
+              unit: dashboard.unit!,
+              onStart: _startNextActivity,
+              onMaybeLater: () => context.go(AppRoutes.home),
+            ),
+          );
+        }
+        return _buildClassSession();
+      },
+    );
+  }
+
+  Widget _buildClassSession() {
     final controllerAsync = ref.watch(classChatControllerProvider(_attempt));
 
-    return AppNav(
-      child: Scaffold(
-        backgroundColor: AppTheme.appBackground,
-        body: controllerAsync.when(
-          loading: () => const ClassLoadingSkeleton(),
-          error: (error, _) {
-            if (error is NoUnitAvailableException) {
-              return ClassWeeklyCapRevealBody(
-                unitIndex: 0,
-                onHome: () => context.go(AppRoutes.home),
-              );
-            }
-            return _ErrorBody(
-              error: error,
-              onBack: () => context.go(AppRoutes.home),
+    return _scaffold(
+      controllerAsync.when(
+        loading: () => const ClassLoadingSkeleton(),
+        error: (error, _) {
+          if (error is NoUnitAvailableException) {
+            return ClassWeeklyCapRevealBody(
+              unitIndex: 0,
+              onHome: () => context.go(AppRoutes.home),
             );
-          },
-          data: (controller) => _ClassChatView(
-            controller: controller,
-            onStartNextActivity: _startNextActivity,
-          ),
+          }
+          return _ErrorBody(
+            error: error,
+            onBack: () => context.go(AppRoutes.home),
+          );
+        },
+        data: (controller) => _ClassChatView(
+          controller: controller,
+          onStartNextActivity: _startNextActivity,
         ),
       ),
     );
   }
+
+  Widget _scaffold(Widget body) => AppNav(
+        child: Scaffold(backgroundColor: AppTheme.appBackground, body: body),
+      );
 }
 
 class _ErrorBody extends StatelessWidget {
