@@ -1,17 +1,31 @@
-# tapapp
+# TapApp
 
-A new Flutter project.
+TapApp is a Flutter learning application backed by a Cloudflare Worker and a Frappe learning platform.
 
-## Getting Started
+## Quick start
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run -d chrome
+```
 
-A few resources to get you started if this is your first Flutter project:
+Worker development:
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+cd worker
+npm ci
+npm run dev
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Documentation
+
+Complete frontend, Worker, Frappe, API, content, deployment, and operations documentation is in [`documentation/`](documentation/index.md).
+
+Serve it locally with MkDocs Material:
+
+```bash
+python3 -m venv .venv-docs
+source .venv-docs/bin/activate
+pip install -r documentation/requirements.txt
+mkdocs serve
+```

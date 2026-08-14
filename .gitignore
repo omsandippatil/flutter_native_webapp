@@ -18,6 +18,8 @@ migrate_working_dir/
 *.iws
 .idea/
 docs/
+/site/
+/.venv-docs/
 
 /linux/
 /macos/
