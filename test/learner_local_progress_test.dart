@@ -36,11 +36,11 @@ void main() {
     await tempDirectory.delete(recursive: true);
   });
 
-  LearnerStateModel serverState(String learnerId) =>
+  LearnerStateModel serverState(String learnerId, {int videosCompleted = 0}) =>
       LearnerStateModel.fromFullJson(learnerId, {
         'enrollment': {
           'course': 'course-1',
-          'videos_completed': 4,
+          'videos_completed': videosCompleted,
           'submission_index': 0,
           'quizzes_completed': 0,
         },
@@ -50,7 +50,7 @@ void main() {
     'restores the exact local stage without leaking across learners',
     () async {
       final learnerA = serverState('learner-a');
-      final learnerB = serverState('learner-b');
+      final learnerB = serverState('learner-b', videosCompleted: 4);
       await cache.setForeverRaw(
         CacheKeys.learnerState('learner-a'),
         learnerA.toJson(),
@@ -77,7 +77,6 @@ void main() {
       expect(
         ClassroomProgressResolver.resolve(
           enrollment: afterSubmission.enrollment!,
-          learnerSubmissionIndex: afterSubmission.submissionIndex,
           unitIndex: 0,
         ).stage,
         ClassroomProgressStage.takeQuiz,
@@ -109,11 +108,38 @@ void main() {
       expect(
         ClassroomProgressResolver.resolve(
           enrollment: nextUnit.enrollment!,
-          learnerSubmissionIndex: nextUnit.submissionIndex,
           unitIndex: 1,
         ).stage,
         ClassroomProgressStage.watchVideo,
       );
+    },
+  );
+
+  test(
+    'local course progress does not overwrite learner submission total',
+    () async {
+      final state = LearnerStateModel.fromFullJson('learner-a', {
+        'submission_index': 3,
+        'enrollment': {
+          'course': 'course-1',
+          'videos_completed': 1,
+          'submission_index': 0,
+          'quizzes_completed': 0,
+        },
+      });
+      await cache.setForeverRaw(
+        CacheKeys.learnerState('learner-a'),
+        state.toJson(),
+      );
+
+      final restored = await repository.applyLocalProgress(
+        learnerId: 'learner-a',
+        submissionIndex: 1,
+        xp: 20,
+      );
+
+      expect(restored.submissionIndex, 3);
+      expect(restored.enrollment?.submissionIndex, 1);
     },
   );
 }

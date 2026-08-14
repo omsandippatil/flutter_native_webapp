@@ -79,7 +79,8 @@ final tapBuddyContextProvider = FutureProvider.autoDispose<TapBuddyContext>((
       courseName: learnerState?.enrollment?.course,
       xp: learnerState?.xp,
       streak: learnerState?.streak,
-      hasReachedWeeklyCap: learnerState?.isBingeing ?? false,
+      hasReachedWeeklyCap:
+          learnerState?.hasReachedWeeklyActivityLimit() ?? false,
       hasActiveClassSession: false,
     );
   }

@@ -4,6 +4,9 @@ import '../../models/learner_state_model.dart';
 import '../remote/api_endpoints.dart';
 import '../remote/http_client.dart';
 
+const completedUnitStateFields =
+    'profile,xp,level,streak,window,archetype,submission,enrollment,achievements';
+
 class ProgressConflictException implements Exception {
   ProgressConflictException(this.responseBody);
   final Map<String, dynamic> responseBody;
@@ -46,7 +49,7 @@ class LearnerStateRepository {
 
     final data = await _http.get(
       ApiEndpoints.learnerState,
-      query: {'learner_id': learnerId},
+      query: {'learner_id': learnerId, 'fields': ?fields},
     );
 
     final serverState = await _writeFull(learnerId, data);
@@ -90,7 +93,6 @@ class LearnerStateRepository {
       ...data,
       'video_index': ?videoIndex,
       'quiz_index': ?quizIndex,
-      'submission_index': ?submissionIndex,
     };
 
     final conflict = data['conflict'] == true;
@@ -105,6 +107,14 @@ class LearnerStateRepository {
     }
 
     final model = await _writeProgressResult(learnerId, mergedProgress);
+    if (submissionIndex != null && model.enrollment != null) {
+      model.enrollment = model.enrollment!.copyWith(
+        submissionIndex: _max(
+          model.enrollment!.submissionIndex,
+          submissionIndex,
+        ),
+      );
+    }
     if (activityType == 'unit_complete') {
       await _localCache.delete(CacheKeys.activityProgress(learnerId));
       model.hasPendingLocalProgress = false;
@@ -211,11 +221,19 @@ class LearnerStateRepository {
         progress['quiz_done'] == true ||
         ((progress['quiz_index'] as num?)?.toInt() ?? 0) > unitIndex;
     serverState.enrollment = existingEnrollment.copyWith(
-      videosCompleted: unitIndex + (videoDone ? 1 : 0),
-      submissionIndex: unitIndex + (submissionDone ? 1 : 0),
-      quizzesCompleted: unitIndex + (quizDone ? 1 : 0),
+      videosCompleted: _max(
+        existingEnrollment.videosCompleted,
+        unitIndex + (videoDone ? 1 : 0),
+      ),
+      submissionIndex: _max(
+        existingEnrollment.submissionIndex,
+        unitIndex + (submissionDone ? 1 : 0),
+      ),
+      quizzesCompleted: _max(
+        existingEnrollment.quizzesCompleted,
+        unitIndex + (quizDone ? 1 : 0),
+      ),
     );
-    serverState.submissionIndex = unitIndex + (submissionDone ? 1 : 0);
     final model = serverState;
     model.hasPendingLocalProgress = true;
     model.pendingProgressXp = (progress['pending_xp'] as num?)?.toInt() ?? 0;
@@ -238,18 +256,22 @@ class LearnerStateRepository {
     return indexes.reduce((a, b) => a < b ? a : b) - 1;
   }
 
+  int _max(int a, int b) => a > b ? a : b;
+
   Future<LearnerStateModel> prepareLocalUnit({
     required String learnerId,
     required int unitIndex,
   }) async {
     final state = await readCached(learnerId);
+    final enrollment = state?.enrollment;
+    final submissionIndex = enrollment?.submissionIndex ?? 0;
     await _localCache.setForeverRaw(CacheKeys.activityProgress(learnerId), {
       'learner_id': learnerId,
-      'course': state?.enrollment?.course,
+      'course': enrollment?.course,
       'unit_index': unitIndex,
-      'video_done': false,
-      'submission_done': false,
-      'quiz_done': false,
+      'video_done': (enrollment?.videosCompleted ?? 0) > unitIndex,
+      'submission_done': submissionIndex > unitIndex,
+      'quiz_done': (enrollment?.quizzesCompleted ?? 0) > unitIndex,
       'pending_xp': 0,
       'ready_to_sync': false,
     });
@@ -303,6 +325,7 @@ class LearnerStateRepository {
       submissionIndex: progress['submission_done'] == true && unitIndex != null
           ? unitIndex + 1
           : null,
+      fields: completedUnitStateFields,
     );
     return synced;
   }
@@ -333,11 +356,9 @@ class LearnerStateRepository {
 
   Future<LearnerStateModel> _writeFull(
     String learnerId,
-    Map<String, dynamic> json, {
-    bool clearConflict = false,
-  }) async {
+    Map<String, dynamic> json,
+  ) async {
     final model = LearnerStateModel.fromFullJson(learnerId, json);
-    if (clearConflict) model.hasPendingConflict = false;
     await _localCache.setForeverRaw(
       CacheKeys.learnerState(learnerId),
       model.toJson(),

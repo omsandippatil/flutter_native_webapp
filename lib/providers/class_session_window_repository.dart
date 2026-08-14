@@ -19,7 +19,9 @@ class ClassSessionWindowRepository {
     String? currentWindowStartDate,
   ) {
     final existing = read(learnerId);
-    if (!existing.coversWindow(currentWindowStartDate)) return false;
+    if (!existing.coversWindow(_windowStart(currentWindowStartDate))) {
+      return false;
+    }
     return existing.completedUnitKeysThisWindow.contains(unitKey);
   }
 
@@ -28,7 +30,7 @@ class ClassSessionWindowRepository {
     String? currentWindowStartDate,
   ) {
     final existing = read(learnerId);
-    if (!existing.coversWindow(currentWindowStartDate)) return 0;
+    if (!existing.coversWindow(_windowStart(currentWindowStartDate))) return 0;
     return existing.completedUnitKeysThisWindow.length;
   }
 
@@ -39,7 +41,8 @@ class ClassSessionWindowRepository {
     String? windowStartDate,
   }) async {
     final existing = read(learnerId);
-    final sameWindow = existing.coversWindow(windowStartDate);
+    final effectiveWindowStart = _windowStart(windowStartDate);
+    final sameWindow = existing.coversWindow(effectiveWindowStart);
     final base = sameWindow
         ? existing
         : ClassSessionWindowModel.empty(learnerId);
@@ -47,7 +50,7 @@ class ClassSessionWindowRepository {
     final updated = base.withUnitCompleted(
       unitKey,
       windowResetsOn: windowResetsOn,
-      windowStartDate: windowStartDate,
+      windowStartDate: effectiveWindowStart,
     );
 
     await _localCache.setForeverRaw(
@@ -58,5 +61,17 @@ class ClassSessionWindowRepository {
 
   Future<void> reset(String learnerId) async {
     await _localCache.delete(CacheKeys.sessionWindow(learnerId));
+  }
+
+  String _windowStart(String? serverWindowStart) {
+    if (serverWindowStart != null && serverWindowStart.isNotEmpty) {
+      return serverWindowStart;
+    }
+    final now = DateTime.now();
+    final monday = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - DateTime.monday));
+    return '${monday.year.toString().padLeft(4, '0')}-'
+        '${monday.month.toString().padLeft(2, '0')}-'
+        '${monday.day.toString().padLeft(2, '0')}';
   }
 }

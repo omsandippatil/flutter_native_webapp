@@ -44,12 +44,6 @@ class ClassSessionBootstrap {
   final bool weeklyCapAlreadyReached;
 }
 
-bool _serverSaysCapReached(LearnerStateModel state) {
-  final bingeing = state.isBingeing ?? false;
-  final remaining = state.unitsRemaining;
-  return bingeing || (remaining != null && remaining <= 0);
-}
-
 final classSessionBootstrapProvider =
     FutureProvider.autoDispose<ClassSessionBootstrap>((ref) async {
       final activeProfile = await ref.watch(activeProfileProvider.future);
@@ -63,16 +57,24 @@ final classSessionBootstrapProvider =
 
       var learnerState = await learnerStateRepository.fetchState(
         learnerId: activeProfile.learnerId,
-        forceRefresh: true,
       );
 
-      if (!_serverSaysCapReached(learnerState) &&
+      if (!learnerState.hasReachedWeeklyActivityLimit() &&
           learnerState.hasPendingLocalProgress) {
         final synced = await learnerStateRepository.syncCompletedLocalProgress(
           activeProfile.learnerId,
         );
         if (synced != null) learnerState = synced;
       }
+
+      final sessionWindowRepository = await ref.watch(
+        classSessionWindowRepositoryProvider.future,
+      );
+      final localCompleted = sessionWindowRepository
+          .completedUnitCountThisWindow(
+        activeProfile.learnerId,
+        learnerState.windowStartDate,
+      );
 
       var enrollment = learnerState.enrollment;
       if (enrollment == null || enrollment.course == null) {
@@ -98,7 +100,6 @@ final classSessionBootstrapProvider =
       final startIndex = ClassroomProgressResolver.resolveUnitIndexForCourse(
         enrollment,
         course.units,
-        learnerSubmissionIndex: learnerState.submissionIndex,
       );
       final selectedUnit = course.units[startIndex];
       final nextUnit = startIndex + 1 < course.units.length
@@ -108,7 +109,6 @@ final classSessionBootstrapProvider =
         enrollment: enrollment,
         unitIndex: startIndex,
         unit: selectedUnit,
-        learnerSubmissionIndex: learnerState.submissionIndex,
       );
 
       if (!learnerState.hasPendingLocalProgress &&
@@ -123,10 +123,11 @@ final classSessionBootstrapProvider =
           enrollment: enrollment,
           unitIndex: startIndex,
           unit: selectedUnit,
-          learnerSubmissionIndex: learnerState.submissionIndex,
         );
       }
-      final capReached = _serverSaysCapReached(learnerState);
+      final capReached = learnerState.hasReachedWeeklyActivityLimit(
+        localCompleted: localCompleted,
+      );
 
       if (capReached &&
           selectedProgress.stage == ClassroomProgressStage.watchVideo) {

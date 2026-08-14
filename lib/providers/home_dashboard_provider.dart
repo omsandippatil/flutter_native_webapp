@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/active_profile_model.dart';
-import '../models/enrollment_model.dart';
-import '../models/learner_state_model.dart';
 import '../models/activity_models.dart';
 import '../models/classroom_progress_stage.dart';
+import '../models/enrollment_model.dart';
+import '../models/learner_state_model.dart';
 import '../models/program_content/course_detail_model.dart';
+import 'class_session_bootstrap_provider.dart';
 import 'learner_state_provider.dart';
 import 'profile_provider.dart';
 import 'program_content_provider.dart';
@@ -35,7 +36,6 @@ LearningProgress _buildProgress({
     enrollment: enrollment,
     unitIndex: unitIndex,
     unit: unit,
-    learnerSubmissionIndex: learnerState.submissionIndex,
   );
 
   return LearningProgress(
@@ -48,7 +48,6 @@ LearningProgress _buildProgress({
     submissionDone: snapshot.submissionDone,
     quizDone: snapshot.quizDone,
     classroomStage: snapshot.stage,
-    watchedVideosThisWeek: learnerState.unitsCompletedThisWeek ?? 0,
   );
 }
 
@@ -62,6 +61,16 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
     var learnerState = await ref.watch(
       learnerStateDataProvider(activeProfile.learnerId).future,
     );
+    final sessionWindowRepository = await ref.watch(
+      classSessionWindowRepositoryProvider.future,
+    );
+    final localCompleted = sessionWindowRepository.completedUnitCountThisWindow(
+      activeProfile.learnerId,
+      learnerState.windowStartDate,
+    );
+    final hasReachedWeeklyCap = learnerState.hasReachedWeeklyActivityLimit(
+      localCompleted: localCompleted,
+    );
 
     var enrollment = learnerState.enrollment;
     if (enrollment == null || enrollment.course == null) {
@@ -74,7 +83,7 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
         ),
         unit: null,
         hasEnrollment: false,
-        hasReachedWeeklyCap: learnerState.isBingeing ?? false,
+        hasReachedWeeklyCap: hasReachedWeeklyCap,
       );
     }
 
@@ -92,14 +101,13 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
         ),
         unit: null,
         hasEnrollment: true,
-        hasReachedWeeklyCap: learnerState.isBingeing ?? false,
+        hasReachedWeeklyCap: hasReachedWeeklyCap,
       );
     }
 
     final unitIndex = ClassroomProgressResolver.resolveUnitIndexForCourse(
       enrollment,
       course.units,
-      learnerSubmissionIndex: learnerState.submissionIndex,
     );
     final courseUnit = course.units[unitIndex];
     var progress = _buildProgress(
@@ -144,8 +152,9 @@ final learningDashboardProvider = FutureProvider.autoDispose<LearningDashboard>(
       progress: progress,
       unit: allUnitsDone ? null : CourseUnit.fromCourse(course, unitIndex),
       hasEnrollment: true,
-      hasReachedWeeklyCap: learnerState.isBingeing ?? false,
-      showCompletionCelebration: celebration?['show'] == true,
+      hasReachedWeeklyCap: hasReachedWeeklyCap,
+      showCompletionCelebration:
+          !allUnitsDone && !hasReachedWeeklyCap && celebration?['show'] == true,
       completionPoints: (celebration?['points'] as num?)?.toInt() ?? 0,
     );
   },

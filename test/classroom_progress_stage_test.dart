@@ -95,21 +95,17 @@ void main() {
     );
   });
 
-  test(
-    'resolves takeQuiz when learnerSubmissionIndex is passed separately',
-    () {
-      expect(
-        ClassroomProgressResolver.resolve(
-          enrollment: const EnrollmentModel(
-            videosCompleted: 1,
-            submissionIndex: 0,
-          ),
-          unitIndex: 0,
-          unit: unit,
-          learnerSubmissionIndex: 1,
-        ).stage,
-        ClassroomProgressStage.takeQuiz,
-      );
-    },
-  );
+  test('does not use learner-wide submissions as course progress', () {
+    expect(
+      ClassroomProgressResolver.resolve(
+        enrollment: const EnrollmentModel(
+          videosCompleted: 1,
+          submissionIndex: 0,
+        ),
+        unitIndex: 0,
+        unit: unit,
+      ).stage,
+      ClassroomProgressStage.submitProject,
+    );
+  });
 }

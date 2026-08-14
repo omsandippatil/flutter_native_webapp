@@ -14,44 +14,30 @@ extension LearningStageClassroomMapper on ClassroomProgressStage {
 
 class CourseUnit {
   const CourseUnit({
-    required this.unitIndex,
     required this.courseDisplay,
     required this.unitName,
-    required this.videoDescription,
+    required this.thumbnailAsset,
     required this.videoPoints,
     required this.submissionPoints,
-    required this.submissionPrompt,
     required this.totalPoints,
   });
 
-  final int unitIndex;
   final String courseDisplay;
   final String unitName;
-  final String videoDescription;
+  final String thumbnailAsset;
   final int videoPoints;
   final int submissionPoints;
-  final String submissionPrompt;
   final int totalPoints;
 
   factory CourseUnit.fromCourse(CourseDetailModel course, int unitIndex) {
     final unit = course.units[unitIndex];
     final video = unit.videos.isNotEmpty ? unit.videos.first : null;
-    final assignment = unit.assignments.isNotEmpty
-        ? unit.assignments.first
-        : null;
-    final assignmentStep = assignment != null && assignment.steps.isNotEmpty
-        ? assignment.steps.first
-        : null;
-
     return CourseUnit(
-      unitIndex: unitIndex,
       courseDisplay: course.vertical.isNotEmpty ? course.vertical : course.name,
       unitName: unit.name,
-      videoDescription: video?.description ?? unit.description,
+      thumbnailAsset: 'assets/data/courses/thumbnail/${course.id}.webp',
       videoPoints: video?.points ?? unit.xp,
       submissionPoints: unit.xp,
-      submissionPrompt:
-          assignmentStep?.unguidedText ?? assignment?.description ?? '',
       totalPoints: unit.xp,
     );
   }
@@ -67,7 +53,6 @@ class LearningProgress {
     required this.submissionDone,
     required this.quizDone,
     required this.classroomStage,
-    required this.watchedVideosThisWeek,
   });
 
   final String studentName;
@@ -78,7 +63,6 @@ class LearningProgress {
   final bool submissionDone;
   final bool quizDone;
   final ClassroomProgressStage classroomStage;
-  final int watchedVideosThisWeek;
 
   LearningStage get currentStage => classroomStage.homeStage;
 }

@@ -2,6 +2,8 @@ import 'achievement_model.dart';
 import 'enrollment_model.dart';
 import 'learner_profile_fields_model.dart';
 
+const int weeklyActivityLimit = 2;
+
 class LearnerStateModel {
   LearnerStateModel({
     required this.learnerId,
@@ -171,7 +173,8 @@ class LearnerStateModel {
     final videosCompleted = (json['videos_completed'] as num?)?.toInt();
     final quizIndex = (json['quiz_index'] as num?)?.toInt();
     final quizzesCompleted = (json['quizzes_completed'] as num?)?.toInt();
-    final submissionProgressIndex = (json['submission_index'] as num?)?.toInt();
+    final courseSubmissionIndex =
+        (json['course_submission_index'] as num?)?.toInt();
 
     final nextVideosCompleted = [
       existing.videosCompleted,
@@ -185,8 +188,7 @@ class LearnerStateModel {
     ].reduce((a, b) => a > b ? a : b);
     final nextSubmissionIndex = [
       existing.submissionIndex,
-      ?submissionProgressIndex,
-      ?submissionIndex,
+      ?courseSubmissionIndex,
     ].reduce((a, b) => a > b ? a : b);
 
     enrollment = existing.copyWith(
@@ -241,5 +243,18 @@ class LearnerStateModel {
     model._applyJson(json, full: true);
     model.hasPendingConflict = json['has_pending_conflict'] as bool? ?? false;
     return model;
+  }
+}
+
+extension LearnerStateWeeklyLimit on LearnerStateModel {
+  bool hasReachedWeeklyActivityLimit({int localCompleted = 0}) {
+    final serverCompleted = unitsCompletedThisWeek ?? 0;
+    final completed = serverCompleted > localCompleted
+        ? serverCompleted
+        : localCompleted;
+    final remaining = unitsRemaining;
+    return (isBingeing ?? false) ||
+        (remaining != null && remaining <= 0) ||
+        completed >= weeklyActivityLimit;
   }
 }
