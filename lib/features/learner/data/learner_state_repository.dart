@@ -127,7 +127,7 @@ class LearnerStateRepository {
     return model;
   }
 
-  Future<LearnerStateModel> applyLocalProgress({
+  Future<LearnerStateModel> cacheLocalProgress({
     required String learnerId,
     int xp = 0,
     int? videoIndex,
@@ -199,6 +199,7 @@ class LearnerStateRepository {
     if (progress == null) return serverState;
 
     final pendingCourse = progress['course'] as String?;
+    if (serverState.enrollment == null) return serverState;
     if (pendingCourse != serverState.enrollment?.course) {
       await _localCache.delete(
         CacheKeys.activityProgress(serverState.learnerId),

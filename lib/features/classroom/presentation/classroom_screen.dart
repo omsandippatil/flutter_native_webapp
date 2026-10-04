@@ -417,10 +417,6 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
                 ),
               ),
             ),
-            if (widget.controller.isAwaitingContinue && !showChoiceReveal)
-              ClassContinueBar(
-                onContinue: widget.controller.continueAfterReview,
-              ),
           ],
         );
       },

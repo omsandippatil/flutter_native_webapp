@@ -1,0 +1,21 @@
+assets/class-screen/10Points.png
+assets/class-screen/lets_begin.png
+assets/class-screen/Skill Passport 1.png
+assets/class-screen/tap_buddy_ai.png
+assets/class-screen/won-champ.png
+assets/class-screen/you-won.png
+assets/data/courses/index.json
+assets/error-screen-assets/sad_girl_error.png
+assets/flows/en/onboarding/student_onboarding.json
+assets/home-screen/home_page_img1.png
+assets/home-screen/home_page_img2.png
+assets/home-screen/sussess_celebrate.png
+assets/logos/gov-logo.png
+assets/logos/tap_logo.png
+assets/logos/tap-otherLogo.png
+assets/onboarding/hello_welcome.png
+assets/onboarding/Skill Passport.png
+assets/onboarding/sussess_celebrate.png
+assets/onboarding/TAP-bot.png
+assets/profile-screen/about_tap.json
+assets/splash-screen/tap-buddy-loader.gif

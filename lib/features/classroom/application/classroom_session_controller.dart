@@ -93,8 +93,6 @@ class ClassChatController extends ChangeNotifier {
   bool get isAwaitingInput => _awaitingInput;
   bool _awaitingInput = false;
 
-  bool get isAwaitingContinue => _awaitingContinue;
-  bool _awaitingContinue = false;
 
   ClassSessionOutcome get outcome => _outcome;
   ClassSessionOutcome _outcome = ClassSessionOutcome.none;
@@ -883,7 +881,7 @@ class ClassChatController extends ChangeNotifier {
     _videoProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.applyLocalProgress(
+      _learnerState = await _learnerStateRepository.cacheLocalProgress(
         learnerId: learnerId,
         xp: points,
         videoIndex: unitIndex + 1,
@@ -902,7 +900,7 @@ class ClassChatController extends ChangeNotifier {
     _submissionProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.applyLocalProgress(
+      _learnerState = await _learnerStateRepository.cacheLocalProgress(
         learnerId: learnerId,
         xp: points,
         submissionIndex: unitIndex + 1,
@@ -921,7 +919,7 @@ class ClassChatController extends ChangeNotifier {
     _quizProgressSaved = true;
     var saved = false;
     try {
-      _learnerState = await _learnerStateRepository.applyLocalProgress(
+      _learnerState = await _learnerStateRepository.cacheLocalProgress(
         learnerId: learnerId,
         xp: points,
         quizIndex: unitIndex + 1,
@@ -935,12 +933,7 @@ class ClassChatController extends ChangeNotifier {
     return saved;
   }
 
-  void continueAfterReview() {
-    if (!_awaitingContinue) return;
-    _awaitingContinue = false;
-    unawaited(_completeUnitThenReveal());
-  }
-
+  
   bool _stateSaysCapped(
     LearnerStateModel state, {
     int localCompleted = 0,

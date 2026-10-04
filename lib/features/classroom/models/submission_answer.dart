@@ -60,7 +60,7 @@ class SubmissionAnswer {
 
     final candidates = validCriteria
         .toLowerCase()
-        .split(RegExp(r'\s*(?:,| or )\s*'))
+        .split(RegExp(r'\s*(?:,|/| or )\s*'))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .toList();

@@ -6,6 +6,7 @@ class OnboardingFlowStep {
     this.component,
     this.audioId,
     this.nextStepId,
+    this.backStepId,
     this.nextFlow,
     this.options = const [],
     this.raw = const {},
@@ -19,6 +20,7 @@ class OnboardingFlowStep {
       component: json['component'] as String?,
       audioId: json['audio_id'] as String?,
       nextStepId: json['next_step'] as String?,
+      backStepId: json['back_step'] as String?,
       nextFlow: json['next_flow'] as String?,
       options: ((json['options'] as List<dynamic>?) ?? const [])
           .cast<Map<String, dynamic>>()
@@ -34,6 +36,7 @@ class OnboardingFlowStep {
   final String? component;
   final String? audioId;
   final String? nextStepId;
+  final String? backStepId;
   final String? nextFlow;
   final List<OnboardingOption> options;
 

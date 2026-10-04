@@ -40,6 +40,9 @@ class _AuthRefreshListenable extends ChangeNotifier {
       if (next.hasValue || next.hasError) {
         hasResolvedOnce = true;
       }
+      if (previous?.value?.learnerId != next.value?.learnerId) {
+        _ref.read(_welcomeGateProvider.notifier).state = false;
+      }
       notifyListeners();
     }, fireImmediately: false);
 

@@ -12,43 +12,6 @@ import '../../../application/classroom_session_controller.dart';
 import '../../../../learner/providers/learner_state_providers.dart';
 import './reveal_asset_resolver.dart';
 
-class ClassContinueBar extends StatelessWidget {
-  const ClassContinueBar({super.key, required this.onContinue});
-
-  final VoidCallback onContinue;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: AppTheme.borderColor)),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
-          child: SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: onContinue,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: const Text('Continue'),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class ClassPendingActivityChoiceBody extends StatelessWidget {
   const ClassPendingActivityChoiceBody({
