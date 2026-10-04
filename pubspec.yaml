@@ -37,27 +37,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/animations/
-    - assets/icons/
-    - assets/images/branding/
-    - assets/images/celebration/
-    - assets/images/classroom/
-    - assets/images/error/
-    - assets/images/home/
-    - assets/images/onboarding/
-    - assets/images/reveal/
+    - assets/logos/
+    - assets/onboarding/
+    - assets/class-screen/
+    - assets/home-screen/
+    - assets/reveal/
+    - assets/splash-screen/
+    - assets/error-screen-assets/
+    - assets/data/courses/
+    - assets/data/courses/thumbnail/
     - assets/flows/
     - assets/flows/en/activity/
     - assets/flows/en/onboarding/
-    - assets/data/constants/
-    - assets/data/content/
-    - assets/data/content/thumbnail/
-    - assets/data/courses/
-    - assets/data/courses/en/
-    - assets/data/courses/hi/
-    - assets/data/courses/kn/
-    - assets/data/courses/mr/
-    - assets/data/courses/pa/
-    - assets/data/courses/thumbnails/
-    - assets/data/district/
     - assets/data/states/
