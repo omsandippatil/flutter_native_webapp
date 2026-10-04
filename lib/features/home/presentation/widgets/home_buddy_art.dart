@@ -14,7 +14,7 @@ class HomeBuddyArt extends StatelessWidget {
       LearningStage.startActivity => 'assets/home-screen/home_page_img1.png',
       LearningStage.sendProject => 'assets/home-screen/home_page_img2.png',
       LearningStage.quizPending => 'assets/home-screen/home_page_img2.png',
-      LearningStage.completed => 'assets/home-screen/sussess_celebrate.png',
+      LearningStage.completed => 'assets/onboarding/sussess_celebrate.png',
     };
 
     final cropTransparentSides = switch (stage) {
