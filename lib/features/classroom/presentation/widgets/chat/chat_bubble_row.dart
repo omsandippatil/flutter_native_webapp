@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_theme.dart';
-import '../../../models/classroom_message.dart';
-import '../../../application/classroom_session_controller.dart';
-import 'message_content.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/chat/message_content.dart';
 
 class ClassChatBubbleRow extends StatelessWidget {
   const ClassChatBubbleRow({
@@ -17,25 +18,26 @@ class ClassChatBubbleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final isUser = message.sender == ClassChatSender.user;
 
     if (message.contentType == ClassChatContentType.loading) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 14),
-        child: Center(child: _TypingIndicator()),
+      return Padding(
+        padding: EdgeInsets.symmetric(vertical: scale.md),
+        child: const Center(child: _TypingIndicator()),
       );
     }
 
     if (message.contentType == ClassChatContentType.checkpoint) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: EdgeInsets.symmetric(vertical: scale.sm),
         child: ClassCheckpointCard(message: message, controller: controller),
       );
     }
 
     if (isUser) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(vertical: scale.xs),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -43,7 +45,8 @@ class ClassChatBubbleRow extends StatelessWidget {
             Flexible(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  maxWidth: (MediaQuery.sizeOf(context).width * 0.72)
+                      .clamp(0.0, scale.userBubbleMaxWidth),
                 ),
                 child: ClassMessageContent(
                   message: message,
@@ -52,20 +55,20 @@ class ClassChatBubbleRow extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
-            const _ClassAvatar(isUser: true),
+            SizedBox(width: scale.xs),
+            _ClassAvatar(isUser: true, size: scale.avatarSize),
           ],
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: scale.xs),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const _ClassAvatar(isUser: false),
-          const SizedBox(width: 8),
+          _ClassAvatar(isUser: false, size: scale.avatarSize),
+          SizedBox(width: scale.xs),
           Expanded(
             child: ClassMessageContent(
               message: message,
@@ -80,42 +83,43 @@ class ClassChatBubbleRow extends StatelessWidget {
 }
 
 class _ClassAvatar extends StatelessWidget {
-  const _ClassAvatar({required this.isUser});
+  const _ClassAvatar({required this.isUser, required this.size});
 
   final bool isUser;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     if (isUser) {
       return Container(
-        width: 30,
-        height: 30,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.cardBackground,
           shape: BoxShape.circle,
           border: Border.all(color: AppTheme.borderColor),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.person_rounded,
-          size: 16,
+          size: size * 0.53,
           color: AppTheme.buttonColor,
         ),
       );
     }
 
     return CircleAvatar(
-      radius: 15,
+      radius: size / 2,
       backgroundColor: AppTheme.classroomMessageSurface,
       child: ClipOval(
         child: Image.asset(
-          'assets/onboarding/TAP-bot.png',
+          'assets/images/branding/tap_buddy_pp.png',
           fit: BoxFit.cover,
-          width: 30,
-          height: 30,
-          errorBuilder: (context, error, stackTrace) => const Icon(
+          width: size,
+          height: size,
+          errorBuilder: (context, error, stackTrace) => Icon(
             Icons.smart_toy_rounded,
-            size: 16,
-            color: Colors.white,
+            size: size * 0.53,
+            color: AppTheme.cardBackground,
           ),
         ),
       ),
@@ -151,11 +155,12 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: EdgeInsets.symmetric(horizontal: scale.md, vertical: scale.sm),
       decoration: BoxDecoration(
         color: AppTheme.classroomMessageSurface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: SizedBox(
         width: 40,
@@ -167,8 +172,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: List.generate(3, (i) {
                 final t = (_controller.value + (i * 0.2)) % 1.0;
-                final scale =
-                    0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
+                final scale = 0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
                 return Transform.scale(
                   scale: scale,
                   child: const CircleAvatar(

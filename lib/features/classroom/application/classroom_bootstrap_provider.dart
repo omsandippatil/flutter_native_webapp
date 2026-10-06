@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/progress_stage.dart';
-import '../../learner/models/learner_state.dart';
-import '../../course_content/models/course_detail.dart';
-import '../data/session_window_repository.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import '../../../providers/local_cache_provider.dart';
-import '../../profile/providers/profile_providers.dart';
-import '../../course_content/providers/course_providers.dart';
+import 'package:tapapp/features/classroom/models/progress_stage.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
+import 'package:tapapp/features/classroom/data/session_window_repository.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/providers/local_cache_provider.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/domain/course/providers/course_providers.dart';
 
 class NoActiveEnrollmentException implements Exception {
   const NoActiveEnrollmentException();
@@ -72,9 +72,9 @@ final classSessionBootstrapProvider =
       );
       final localCompleted = sessionWindowRepository
           .completedUnitCountThisWindow(
-        activeProfile.learnerId,
-        learnerState.windowStartDate,
-      );
+            activeProfile.learnerId,
+            learnerState.windowStartDate,
+          );
 
       var enrollment = learnerState.enrollment;
       if (enrollment == null || enrollment.course == null) {

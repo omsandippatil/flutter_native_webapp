@@ -1,0 +1,164 @@
+[
+  {
+    "id": "CAFFL4",
+    "nm": "✦ Money Mastery",
+    "vrt": "financial-literacy",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAFFL4.json"
+  },
+  {
+    "id": "CAATA3",
+    "nm": "❀ Next-Level Art",
+    "vrt": "arts",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAATA3.json"
+  },
+  {
+    "id": "CAEKL4K",
+    "nm": "π Smart Circuits App",
+    "vrt": "science-lab",
+    "lvl": "4K",
+    "kit_less": true,
+    "units_count": 10,
+    "file": "CAEKL4K.json"
+  },
+  {
+    "id": "CAESL4",
+    "nm": "∑ Smart Circuits",
+    "vrt": "science-lab",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAESL4.json"
+  },
+  {
+    "id": "CASSL2",
+    "nm": "◆ Science Challenges",
+    "vrt": "science-lab",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CASSL2.json"
+  },
+  {
+    "id": "CBASA1",
+    "nm": "✎ Art Starters",
+    "vrt": "arts",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBASA1.json"
+  },
+  {
+    "id": "CBEKL3K",
+    "nm": "∞ Circuit Basics App",
+    "vrt": "science-lab",
+    "lvl": "3K",
+    "kit_less": true,
+    "units_count": 10,
+    "file": "CBEKL3K.json"
+  },
+  {
+    "id": "CBESL3",
+    "nm": "Ω Circuit Basics",
+    "vrt": "science-lab",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBESL3.json"
+  },
+  {
+    "id": "CBSSL1",
+    "nm": "∆ Science Starters",
+    "vrt": "science-lab",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBSSL1.json"
+  },
+  {
+    "id": "CIAA2",
+    "nm": "✿ Creative Art",
+    "vrt": "arts",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CIAA2.json"
+  },
+  {
+    "id": "CMAEA4",
+    "nm": "✺ Art & Self-Expression",
+    "vrt": "arts",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMAEA4.json"
+  },
+  {
+    "id": "CMBC3",
+    "nm": "◇ Micro:bit Makers",
+    "vrt": "coding",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMBC3.json"
+  },
+  {
+    "id": "CMBFL1",
+    "nm": "₹ Money Starters",
+    "vrt": "financial-literacy",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMBFL1.json"
+  },
+  {
+    "id": "COC2",
+    "nm": "✱ OctoStudio Apps",
+    "vrt": "coding",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "COC2.json"
+  },
+  {
+    "id": "CPC4",
+    "nm": "❯ Coding with Python",
+    "vrt": "coding",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CPC4.json"
+  },
+  {
+    "id": "CRLMF3",
+    "nm": "❖ Real-Life Money",
+    "vrt": "financial-literacy",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CRLMF3.json"
+  },
+  {
+    "id": "CSJC1",
+    "nm": "♫ Scratch Jr Fun",
+    "vrt": "coding",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CSJC1.json"
+  },
+  {
+    "id": "CSSFL2",
+    "nm": "◈ Smart Savings",
+    "vrt": "financial-literacy",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CSSFL2.json"
+  }
+]

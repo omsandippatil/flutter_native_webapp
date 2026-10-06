@@ -1,8 +1,8 @@
-import '../../../core/storage/cache_keys.dart';
-import '../../../core/storage/local_cache.dart';
-import '../models/submission_review.dart';
-import '../../../core/network/api_endpoints.dart';
-import '../../../core/network/http_client.dart';
+import 'package:tapapp/core/storage/cache_keys.dart';
+import 'package:tapapp/core/storage/local_cache.dart';
+import 'package:tapapp/features/classroom/models/submission_review.dart';
+import 'package:tapapp/core/network/api_endpoints.dart';
+import 'package:tapapp/core/network/http_client.dart';
 
 class SubmissionReviewRepository {
   SubmissionReviewRepository(this._http, this._localCache);

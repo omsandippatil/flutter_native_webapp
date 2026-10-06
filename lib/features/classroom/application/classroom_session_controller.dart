@@ -2,19 +2,19 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../learner/models/learner_state.dart';
-import '../../learner/data/learner_state_repository.dart';
-import '../data/submission_review_repository.dart';
-import '../models/activity_flow.dart';
-import '../domain/archetype_step_selector.dart';
-import '../models/classroom_message.dart';
-import '../models/progress_stage.dart';
-import '../../learner/models/enrollment.dart';
-import '../../learner/models/learner_archetype.dart';
-import '../../learner/domain/local_archetype_calculator.dart';
-import '../../course_content/models/course_detail.dart';
-import '../models/submission_answer.dart';
-import '../data/session_window_repository.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/learner/data/learner_state_repository.dart';
+import 'package:tapapp/features/classroom/data/submission_review_repository.dart';
+import 'package:tapapp/features/classroom/models/activity_flow.dart';
+import 'package:tapapp/features/classroom/domain/archetype_step_selector.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/models/progress_stage.dart';
+import 'package:tapapp/domain/learner/models/enrollment.dart';
+import 'package:tapapp/domain/learner/models/learner_archetype.dart';
+import 'package:tapapp/domain/learner/calculations/local_archetype_calculator.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
+import 'package:tapapp/features/classroom/models/submission_answer.dart';
+import 'package:tapapp/features/classroom/data/session_window_repository.dart';
 
 enum ClassSessionOutcome { none, choice, weeklyCapReached }
 
@@ -92,7 +92,6 @@ class ClassChatController extends ChangeNotifier {
 
   bool get isAwaitingInput => _awaitingInput;
   bool _awaitingInput = false;
-
 
   ClassSessionOutcome get outcome => _outcome;
   ClassSessionOutcome _outcome = ClassSessionOutcome.none;
@@ -367,7 +366,7 @@ class ClassChatController extends ChangeNotifier {
     _awaitingInput = false;
     _pushCheckpoint(
       stepId: 'VIDEO-CHECKPOINT',
-      image: 'assets/class-screen/10Points.png',
+      image: 'assets/images/classroom/10Points.png',
       text:
           'Wow! That’s amazing 🤩  $studentName, you just earned ${video.points} points🪩 for watching the video 🥳🥳🥳\n\nNow it’s time to do the activity submission 🌟',
       buttonLabel: 'Continue',
@@ -648,7 +647,7 @@ class ClassChatController extends ChangeNotifier {
     }
     _pushCheckpoint(
       stepId: 'QUIZ-START',
-      image: 'assets/class-screen/lets_begin.png',
+      image: 'assets/images/classroom/lets_begin.png',
       text: "Let’s start the ${_currentUnit.name} quiz🚀🚀🚀",
       buttonLabel: 'Quiz',
       action: 'quiz',
@@ -720,7 +719,7 @@ class ClassChatController extends ChangeNotifier {
         );
         _pushCheckpoint(
           stepId: 'QUIZ-BEGIN',
-          image: 'assets/class-screen/lets_begin.png',
+          image: 'assets/images/classroom/lets_begin.png',
           text: '',
           buttonLabel: '',
           action: 'quiz_begin_art',
@@ -751,7 +750,7 @@ class ClassChatController extends ChangeNotifier {
   void _showFinalWinCard() {
     _pushCheckpoint(
       stepId: 'FINAL-WIN',
-      image: 'assets/class-screen/you-won.png',
+      image: 'assets/images/celebration/you_won.png',
       text:
           'Activity Points    ${_accumulatedVideoPoints + _accumulatedSubmissionPoints} 🪙\nQuiz Points    $_accumulatedQuizPoints 🪙\nSkill Gems    ${_submissionAcceptedThisUnit ? 1 : 0} 💎\nSubmission Streak    ${_submissionAcceptedThisUnit ? 1 : 0} 🔥',
       buttonLabel: 'Continue',
@@ -771,7 +770,7 @@ class ClassChatController extends ChangeNotifier {
     }
     _pushCheckpoint(
       stepId: 'QUIZ-COMPLETE-ART',
-      image: 'assets/class-screen/won-champ.png',
+      image: 'assets/images/celebration/won_champ.png',
       text: '',
       buttonLabel: '',
       action: 'quiz_complete_art',
@@ -868,7 +867,7 @@ class ClassChatController extends ChangeNotifier {
 
     _pushCheckpoint(
       stepId: 'VIDEO-CHECKPOINT',
-      image: 'assets/class-screen/10Points.png',
+      image: 'assets/images/classroom/10Points.png',
       text:
           'Wow! That’s amazing 🤩  $studentName, you just earned ${video.points} points🪩 for watching the video 🥳🥳🥳\n\nNow it’s time to do the activity submission 🌟',
       buttonLabel: 'Continue',
@@ -933,23 +932,13 @@ class ClassChatController extends ChangeNotifier {
     return saved;
   }
 
-  
-  bool _stateSaysCapped(
-    LearnerStateModel state, {
-    int localCompleted = 0,
-  }) =>
+  bool _stateSaysCapped(LearnerStateModel state, {int localCompleted = 0}) =>
       state.hasReachedWeeklyActivityLimit(localCompleted: localCompleted);
 
   Future<ClassSessionOutcome> _completionOutcome() async {
-    final localCompleted =
-        _sessionWindowRepository.completedUnitCountThisWindow(
-      learnerId,
-      _learnerState.windowStartDate,
-    );
-    if (_stateSaysCapped(
-      _learnerState,
-      localCompleted: localCompleted,
-    )) {
+    final localCompleted = _sessionWindowRepository
+        .completedUnitCountThisWindow(learnerId, _learnerState.windowStartDate);
+    if (_stateSaysCapped(_learnerState, localCompleted: localCompleted)) {
       await _learnerStateRepository.clearHomeCelebration(learnerId);
       return ClassSessionOutcome.weeklyCapReached;
     }

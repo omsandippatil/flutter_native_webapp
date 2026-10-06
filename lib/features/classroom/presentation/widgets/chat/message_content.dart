@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_theme.dart';
-import '../../../models/classroom_message.dart';
-import '../../../application/classroom_session_controller.dart';
-import '../states/card_shell.dart';
-import '../quiz/quiz_question_card.dart';
-import '../checkpoint/section_checkpoint.dart';
-import '../submission/submission_card.dart';
-import '../video/video_card.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/checkpoint/section_checkpoint.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/quiz/quiz_question_card.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/states/card_shell.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/submission/submission_card.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/video/video_card.dart';
 
 class ClassMessageContent extends StatelessWidget {
   const ClassMessageContent({
@@ -73,11 +73,10 @@ class ClassMessageContent extends StatelessWidget {
         return ClassQuizSummaryCard(message: message);
       case ClassChatContentType.sessionEnd:
       case ClassChatContentType.weeklyCapReached:
+      case ClassChatContentType.loading:
         return const SizedBox.shrink();
       case ClassChatContentType.errorRetry:
         return ClassErrorRetryCard(message: message, controller: controller);
-      case ClassChatContentType.loading:
-        return const SizedBox.shrink();
     }
   }
 }
@@ -94,16 +93,21 @@ class ClassCheckpointCard extends StatelessWidget {
   final ClassChatController controller;
   final bool fillAvailableHeight;
 
+  static const Set<String> _sectionActions = {
+    'video',
+    'submission',
+    'submission_retry',
+    'quiz',
+  };
+
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final image = message.data['image'] as String?;
     final buttonLabel = message.data['buttonLabel'] as String? ?? 'Continue';
     final action = message.data['action'] as String? ?? '';
 
-    if (action == 'video' ||
-        action == 'submission' ||
-        action == 'submission_retry' ||
-        action == 'quiz') {
+    if (_sectionActions.contains(action)) {
       return ClassSectionCheckpoint(
         kind: switch (action) {
           'video' => ClassSectionCheckpointKind.video,
@@ -119,175 +123,196 @@ class ClassCheckpointCard extends StatelessWidget {
 
     if ((action == 'quiz_begin_art' || action == 'quiz_complete_art') &&
         image != null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 300),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppTheme.classroomMessageSurface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(image, height: 260, fit: BoxFit.contain),
-          ),
-        ),
-      );
+      return _artPanel(scale, image);
     }
 
     if (action == 'video_reward' && image != null) {
-      return Align(
-        alignment: Alignment.center,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 430),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.classroomMessageSurface,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Image.asset(image, fit: BoxFit.cover),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.fromLTRB(16, 12, 14, 14),
-                decoration: BoxDecoration(
-                  color: AppTheme.classroomMessageSurface,
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        message.text ?? '',
-                        textAlign: TextAlign.left,
-                        style: GoogleFonts.inter(
-                          fontSize: 18,
-                          height: 1.35,
-                          fontWeight: FontWeight.w400,
-                          color: AppTheme.textColor,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.volume_up_rounded,
-                      size: 22,
-                      color: AppTheme.buttonColor,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                height: 76,
-                child: ElevatedButton(
-                  onPressed: () => controller.continueCheckpoint(action),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.buttonColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                  ),
-                  child: Text(
-                    buttonLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _rewardPanel(scale, image, buttonLabel, action);
     }
 
     if (action == 'finish' && image != null) {
-      return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 320),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppTheme.classroomMessageSurface,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(image, height: 210, fit: BoxFit.contain),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                message.text ?? '',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  height: 1.4,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textColor,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () => controller.continueCheckpoint(action),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.buttonColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(buttonLabel),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return _finalPanel(scale, image, buttonLabel, action);
     }
 
+    return _promptPanel(scale, image, buttonLabel, action);
+  }
+
+  Widget _artPanel(AppSpacingScale scale, String image) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 320),
+        padding: EdgeInsets.all(scale.xs),
+        decoration: BoxDecoration(
+          color: AppTheme.classroomMessageSurface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          child: Image.asset(image, height: 260, fit: BoxFit.contain),
+        ),
+      ),
+    );
+  }
+
+  Widget _rewardPanel(
+    AppSpacingScale scale,
+    String image,
+    String buttonLabel,
+    String action,
+  ) {
+    return Align(
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: EdgeInsets.all(scale.sm),
+              decoration: BoxDecoration(
+                color: AppTheme.classroomMessageSurface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Image.asset(image, fit: BoxFit.cover),
+                ),
+              ),
+            ),
+            SizedBox(height: scale.md),
+            Container(
+              padding: EdgeInsets.fromLTRB(
+                scale.md,
+                scale.sm,
+                scale.md,
+                scale.md,
+              ),
+              decoration: BoxDecoration(
+                color: AppTheme.classroomMessageSurface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      message.text ?? '',
+                      style: AppTheme.text(size: 18, height: 1.35),
+                    ),
+                  ),
+                  SizedBox(width: scale.xs),
+                  const Icon(
+                    Icons.volume_up_rounded,
+                    size: 22,
+                    color: AppTheme.buttonColor,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: scale.lg),
+            SizedBox(
+              height: scale.buttonHeight,
+              child: ElevatedButton(
+                onPressed: () => controller.continueCheckpoint(action),
+                style: AppTheme.primaryButtonStyle(radius: AppTheme.radiusLg),
+                child: Text(
+                  buttonLabel,
+                  style: AppTheme.text(
+                    size: 17,
+                    weight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _finalPanel(
+    AppSpacingScale scale,
+    String image,
+    String buttonLabel,
+    String action,
+  ) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 340),
+        padding: EdgeInsets.all(scale.sm),
+        decoration: BoxDecoration(
+          color: AppTheme.classroomMessageSurface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              child: Image.asset(image, height: 210, fit: BoxFit.contain),
+            ),
+            SizedBox(height: scale.sm),
+            Text(
+              message.text ?? '',
+              textAlign: TextAlign.center,
+              style: AppTheme.text(
+                size: 13,
+                height: 1.45,
+                weight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: scale.sm),
+            SizedBox(
+              width: double.infinity,
+              height: scale.buttonHeight,
+              child: ElevatedButton(
+                onPressed: () => controller.continueCheckpoint(action),
+                style: AppTheme.primaryButtonStyle(),
+                child: Text(buttonLabel),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _promptPanel(
+    AppSpacingScale scale,
+    String? image,
+    String buttonLabel,
+    String action,
+  ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 28),
+      padding: EdgeInsets.fromLTRB(
+        scale.lg,
+        scale.xl,
+        scale.lg,
+        scale.xl,
+      ),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE7E7EF)),
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppTheme.borderColor),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ClassTapBuddySpeakingOrb(),
-          const SizedBox(height: 12),
+          ClassTapBuddySpeakingOrb(size: scale.orbSize),
+          SizedBox(height: scale.sm),
           Container(
             height: 34,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
+            padding: EdgeInsets.symmetric(horizontal: scale.md),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0EDFF),
-              borderRadius: BorderRadius.circular(999),
+              color: AppTheme.chipLavender,
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -297,12 +322,12 @@ class ClassCheckpointCard extends StatelessWidget {
                   size: 15,
                   color: AppTheme.buttonColor,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: scale.xxs + 2),
                 Text(
                   'Hear again',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  style: AppTheme.text(
+                    size: 12,
+                    weight: FontWeight.w700,
                     color: AppTheme.buttonColor,
                   ),
                 ),
@@ -310,7 +335,7 @@ class ClassCheckpointCard extends StatelessWidget {
             ),
           ),
           if (image != null) ...[
-            const SizedBox(height: 18),
+            SizedBox(height: scale.lg),
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 230, maxWidth: 360),
               child: Image.asset(
@@ -321,42 +346,34 @@ class ClassCheckpointCard extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: 18),
+          SizedBox(height: scale.lg),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Text(
               message.text ?? '',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                height: 1.35,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF2C2C34),
+              style: AppTheme.text(
+                size: 17,
+                height: 1.4,
+                weight: FontWeight.w500,
+                color: AppTheme.stemText,
               ),
             ),
           ),
-          const SizedBox(height: 22),
+          SizedBox(height: scale.xl),
           SizedBox(
             width: 280,
-            height: 48,
+            height: scale.buttonHeight,
             child: ElevatedButton(
               onPressed: action.isEmpty
                   ? null
                   : () => controller.continueCheckpoint(action),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              style: AppTheme.primaryButtonStyle(
+                radius: AppTheme.radiusSm + 2,
               ),
               child: Text(
                 buttonLabel,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTheme.text(size: 14, weight: FontWeight.w700, color: Colors.white),
               ),
             ),
           ),
@@ -380,41 +397,38 @@ class ClassTextBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
+
     if (isUser) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE2F5E9),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(4),
-            bottomLeft: Radius.circular(16),
-            bottomRight: Radius.circular(16),
+        padding: EdgeInsets.symmetric(horizontal: scale.md, vertical: scale.sm),
+        decoration: const BoxDecoration(
+          color: AppTheme.userBubble,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppTheme.radiusMd + 2),
+            topRight: Radius.circular(AppTheme.radiusSm - 6),
+            bottomLeft: Radius.circular(AppTheme.radiusMd + 2),
+            bottomRight: Radius.circular(AppTheme.radiusMd + 2),
           ),
         ),
         child: Text(
           text,
-          style: GoogleFonts.inter(
-            fontSize: 15,
-            height: 1.4,
-            color: AppTheme.textColor,
-          ),
+          style: AppTheme.text(size: 15, height: 1.45),
         ),
       );
     }
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      padding: EdgeInsets.symmetric(horizontal: scale.md, vertical: scale.sm),
       decoration: BoxDecoration(
         color: AppTheme.classroomMessageSurface,
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(4),
-          topRight: Radius.circular(16),
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
+          topLeft: Radius.circular(AppTheme.radiusSm - 6),
+          topRight: Radius.circular(AppTheme.radiusMd + 2),
+          bottomLeft: Radius.circular(AppTheme.radiusMd + 2),
+          bottomRight: Radius.circular(AppTheme.radiusMd + 2),
         ),
-        border: Border.all(color: AppTheme.classroomMessageSurface),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -422,15 +436,14 @@ class ClassTextBubble extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: GoogleFonts.inter(
-                fontSize: 14,
+              style: AppTheme.text(
+                size: 14,
                 height: 1.5,
                 fontStyle: isMuted ? FontStyle.italic : FontStyle.normal,
-                color: AppTheme.textColor,
               ),
             ),
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: scale.xs),
           const Icon(
             Icons.volume_up_rounded,
             size: 18,
@@ -454,31 +467,22 @@ class ClassErrorRetryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     return ClassCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             message.text ?? 'Something went wrong.',
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
-            ),
+            style: AppTheme.text(size: 14, weight: FontWeight.w600, height: 1.4),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: scale.sm),
           SizedBox(
             width: double.infinity,
-            height: 44,
+            height: scale.buttonHeight - 6,
             child: ElevatedButton(
               onPressed: controller.retryAfterError,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              style: AppTheme.primaryButtonStyle(),
               child: const Text('Retry'),
             ),
           ),

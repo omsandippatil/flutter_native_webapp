@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../profile/models/active_profile.dart';
-import '../../profile/models/profile_summary.dart';
-import '../../profile/providers/profile_providers.dart';
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/profile/models/profile_summary.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
 
 class ProfileSelectScreen extends ConsumerStatefulWidget {
   const ProfileSelectScreen({super.key, required this.phone});
@@ -242,7 +242,8 @@ class _ProfileCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     [
-                      if (profile.grade != null) 'Grade ${profile.grade}',
+                      if (profile.grade != null)
+                        'Grade ${profile.grade}',
                       if (profile.division != null) profile.division,
                     ].join(' · '),
                     style: GoogleFonts.inter(

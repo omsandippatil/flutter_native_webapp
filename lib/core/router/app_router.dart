@@ -2,17 +2,17 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/splash/splash_screen.dart';
-import '../../features/error/error_screen.dart';
-import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/profile_select_screen.dart';
-import '../../features/onboarding/presentation/onboarding_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
-import '../../features/classroom/presentation/classroom_screen.dart';
-import '../../features/passport/presentation/passport_screen.dart';
-import '../../features/profile/presentation/settings_screen.dart';
-import '../../features/welcome/welcome_screen.dart';
-import '../../features/profile/providers/profile_providers.dart';
+import 'package:tapapp/features/splash/presentation/splash_screen.dart';
+import 'package:tapapp/features/error/presentation/error_screen.dart';
+import 'package:tapapp/features/auth/presentation/login_screen.dart';
+import 'package:tapapp/features/auth/presentation/profile_select_screen.dart';
+import 'package:tapapp/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:tapapp/features/home/presentation/home_screen.dart';
+import 'package:tapapp/features/classroom/presentation/classroom_screen.dart';
+import 'package:tapapp/features/passport/presentation/passport_screen.dart';
+import 'package:tapapp/features/profile_settings/presentation/settings_screen.dart';
+import 'package:tapapp/features/welcome/presentation/welcome_screen.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -110,7 +110,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final profile = activeProfileAsync.value;
       final loggedIn = profile != null;
-      final onboarded = loggedIn && (profile.onboardingCompleted == true);
+      final onboarded = profile != null && profile.onboardingCompleted;
 
       if (!loggedIn) {
         if (target != AppRoutes.splash && _publicRoutes.contains(target)) {

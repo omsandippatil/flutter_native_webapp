@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/activity_flow.dart';
-import '../../../core/flows/flow_providers.dart';
+import 'package:tapapp/features/classroom/models/activity_flow.dart';
+import 'package:tapapp/core/flows/flow_providers.dart';
 
 final activityFlowProvider = FutureProvider.autoDispose
     .family<ActivityFlowModel, String>((ref, languageCode) async {

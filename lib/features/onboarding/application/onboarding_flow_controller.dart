@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../profile/models/active_profile.dart';
-import '../../learner/models/learner_state.dart';
-import '../../course_content/models/course_index_entry.dart';
-import 'onboarding_component_registry.dart';
-import 'onboarding_session_service.dart';
-import '../models/onboarding_flow_step.dart';
-import '../models/onboarding_message.dart';
-import '../presentation/widgets/onboarding_flow_widgets.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_index_entry.dart';
+import 'package:tapapp/features/onboarding/application/onboarding_component_registry.dart';
+import 'package:tapapp/features/onboarding/application/onboarding_session_service.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_flow_step.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_message.dart';
+import 'package:tapapp/features/onboarding/presentation/widgets/onboarding_flow_widgets.dart';
 
 class OnboardingFlowController extends ChangeNotifier {
   OnboardingFlowController({

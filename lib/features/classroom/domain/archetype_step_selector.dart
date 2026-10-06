@@ -1,5 +1,5 @@
-import '../../learner/models/learner_archetype.dart';
-import '../../course_content/models/course_detail.dart';
+import 'package:tapapp/domain/learner/models/learner_archetype.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
 
 class ArchetypeStepSelector {
   ArchetypeStepSelector._();

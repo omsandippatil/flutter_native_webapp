@@ -3,7 +3,7 @@ import 'dart:convert';
 
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import 'cache_keys.dart';
+import 'package:tapapp/core/storage/cache_keys.dart';
 
 class CacheEntry<T> {
   const CacheEntry({required this.value, required this.cachedAt});
@@ -31,15 +31,19 @@ class LocalCache {
   static const String _boxName = 'tap_forever_cache';
   static const String _indexBoxName = 'tap_forever_cache_index';
 
-  static const Duration _openTimeout = Duration(seconds: 10);
+  static const Duration _openTimeout = Duration(seconds: 30);
 
   final Box<String> _box;
   final Box<String> _indexBox;
 
   static Future<LocalCache> open() async {
+    final opening = _openInternal();
     try {
-      return await _openInternal().timeout(_openTimeout);
+      return await opening.timeout(_openTimeout);
     } on TimeoutException {
+      unawaited(
+        opening.then((cache) => cache._closeQuietly()).catchError((_) {}),
+      );
       throw const LocalCacheOpenTimeoutException();
     }
   }
@@ -49,6 +53,13 @@ class LocalCache {
     final box = await Hive.openBox<String>(_boxName);
     final indexBox = await Hive.openBox<String>(_indexBoxName);
     return LocalCache._(box, indexBox);
+  }
+
+  Future<void> _closeQuietly() async {
+    try {
+      await _box.close();
+      await _indexBox.close();
+    } catch (_) {}
   }
 
   bool has(String key) => _box.containsKey(key);

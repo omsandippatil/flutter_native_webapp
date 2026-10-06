@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../learner/models/learner_state.dart';
-import '../../classroom/application/classroom_bootstrap_provider.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import '../../profile/providers/profile_providers.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/features/classroom/application/classroom_bootstrap_provider.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
 
 class TapBuddyContext {
   const TapBuddyContext({
@@ -29,13 +29,20 @@ class TapBuddyContext {
   final bool hasActiveClassSession;
 
   Map<String, dynamic> toJson() => {
-    if (studentName != null) 'student_name': studentName,
-    if (grade != null) 'grade': grade,
-    if (courseName != null) 'course_name': courseName,
-    if (unitName != null) 'unit_name': unitName,
-    if (unitDescription != null) 'unit_description': unitDescription,
+    if (studentName != null)
+      'student_name': studentName,
+    if (grade != null)
+      'grade': grade,
+    if (courseName != null)
+      'course_name': courseName,
+    if (unitName != null)
+      'unit_name': unitName,
+    if (unitDescription != null)
+      'unit_description':
+          unitDescription,
     if (xp != null) 'xp': xp,
-    if (streak != null) 'streak': streak,
+    if (streak != null)
+      'streak': streak,
     'has_reached_weekly_cap': hasReachedWeeklyCap,
     'has_active_class_session': hasActiveClassSession,
   };

@@ -3,23 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_theme.dart';
-import '../models/classroom_message.dart';
-import '../application/classroom_session_controller.dart';
-import '../application/classroom_providers.dart';
-import '../application/classroom_bootstrap_provider.dart';
-import '../../home/providers/home_dashboard_provider.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import '../../profile/providers/profile_providers.dart';
-import '../../../shared/widgets/app_header.dart';
-import '../../../shared/widgets/app_shell.dart';
-import 'widgets/chat/chat_bubble_row.dart';
-import 'widgets/states/loading_skeleton.dart';
-import 'widgets/chat/message_content.dart';
-import 'widgets/reveal/reveal_rail.dart';
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/features/classroom/application/classroom_bootstrap_provider.dart';
+import 'package:tapapp/features/classroom/application/classroom_providers.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/chat/chat_bubble_row.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/chat/message_content.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/reveal/reveal_rail.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/states/loading_skeleton.dart';
+import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/shared/widgets/app_header.dart';
 
 class ClassScreen extends ConsumerStatefulWidget {
   const ClassScreen({super.key});
@@ -98,9 +97,10 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
     );
   }
 
-  Widget _scaffold(Widget body) => AppNav(
-        child: Scaffold(backgroundColor: AppTheme.appBackground, body: body),
-      );
+  Widget _scaffold(Widget body) => Scaffold(
+    backgroundColor: AppTheme.appBackground,
+    body: SafeArea(bottom: false, child: body),
+  );
 }
 
 class _ErrorBody extends StatelessWidget {
@@ -111,33 +111,35 @@ class _ErrorBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final isNoEnrollment = error is NoActiveEnrollmentException;
+
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isNoEnrollment
-                  ? "You're not enrolled in a course yet."
-                  : 'Something went wrong loading your class.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
+        child: Padding(
+          padding: EdgeInsets.all(scale.xxl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                isNoEnrollment
+                    ? "You're not enrolled in a course yet."
+                    : 'Something went wrong loading your class.',
+                textAlign: TextAlign.center,
+                style: AppTheme.text(size: 18, weight: FontWeight.w700),
               ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: onBack,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
+              SizedBox(height: scale.xl),
+              SizedBox(
+                height: scale.buttonHeight,
+                child: ElevatedButton(
+                  onPressed: onBack,
+                  style: AppTheme.primaryButtonStyle(),
+                  child: const Text('Go home'),
+                ),
               ),
-              child: const Text('Go home'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -209,30 +211,29 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
     _removeQuizToast();
 
     final media = MediaQuery.of(context);
-    final isWide = media.size.width >= 640;
+    final scale = AppSpacing.of(context);
+    final isWide = scale.showsSideRail;
+
     _quizToastOverlay = OverlayEntry(
-      builder: (context) => Positioned(
-        top: media.padding.top + (isWide ? 96 : 12),
-        right: isWide ? 24 : 12,
-        left: isWide ? null : 12,
-        width: isWide ? 320 : null,
+      builder: (overlayContext) => Positioned(
+        top: media.padding.top + (isWide ? scale.section + scale.md : scale.sm),
+        right: isWide ? scale.xl : scale.sm,
+        left: isWide ? null : scale.sm,
+        width: isWide ? 340 : null,
         child: IgnorePointer(
           child: Material(
             color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: scale.lg,
+                vertical: scale.md,
+              ),
               decoration: BoxDecoration(
                 color: toast.isCorrect
-                    ? const Color(0xFFDCF6E7)
-                    : const Color(0xFFFFE7E2),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 18,
-                    offset: Offset(0, 6),
-                  ),
-                ],
+                    ? AppTheme.successToast
+                    : AppTheme.errorToast,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                boxShadow: AppTheme.floatingShadow,
               ),
               child: Row(
                 children: [
@@ -240,15 +241,16 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
                     toast.isCorrect ? '🎉' : '💡',
                     style: const TextStyle(fontSize: 20),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: scale.sm),
                   Expanded(
                     child: Text(
                       toast.isCorrect
                           ? 'Correct Answer!  +${toast.points} points'
                           : 'Not quite. Correct answer: ${toast.correctAnswer ?? ''}',
-                      style: const TextStyle(
-                        color: Color(0xFF25252B),
-                        fontWeight: FontWeight.w700,
+                      style: AppTheme.text(
+                        size: 14,
+                        weight: FontWeight.w700,
+                        color: AppTheme.toastText,
                       ),
                     ),
                   ),
@@ -287,26 +289,28 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (context, _) {
-        if (widget.controller.outcome == ClassSessionOutcome.weeklyCapReached) {
+        final controller = widget.controller;
+
+        if (controller.outcome == ClassSessionOutcome.weeklyCapReached) {
           return ClassWeeklyCapRevealBody(
-            unitIndex: widget.controller.unitIndex,
+            unitIndex: controller.unitIndex,
             onHome: () => context.go(AppRoutes.home),
           );
         }
 
         final showChoiceReveal =
-            widget.controller.outcome == ClassSessionOutcome.choice;
+            controller.outcome == ClassSessionOutcome.choice;
         final isVideoStartCheckpoint =
-            widget.controller.messages.length == 1 &&
-            widget.controller.messages.first.contentType ==
+            controller.messages.length == 1 &&
+            controller.messages.first.contentType ==
                 ClassChatContentType.checkpoint &&
-            widget.controller.messages.first.data['action'] == 'video';
+            controller.messages.first.data['action'] == 'video';
 
         return Column(
           children: [
             AppHeader(
-              title: widget.controller.unitName,
-              points: widget.controller.displayedTotalPoints,
+              title: controller.unitName,
+              points: controller.displayedTotalPoints,
               showBack: true,
               showPoints: true,
               showAskBuddy: true,
@@ -317,50 +321,61 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
                 color: AppTheme.appBackground,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final showRail = constraints.maxWidth >= 640;
+                    final scale = AppSpacingScale.fromWidth(
+                      constraints.maxWidth,
+                    );
 
                     if (isVideoStartCheckpoint) {
                       return Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 1060),
+                          constraints: BoxConstraints(
+                            maxWidth: scale.contentMaxWidth,
+                          ),
                           child: ClassCheckpointCard(
-                            message: widget.controller.messages.first,
-                            controller: widget.controller,
+                            message: controller.messages.first,
+                            controller: controller,
                             fillAvailableHeight: true,
                           ),
                         ),
                       );
                     }
 
-                    final chatColumn = ListView.builder(
+                    final chatList = ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(14, 20, 14, 24),
+                      padding: EdgeInsets.fromLTRB(
+                        scale.md,
+                        scale.lg,
+                        scale.md,
+                        scale.xxl,
+                      ),
                       itemCount:
-                          widget.controller.messages.length +
+                          controller.messages.length +
                           (showChoiceReveal ? 1 : 0),
                       itemBuilder: (context, index) {
-                        if (index < widget.controller.messages.length) {
-                          final message = widget.controller.messages[index];
+                        if (index < controller.messages.length) {
+                          final message = controller.messages[index];
                           return ClassChatBubbleRow(
                             key: ValueKey(message.id),
                             message: message,
-                            controller: widget.controller,
+                            controller: controller,
                           );
                         }
                         return ClassNextActivityInlineCard(
-                          controller: widget.controller,
+                          controller: controller,
                           onStartNextActivity: widget.onStartNextActivity,
                         );
                       },
                     );
 
-                    if (!showRail) {
+                    if (!scale.showsSideRail) {
                       return Center(
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 760),
+                          constraints: BoxConstraints(
+                            maxWidth: scale.chatMaxWidth,
+                          ),
                           child: Container(
                             color: AppTheme.classroomBackground,
-                            child: chatColumn,
+                            child: chatList,
                           ),
                         ),
                       );
@@ -368,48 +383,60 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
 
                     return Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1060),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  60,
-                                  14,
-                                  0,
-                                  14,
-                                ),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxWidth: 700,
+                        constraints: BoxConstraints(
+                          maxWidth: scale.contentMaxWidth,
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: scale.pageGutter,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: scale.sm,
                                   ),
-                                  child: Container(
-                                    color: AppTheme.classroomBackground,
-                                    child: chatColumn,
+                                  child: Align(
+                                    alignment: Alignment.topCenter,
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: scale.chatMaxWidth,
+                                      ),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          color: AppTheme.classroomBackground,
+                                          borderRadius: BorderRadius.circular(
+                                            AppTheme.radiusXl,
+                                          ),
+                                        ),
+                                        clipBehavior: Clip.antiAlias,
+                                        child: chatList,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            SizedBox(
-                              width: 260,
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  34,
-                                  20,
-                                  16,
-                                  20,
-                                ),
-                                child: ClassRevealRail(
-                                  unitIndex: widget.controller.unitIndex,
-                                  revealProgress: showChoiceReveal
-                                      ? 1
-                                      : widget.controller.revealProgress,
-                                  studentName: widget.controller.studentName,
+                              SizedBox(
+                                width: scale.railWidth + scale.xl,
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    left: scale.xl,
+                                    top: scale.lg,
+                                    bottom: scale.lg,
+                                  ),
+                                  child: ClassRevealRail(
+                                    unitIndex: controller.unitIndex,
+                                    revealProgress: showChoiceReveal
+                                        ? 1
+                                        : controller.revealProgress,
+                                    studentName: controller.studentName,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );

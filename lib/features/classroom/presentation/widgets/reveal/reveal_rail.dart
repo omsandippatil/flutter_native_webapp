@@ -3,15 +3,14 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/router/app_router.dart';
-import '../../../../../core/theme/app_theme.dart';
-import '../../../../home/models/learning_dashboard.dart';
-import '../../../application/classroom_session_controller.dart';
-import '../../../../learner/providers/learner_state_providers.dart';
-import './reveal_asset_resolver.dart';
-
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/reveal/reveal_asset_resolver.dart';
+import 'package:tapapp/features/home/models/learning_dashboard.dart';
 
 class ClassPendingActivityChoiceBody extends StatelessWidget {
   const ClassPendingActivityChoiceBody({
@@ -27,10 +26,12 @@ class ClassPendingActivityChoiceBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
+
     return SafeArea(
       child: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(scale.lg),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 560),
             child: Column(
@@ -38,30 +39,27 @@ class ClassPendingActivityChoiceBody extends StatelessWidget {
                 Text(
                   'Want to continue?',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: AppTheme.text(size: 24, weight: FontWeight.w800),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: scale.xs),
                 Text(
                   'Start the next activity when you are ready.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(color: AppTheme.subheadingColor),
+                  style: AppTheme.text(size: 14, color: AppTheme.subheadingColor),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: scale.xl),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(scale.md),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    color: AppTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                     border: Border.all(color: AppTheme.borderColor),
                   ),
                   child: Row(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         child: Image.asset(
                           unit.thumbnailAsset,
                           width: 112,
@@ -79,30 +77,27 @@ class ClassPendingActivityChoiceBody extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      SizedBox(width: scale.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               unit.courseDisplay,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
+                              style: AppTheme.text(
+                                size: 12,
                                 color: AppTheme.imagePlaceholder,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            SizedBox(height: scale.xxs),
                             Text(
                               unit.unitName,
-                              style: GoogleFonts.inter(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                              ),
+                              style: AppTheme.text(size: 17, weight: FontWeight.w800),
                             ),
-                            const SizedBox(height: 10),
+                            SizedBox(height: scale.xs + 2),
                             _EarnRow(
                               icon: Icons.stars_rounded,
-                              iconColor: const Color(0xFFE29A22),
+                              iconColor: AppTheme.warningIcon,
                               label: '${unit.totalPoints} Points',
                             ),
                           ],
@@ -111,22 +106,23 @@ class ClassPendingActivityChoiceBody extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: scale.md),
                 Row(
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 50,
+                        height: scale.buttonHeight,
                         child: ElevatedButton(
                           onPressed: onStart,
+                          style: AppTheme.primaryButtonStyle(),
                           child: const Text("Let's go"),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: scale.xs + 2),
                     Expanded(
                       child: SizedBox(
-                        height: 50,
+                        height: scale.buttonHeight,
                         child: OutlinedButton(
                           onPressed: onMaybeLater,
                           child: const Text('Maybe later'),
@@ -156,36 +152,35 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final scale = AppSpacing.of(context);
+
     if (!controller.hasNextUnit) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(vertical: scale.xs),
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(scale.lg),
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+            color: AppTheme.cardBackground,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             border: Border.all(color: AppTheme.borderColor),
           ),
           child: Column(
             children: [
               Text(
                 'Course complete! 🎉',
-                style: GoogleFonts.inter(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTheme.text(size: 18, weight: FontWeight.w800),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: scale.xs),
               Text(
                 'You completed every activity in this course.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(color: AppTheme.subheadingColor),
+                style: AppTheme.text(size: 14, color: AppTheme.subheadingColor),
               ),
-              const SizedBox(height: 16),
+              SizedBox(height: scale.md),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: scale.buttonHeight,
                 child: ElevatedButton(
                   onPressed: () {
                     ref.invalidate(
@@ -193,6 +188,7 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                     );
                     context.go(AppRoutes.home);
                   },
+                  style: AppTheme.primaryButtonStyle(),
                   child: const Text('Back to home'),
                 ),
               ),
@@ -202,32 +198,29 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
       );
     }
 
-    final isWide = MediaQuery.sizeOf(context).width >= 760;
-    final previewWidth = isWide ? 210.0 : 96.0;
-    final previewHeight = isWide ? 170.0 : 96.0;
+    final isWide = scale.showsSideRail;
+    final previewWidth = isWide ? 200.0 : 96.0;
+    final previewHeight = isWide ? 160.0 : 96.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: scale.xs),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: scale.sm, vertical: scale.xs + 2),
             decoration: BoxDecoration(
               color: AppTheme.classroomMessageSurface,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'Watch another video?',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppTheme.subheadingColor,
-                  ),
+                  style: AppTheme.text(size: 13, color: AppTheme.subheadingColor),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: scale.xs),
                 const Icon(
                   Icons.volume_up_rounded,
                   size: 16,
@@ -236,20 +229,20 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: scale.sm),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(scale.md),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              color: AppTheme.cardBackground,
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
               border: Border.all(color: AppTheme.borderColor),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   child: Container(
                     width: previewWidth,
                     height: previewHeight,
@@ -261,49 +254,46 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: scale.md),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         controller.courseDisplay,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
+                        style: AppTheme.text(
+                          size: 12,
                           color: AppTheme.imagePlaceholder,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      SizedBox(height: scale.xxs),
                       Text(
                         controller.nextUnitName,
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: AppTheme.text(size: 16, weight: FontWeight.w800),
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: scale.sm),
                       Text(
                         "YOU'LL EARN",
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
+                        style: AppTheme.text(
+                          size: 10,
+                          weight: FontWeight.w800,
                           letterSpacing: 0.4,
                           color: AppTheme.imagePlaceholder,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: scale.xs),
                       _EarnRow(
                         icon: Icons.stars_rounded,
-                        iconColor: const Color(0xFFE29A22),
+                        iconColor: AppTheme.warningIcon,
                         label: '${controller.nextUnitPoints} Points',
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: scale.xxs),
                       const _EarnRow(
                         icon: Icons.local_fire_department_rounded,
                         iconColor: AppTheme.streakColor,
                         label: '1 streak',
                       ),
-                      const SizedBox(height: 4),
+                      SizedBox(height: scale.xxs),
                       const _EarnRow(
                         icon: Icons.diamond_rounded,
                         iconColor: AppTheme.buttonColor,
@@ -315,29 +305,23 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: scale.md),
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: scale.buttonHeight - 2,
                   child: ElevatedButton(
                     onPressed: onStartNextActivity,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.buttonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    style: AppTheme.primaryButtonStyle(),
                     child: const Text("Let's go 🎉"),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: scale.xs + 2),
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: scale.buttonHeight - 2,
                   child: ElevatedButton(
                     onPressed: () {
                       ref.invalidate(
@@ -345,14 +329,7 @@ class ClassNextActivityInlineCard extends ConsumerWidget {
                       );
                       context.go(AppRoutes.home);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.mutedLavender,
-                      foregroundColor: AppTheme.buttonColor,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    style: AppTheme.secondaryButtonStyle(),
                     child: const Text('Maybe later'),
                   ),
                 ),
@@ -384,7 +361,7 @@ class _EarnRow extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+          style: AppTheme.text(size: 13, weight: FontWeight.w600),
         ),
       ],
     );
@@ -404,48 +381,37 @@ class ClassWeeklyCapRevealBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFFF6F6F9),
+      color: AppTheme.pageMuted,
       width: double.infinity,
       height: double.infinity,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final showRail = constraints.maxWidth >= 640;
+          final scale = AppSpacingScale.fromWidth(constraints.maxWidth);
+
           final message = Center(
             child: Padding(
-              padding: const EdgeInsets.all(32),
+              padding: EdgeInsets.all(scale.xxl),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'You did really well this week! 🎉',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: AppTheme.text(size: 20, weight: FontWeight.w800),
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: scale.xs),
                   Text(
                     "You've completed your activities for this week. See you next week!",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: AppTheme.subheadingColor,
-                    ),
+                    style: AppTheme.text(size: 14, color: AppTheme.subheadingColor),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: scale.xl),
                   SizedBox(
                     width: 220,
-                    height: 48,
+                    height: scale.buttonHeight,
                     child: ElevatedButton(
                       onPressed: onHome,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.buttonColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
+                      style: AppTheme.primaryButtonStyle(),
                       child: const Text('Back to home'),
                     ),
                   ),
@@ -454,16 +420,16 @@ class ClassWeeklyCapRevealBody extends StatelessWidget {
             ),
           );
 
-          if (!showRail) return message;
+          if (!scale.showsSideRail) return message;
 
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: message),
               SizedBox(
-                width: 220,
+                width: scale.railWidth + scale.xl,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 20, 16, 20),
+                  padding: EdgeInsets.fromLTRB(0, scale.lg, scale.md, scale.lg),
                   child: ClassRevealRail(
                     unitIndex: unitIndex,
                     revealProgress: 1,
@@ -493,12 +459,17 @@ class ClassRevealRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final progress = revealProgress.clamp(0.0, 1.0);
     final revealed = progress >= 1;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-      decoration: const BoxDecoration(color: Colors.white),
+      padding: EdgeInsets.all(scale.md),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppTheme.borderColor),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -508,8 +479,8 @@ class ClassRevealRail extends StatelessWidget {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F6E9),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppTheme.revealIconSurface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm - 2),
                 ),
                 child: const Icon(
                   Icons.auto_awesome_rounded,
@@ -517,31 +488,31 @@ class ClassRevealRail extends StatelessWidget {
                   color: AppTheme.streakColor,
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: scale.xs),
               Expanded(
                 child: Text(
                   "Today's picture",
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                  style: AppTheme.text(
+                    size: 12,
+                    weight: FontWeight.w700,
                     color: AppTheme.textColor,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: scale.sm - 2),
           Text(
             revealed
-                ? 'Congratulations !!🎉 You have unlocked today\'s picture'
+                ? "Congratulations !!🎉 You have unlocked today's picture"
                 : 'Complete the activity to reveal the secret character hiding behind the cloud! ☁️✨',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              height: 1.4,
+            style: AppTheme.text(
+              size: 12,
+              height: 1.45,
               color: AppTheme.subheadingColor,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: scale.sm),
           _RevealImage(
             unitIndex: unitIndex,
             revealProgress: progress,
@@ -553,11 +524,11 @@ class ClassRevealRail extends StatelessWidget {
   }
 }
 
-class _RevealImage extends StatelessWidget {
+class _RevealImage extends StatefulWidget {
   const _RevealImage({
     required this.unitIndex,
     required this.revealProgress,
-    this.height = 150,
+    required this.height,
   });
 
   final int unitIndex;
@@ -565,9 +536,33 @@ class _RevealImage extends StatelessWidget {
   final double height;
 
   @override
+  State<_RevealImage> createState() => _RevealImageState();
+}
+
+class _RevealImageState extends State<_RevealImage> {
+  late Future<String> _assetFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _assetFuture = RevealAssetResolver.resolve(widget.unitIndex);
+  }
+
+  @override
+  void didUpdateWidget(covariant _RevealImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.unitIndex != widget.unitIndex) {
+      _assetFuture = RevealAssetResolver.resolve(widget.unitIndex);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final height = widget.height;
+    final revealProgress = widget.revealProgress;
+
     return FutureBuilder<String>(
-      future: RevealAssetResolver.resolve(unitIndex),
+      future: _assetFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return SizedBox(
@@ -578,14 +573,14 @@ class _RevealImage extends StatelessWidget {
           );
         }
         return ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: Stack(
             alignment: Alignment.center,
             children: [
               Container(
                 width: double.infinity,
                 height: height,
-                color: const Color(0xFFDBF4C9),
+                color: AppTheme.revealBackground,
               ),
               Image.asset(
                 snapshot.data!,
@@ -629,10 +624,11 @@ class _RevealImage extends StatelessWidget {
               if (revealProgress < 0.95)
                 Text(
                   '???',
-                  style: GoogleFonts.inter(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF2B2B30),
+                  style: AppTheme.text(
+                    size: 34,
+                    weight: FontWeight.w900,
+                    color: AppTheme.stemText,
+                  ).copyWith(
                     shadows: const [
                       Shadow(
                         color: Colors.white,

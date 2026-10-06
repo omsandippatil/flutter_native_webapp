@@ -1,8 +1,8 @@
-import { applyCors, handlePreflight } from './cors.js';
-import { checkLimit, rateLimitResponse } from './ratelimit.js';
-import { routeRequest } from './routes.js';
-import { handleTapbuddyChat } from './tapbuddy.js';
-import { handleSubmissionReview } from './submission_review.js';
+import { applyCors, handlePreflight } from './middleware/cors.js';
+import { checkLimit, rateLimitResponse } from './middleware/rate_limit.js';
+import { routeRequest } from './routes/route_table.js';
+import { handleTapBuddyChat } from './handlers/tap_buddy_chat.js';
+import { handleSubmissionReview } from './handlers/submission_review.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -19,7 +19,7 @@ export default {
 
     try {
       if (request.method === 'POST' && url.pathname === '/tapbuddy/chat') {
-        const response = await handleTapbuddyChat(request, env);
+        const response = await handleTapBuddyChat(request, env);
         return applyCors(response, request, env);
       }
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../../profile/models/active_profile.dart';
-import '../../../learner/models/learner_state.dart';
-import '../../../course_content/models/course_index_entry.dart';
-import '../../models/onboarding_message.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_index_entry.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_message.dart';
 
 String onboardingCourseThumbnail(String courseId) =>
     'assets/data/courses/thumbnail/$courseId.webp';
@@ -473,7 +473,7 @@ class OnboardingCelebrationCard extends StatelessWidget {
     child: ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: Image.asset(
-        'assets/onboarding/sussess_celebrate.png',
+        'assets/images/celebration/success_celebrate.png',
         fit: BoxFit.contain,
         errorBuilder: (context, error, stackTrace) => const Icon(
           Icons.celebration,
@@ -510,7 +510,7 @@ class OnboardingSkillPassportCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              'assets/onboarding/Skill Passport.png',
+              'assets/images/onboarding/skill_passport.png',
               width: 220,
               height: 245,
               fit: BoxFit.contain,

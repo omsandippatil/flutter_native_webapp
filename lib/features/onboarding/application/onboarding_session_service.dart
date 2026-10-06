@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../learner/data/learner_state_repository.dart';
-import '../../profile/data/profile_repository.dart';
-import '../../profile/models/active_profile.dart';
-import '../../learner/models/learner_state.dart';
-import '../../course_content/models/course_index_entry.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import '../../profile/providers/profile_providers.dart';
-import '../../course_content/providers/course_providers.dart';
-import '../data/onboarding_flow_repository.dart';
-import '../models/onboarding_flow_step.dart';
+import 'package:tapapp/core/localization/language_provider.dart';
+import 'package:tapapp/domain/learner/data/learner_state_repository.dart';
+import 'package:tapapp/domain/profile/data/profile_repository.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_index_entry.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/domain/course/providers/course_providers.dart';
+import 'package:tapapp/features/onboarding/data/onboarding_flow_repository.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_flow_step.dart';
 
 class OnboardingBootstrapData {
   const OnboardingBootstrapData({
@@ -76,7 +77,9 @@ class OnboardingSessionService {
     final learnerState = await learnerStateRepository.fetchState(
       learnerId: activeProfile.learnerId,
     );
-    final courseIndex = await programContentRepository.fetchCourseIndex();
+    final courseIndex = await programContentRepository.fetchCourseIndex(
+      lang: ref.read(languageProvider),
+    );
     final steps = await const OnboardingFlowRepository().load();
 
     return OnboardingBootstrapData(

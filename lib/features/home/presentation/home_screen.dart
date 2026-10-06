@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/router/app_router.dart';
-import '../models/learning_dashboard.dart';
-import '../providers/home_dashboard_provider.dart';
-import '../../../shared/widgets/app_header.dart';
-import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/loading_view.dart';
-import 'widgets/completed_card.dart';
-import 'widgets/home_buddy_art.dart';
-import 'widgets/quiz_pending_card.dart';
-import 'widgets/send_project_card.dart';
-import 'widgets/start_activity_card.dart';
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/features/home/models/learning_dashboard.dart';
+import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/shared/widgets/app_header.dart';
+import 'package:tapapp/shared/widgets/app_shell.dart';
+import 'package:tapapp/shared/widgets/loading_view.dart';
+import 'package:tapapp/features/home/presentation/widgets/completed_card.dart';
+import 'package:tapapp/features/home/presentation/widgets/home_buddy_art.dart';
+import 'package:tapapp/features/home/presentation/widgets/quiz_pending_card.dart';
+import 'package:tapapp/features/home/presentation/widgets/send_project_card.dart';
+import 'package:tapapp/features/home/presentation/widgets/start_activity_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -74,7 +74,8 @@ class _HomeDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = dashboard.progress;
-    final stage = dashboard.showCompletionCelebration ||
+    final stage =
+        dashboard.showCompletionCelebration ||
             dashboard.hasReachedWeeklyCap ||
             dashboard.unit == null
         ? LearningStage.completed

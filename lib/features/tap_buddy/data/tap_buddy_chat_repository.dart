@@ -1,8 +1,8 @@
-import '../../../core/storage/cache_keys.dart';
-import '../../../core/storage/local_cache.dart';
-import '../models/chat_turn.dart';
-import '../../../core/network/api_endpoints.dart';
-import '../../../core/network/http_client.dart';
+import 'package:tapapp/core/storage/cache_keys.dart';
+import 'package:tapapp/core/storage/local_cache.dart';
+import 'package:tapapp/features/tap_buddy/models/chat_turn.dart';
+import 'package:tapapp/core/network/api_endpoints.dart';
+import 'package:tapapp/core/network/http_client.dart';
 
 class TapbuddyChatRepository {
   TapbuddyChatRepository(this._http, this._localCache);
@@ -45,7 +45,8 @@ class TapbuddyChatRepository {
         'message': message,
         'grade': ?grade,
         'language': ?language,
-        if (context != null && context.isNotEmpty) 'context': context,
+        if (context != null && context.isNotEmpty)
+          'context': context,
         'history': ChatTurnModel.listToJson(recentHistory),
       },
     );

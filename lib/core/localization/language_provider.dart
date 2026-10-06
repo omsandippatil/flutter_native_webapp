@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../storage/cache_keys.dart';
-import '../constants/app_constants.dart';
-import '../../providers/local_cache_provider.dart';
+import 'package:tapapp/core/storage/cache_keys.dart';
+import 'package:tapapp/core/constants/app_constants.dart';
+import 'package:tapapp/providers/local_cache_provider.dart';
 
 class LanguageNotifier extends Notifier<String> {
   @override

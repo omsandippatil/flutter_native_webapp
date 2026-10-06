@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../models/onboarding_flow_step.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_flow_step.dart';
 
 class OnboardingFlowRepository {
   const OnboardingFlowRepository();

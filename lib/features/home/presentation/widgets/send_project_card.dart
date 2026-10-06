@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'card_deck_wrapper.dart';
-import 'reward_item.dart';
+import 'package:tapapp/features/home/presentation/widgets/card_deck_wrapper.dart';
+import 'package:tapapp/features/home/presentation/widgets/reward_item.dart';
 
 class SendProjectCard extends StatelessWidget {
   final String courseDisplay;

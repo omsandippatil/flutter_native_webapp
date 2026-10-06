@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../../core/theme/app_theme.dart';
-import '../../../models/classroom_message.dart';
-import '../../../models/submission_answer.dart';
-import '../../../application/classroom_session_controller.dart';
-import '../states/card_shell.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/models/submission_answer.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/states/card_shell.dart';
 
 class ClassSubmissionCard extends StatefulWidget {
   const ClassSubmissionCard({
@@ -63,14 +63,7 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
         });
       }
     } catch (_) {
-      if (mounted) {
-        setState(() => _pickError = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't access that. Please try again."),
-          ),
-        );
-      }
+      _handlePickFailure();
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
@@ -95,17 +88,18 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
         });
       }
     } catch (_) {
-      if (mounted) {
-        setState(() => _pickError = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Couldn't access that. Please try again."),
-          ),
-        );
-      }
+      _handlePickFailure();
     } finally {
       if (mounted) setState(() => _isPicking = false);
     }
+  }
+
+  void _handlePickFailure() {
+    if (!mounted) return;
+    setState(() => _pickError = true);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Couldn't access that. Please try again.")),
+    );
   }
 
   Future<void> _showMediaSourceSheet({
@@ -115,43 +109,48 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     final choice = await showModalBottomSheet<_MediaPickChoice>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppTheme.radiusXl),
+        ),
       ),
       builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            if (!forceVideo) ...[
-              ListTile(
-                leading: const Icon(Icons.photo_camera_outlined),
-                title: const Text('Take a photo'),
-                onTap: () =>
-                    Navigator.pop(context, _MediaPickChoice.cameraImage),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined),
-                title: const Text('Choose photo from gallery'),
-                onTap: () =>
-                    Navigator.pop(context, _MediaPickChoice.galleryImage),
-              ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            vertical: AppSpacing.of(context).xs,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!forceVideo) ...[
+                ListTile(
+                  leading: const Icon(Icons.photo_camera_outlined),
+                  title: const Text('Take a photo'),
+                  onTap: () =>
+                      Navigator.pop(context, _MediaPickChoice.cameraImage),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.photo_library_outlined),
+                  title: const Text('Choose photo from gallery'),
+                  onTap: () =>
+                      Navigator.pop(context, _MediaPickChoice.galleryImage),
+                ),
+              ],
+              if (allowVideo) ...[
+                ListTile(
+                  leading: const Icon(Icons.videocam_outlined),
+                  title: const Text('Record a video'),
+                  onTap: () =>
+                      Navigator.pop(context, _MediaPickChoice.cameraVideo),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.video_library_outlined),
+                  title: const Text('Choose video from gallery'),
+                  onTap: () =>
+                      Navigator.pop(context, _MediaPickChoice.galleryVideo),
+                ),
+              ],
             ],
-            if (allowVideo) ...[
-              ListTile(
-                leading: const Icon(Icons.videocam_outlined),
-                title: const Text('Record a video'),
-                onTap: () =>
-                    Navigator.pop(context, _MediaPickChoice.cameraVideo),
-              ),
-              ListTile(
-                leading: const Icon(Icons.video_library_outlined),
-                title: const Text('Choose video from gallery'),
-                onTap: () =>
-                    Navigator.pop(context, _MediaPickChoice.galleryVideo),
-              ),
-            ],
-            const SizedBox(height: 8),
-          ],
+          ),
         ),
       ),
     );
@@ -159,16 +158,12 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     switch (choice) {
       case _MediaPickChoice.cameraImage:
         await _pickImage(ImageSource.camera);
-        break;
       case _MediaPickChoice.galleryImage:
         await _pickImage(ImageSource.gallery);
-        break;
       case _MediaPickChoice.cameraVideo:
         await _pickVideo(ImageSource.camera);
-        break;
       case _MediaPickChoice.galleryVideo:
         await _pickVideo(ImageSource.gallery);
-        break;
       case null:
         break;
     }
@@ -176,6 +171,7 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final guidedText = widget.message.data['guidedText'] as String?;
     final unguidedText = widget.message.data['unguidedText'] as String? ?? '';
     final validCriteria = widget.message.data['validCriteria'] as String?;
@@ -183,19 +179,19 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     final kind = SubmissionKindResolver.fromSubTypes(subTypes);
     final stepNumber = widget.message.data['stepNumber'] as int?;
     final stepTotal = widget.message.data['stepTotal'] as int?;
-    final isAwaiting = widget.controller.isAwaitingInput;
-    final canInteract = isAwaiting && !_submitted;
+    final canInteract = widget.controller.isAwaitingInput && !_submitted;
+    final prompt = guidedText?.isNotEmpty == true ? guidedText! : unguidedText;
 
     return ClassCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: scale.xs,
+            runSpacing: scale.xs,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              _SubmissionChip(
+              const _SubmissionChip(
                 label: "TODAY'S ACTIVITY 🏎️🏎️",
                 foregroundColor: AppTheme.buttonColor,
               ),
@@ -204,8 +200,9 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
                 _SubmissionChip(label: 'STEP $stepNumber/$stepTotal'),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: scale.md),
           _ExamplePreview(
+            height: scale.previewHeight,
             hasMedia: _pickedMedia != null,
             isVideo: _isVideoPick,
             mediaBytes: _pickedMediaBytes,
@@ -216,83 +213,49 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
                   )
                 : _showSubmissionHelpDialog,
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: scale.md),
           Text(
-            guidedText?.isNotEmpty == true ? guidedText! : unguidedText,
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              height: 1.35,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textColor,
-            ),
+            prompt,
+            style: AppTheme.text(size: 16, weight: FontWeight.w800, height: 1.35),
           ),
           if (unguidedText.isNotEmpty && guidedText?.isNotEmpty == true) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: scale.xxs),
             Text(
               unguidedText,
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                height: 1.35,
+              style: AppTheme.text(
+                size: 12,
+                height: 1.4,
                 color: AppTheme.subheadingColor,
               ),
             ),
           ],
           if (validCriteria?.isNotEmpty == true) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: scale.xs),
             Text(
               'I will check for: $validCriteria',
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                height: 1.35,
+              style: AppTheme.text(
+                size: 11,
+                height: 1.4,
                 color: AppTheme.subheadingColor,
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
-          const SizedBox(height: 12),
+          SizedBox(height: scale.md),
           if (_showFriendExamples(kind)) ...[
             Text(
               _friendLabel(kind),
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                color: AppTheme.subheadingColor,
-              ),
+              style: AppTheme.text(size: 12, color: AppTheme.subheadingColor),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: scale.xs),
           ],
-          if (_pickError)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1EF),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFF3C4BE)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      size: 18,
-                      color: AppTheme.dangerText,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        "We couldn't load that file. Please try picking it again.",
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          color: AppTheme.dangerText,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          if (_pickError) ...[
+            _ErrorNotice(
+              message: "We couldn't load that file. Please try picking it again.",
             ),
+            SizedBox(height: scale.sm),
+          ],
           _buildInputForKind(kind, canInteract),
         ],
       ),
@@ -302,73 +265,34 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
   Widget _buildInputForKind(SubmissionKind kind, bool canInteract) {
     switch (kind) {
       case SubmissionKind.emoji:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: ['👍', '👎', '😊', '😕', '💪', '🤔'].map((emoji) {
-                final selected = _selectedEmoji == emoji;
-                return InkWell(
-                  onTap: canInteract
-                      ? () => setState(() => _selectedEmoji = emoji)
-                      : null,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? AppTheme.mutedLavender
-                          : AppTheme.classroomMessageSurface,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(emoji, style: const TextStyle(fontSize: 24)),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 12),
-            _submitRow(
-              onPressed: (canInteract && _selectedEmoji != null)
-                  ? () {
-                      widget.controller.submitAssignmentAnswer(
-                        SubmissionAnswer.emoji(_selectedEmoji!),
-                      );
-                      _markSubmitted();
-                    }
-                  : null,
-            ),
-          ],
-        );
-
+        return _emojiInput(canInteract);
       case SubmissionKind.text:
         return _textSubmissionInput(
           canInteract: canInteract,
           hintText: 'Type your answer here...',
           onSubmit: () {
-            if (_textController.text.trim().isEmpty) return;
+            final value = _textController.text.trim();
+            if (value.isEmpty) return;
             widget.controller.submitAssignmentAnswer(
-              SubmissionAnswer.text(_textController.text.trim()),
+              SubmissionAnswer.text(value),
             );
             _markSubmitted();
           },
         );
-
       case SubmissionKind.textAudio:
       case SubmissionKind.audio:
         return _textSubmissionInput(
           canInteract: canInteract,
           hintText: 'Type or transcribe your answer here...',
           onSubmit: () {
-            if (_textController.text.trim().isEmpty) return;
+            final value = _textController.text.trim();
+            if (value.isEmpty) return;
             widget.controller.submitAssignmentAnswer(
-              SubmissionAnswer.audioTranscript(_textController.text.trim()),
+              SubmissionAnswer.audioTranscript(value),
             );
             _markSubmitted();
           },
         );
-
       case SubmissionKind.image:
         return _buildMediaPicker(
           canInteract: canInteract,
@@ -381,7 +305,6 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
             _markSubmitted();
           },
         );
-
       case SubmissionKind.video:
         return _buildMediaPicker(
           canInteract: canInteract,
@@ -395,7 +318,6 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
             _markSubmitted();
           },
         );
-
       case SubmissionKind.imageVideo:
         return _buildMediaPicker(
           canInteract: canInteract,
@@ -414,11 +336,59 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     }
   }
 
+  Widget _emojiInput(bool canInteract) {
+    final scale = AppSpacing.of(context);
+    const emojis = ['👍', '👎', '😊', '😕', '💪', '🤔'];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: scale.xs + 2,
+          runSpacing: scale.xs + 2,
+          children: emojis.map((emoji) {
+            final selected = _selectedEmoji == emoji;
+            return InkWell(
+              onTap: canInteract
+                  ? () => setState(() => _selectedEmoji = emoji)
+                  : null,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              child: Container(
+                padding: EdgeInsets.all(scale.xs + 2),
+                decoration: BoxDecoration(
+                  color: selected
+                      ? AppTheme.mutedLavender
+                      : AppTheme.classroomMessageSurface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(
+                    color: selected ? AppTheme.buttonColor : Colors.transparent,
+                  ),
+                ),
+                child: Text(emoji, style: const TextStyle(fontSize: 24)),
+              ),
+            );
+          }).toList(),
+        ),
+        SizedBox(height: scale.md),
+        _submitRow(
+          onPressed: (canInteract && _selectedEmoji != null)
+              ? () {
+                  widget.controller.submitAssignmentAnswer(
+                    SubmissionAnswer.emoji(_selectedEmoji!),
+                  );
+                  _markSubmitted();
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
   Widget _textSubmissionInput({
     required bool canInteract,
     required String hintText,
     required VoidCallback onSubmit,
   }) {
+    final scale = AppSpacing.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -426,17 +396,18 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
           controller: _textController,
           enabled: canInteract,
           maxLines: 4,
+          style: AppTheme.text(size: 14, height: 1.45),
           decoration: InputDecoration(
             hintText: hintText,
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppTheme.cardBackground,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               borderSide: BorderSide.none,
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: scale.md),
         _submitRow(onPressed: canInteract ? onSubmit : null),
       ],
     );
@@ -448,6 +419,7 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     required VoidCallback onSubmit,
     bool forceVideo = false,
   }) {
+    final scale = AppSpacing.of(context);
     final hasMedia = _pickedMedia != null;
     void openPicker() =>
         _showMediaSourceSheet(allowVideo: allowVideo, forceVideo: forceVideo);
@@ -456,29 +428,28 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: scale.xs + 2,
+          runSpacing: scale.xs + 2,
           children: _mediaFriendExamples(forceVideo: forceVideo)
               .map(
                 (emoji) => _FriendExampleTile(
                   label: emoji,
-                  selected: false,
                   onTap: canInteract ? openPicker : null,
                 ),
               )
               .toList(),
         ),
         if (hasMedia) ...[
-          const SizedBox(height: 12),
+          SizedBox(height: scale.sm),
           InkWell(
             onTap: canInteract ? openPicker : null,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(scale.xs + 2),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                color: AppTheme.cardBackground,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(color: AppTheme.borderColor),
               ),
               child: Row(
@@ -489,16 +460,13 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
                         : Icons.image_outlined,
                     color: AppTheme.buttonColor,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: scale.xs),
                   Expanded(
                     child: Text(
                       _pickedMedia!.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTheme.text(size: 13, weight: FontWeight.w700),
                     ),
                   ),
                   const Icon(Icons.refresh_rounded, size: 18),
@@ -507,7 +475,7 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
             ),
           ),
         ],
-        const SizedBox(height: 12),
+        SizedBox(height: scale.md),
         _submitRow(
           primaryLabel: hasMedia ? 'Share submission' : 'Submit',
           isLoading: _isPicking,
@@ -524,20 +492,16 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     String primaryLabel = 'Submit',
     bool isLoading = false,
   }) {
+    final scale = AppSpacing.of(context);
     return Row(
       children: [
         Expanded(
           child: SizedBox(
-            height: 44,
+            height: scale.buttonHeight - 6,
             child: ElevatedButton(
               onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.dividerColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              style: AppTheme.primaryButtonStyle(
+                disabledColor: AppTheme.dividerColor,
               ),
               child: isLoading
                   ? const SizedBox(
@@ -552,18 +516,15 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: scale.xs + 2),
         SizedBox(
-          height: 44,
+          height: scale.buttonHeight - 6,
           child: OutlinedButton(
             onPressed: _showSubmissionHelpDialog,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.subheadingColor,
               side: const BorderSide(color: AppTheme.dividerColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: EdgeInsets.symmetric(horizontal: scale.md),
             ),
             child: const Text('Submission Help'),
           ),
@@ -602,6 +563,7 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
   };
 
   Future<void> _showSubmissionHelpDialog() async {
+    final scale = AppSpacing.of(context);
     final guidedText = widget.message.data['guidedText'] as String?;
     final unguidedText = widget.message.data['unguidedText'] as String? ?? '';
     final validCriteria = widget.message.data['validCriteria'] as String?;
@@ -611,23 +573,28 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
     await showDialog<void>(
       context: context,
       builder: (context) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        insetPadding: EdgeInsets.symmetric(
+          horizontal: scale.md,
+          vertical: scale.xl,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 620),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(scale.md),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    _SubmissionChip(
+                    const _SubmissionChip(
                       label: "TODAY'S ACTIVITY 🏎️🏎️",
                       foregroundColor: AppTheme.buttonColor,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: scale.xs),
                     _SubmissionChip(label: _kindLabel(kind)),
                     const Spacer(),
                     IconButton(
@@ -636,23 +603,20 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: scale.sm),
                 Center(
                   child: Text(
                     'How to submit',
-                    style: GoogleFonts.inter(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: AppTheme.text(size: 16, weight: FontWeight.w800),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: scale.sm),
                 Container(
                   width: double.infinity,
                   height: 220,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(color: AppTheme.borderColor),
                   ),
                   child: const Icon(
@@ -661,35 +625,29 @@ class _ClassSubmissionCardState extends State<ClassSubmissionCard> {
                     color: AppTheme.imagePlaceholder,
                   ),
                 ),
-                const SizedBox(height: 14),
+                SizedBox(height: scale.md),
                 Text(
                   guidedText?.isNotEmpty == true ? guidedText! : unguidedText,
-                  style: GoogleFonts.inter(fontSize: 14, height: 1.4),
+                  style: AppTheme.text(size: 14, height: 1.45),
                 ),
                 if (validCriteria?.isNotEmpty == true) ...[
-                  const SizedBox(height: 8),
+                  SizedBox(height: scale.xs),
                   Text(
                     'Check: $validCriteria',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
+                    style: AppTheme.text(
+                      size: 12,
+                      height: 1.4,
                       color: AppTheme.subheadingColor,
-                      height: 1.35,
                     ),
                   ),
                 ],
-                const SizedBox(height: 18),
+                SizedBox(height: scale.lg),
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
+                  height: scale.buttonHeight - 2,
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(context),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.buttonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
+                    style: AppTheme.primaryButtonStyle(),
                     child: const Text('Continue'),
                   ),
                 ),
@@ -715,18 +673,19 @@ class _SubmissionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: scale.sm - 2, vertical: scale.xs - 2),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusPill),
         border: Border.all(color: AppTheme.dividerColor),
       ),
       child: Text(
         label,
-        style: GoogleFonts.inter(
-          fontSize: 11,
-          fontWeight: FontWeight.w800,
+        style: AppTheme.text(
+          size: 11,
+          weight: FontWeight.w800,
           color: foregroundColor,
         ),
       ),
@@ -736,12 +695,14 @@ class _SubmissionChip extends StatelessWidget {
 
 class _ExamplePreview extends StatelessWidget {
   const _ExamplePreview({
+    required this.height,
     required this.hasMedia,
     required this.isVideo,
     required this.mediaBytes,
     required this.onTap,
   });
 
+  final double height;
   final bool hasMedia;
   final bool isVideo;
   final Uint8List? mediaBytes;
@@ -751,17 +712,17 @@ class _ExamplePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
       child: Container(
         width: double.infinity,
-        height: 190,
+        height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+          color: AppTheme.cardBackground,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(color: AppTheme.borderColor),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd - 1),
           child: hasMedia
               ? (isVideo
                     ? const Center(
@@ -793,33 +754,62 @@ class _ExamplePreview extends StatelessWidget {
 }
 
 class _FriendExampleTile extends StatelessWidget {
-  const _FriendExampleTile({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _FriendExampleTile({required this.label, required this.onTap});
 
   final String label;
-  final bool selected;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
       child: Container(
         width: 68,
         height: 58,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? AppTheme.mutedLavender : AppTheme.dividerColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected ? AppTheme.buttonColor : AppTheme.borderColor,
-          ),
+          color: AppTheme.dividerColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(color: AppTheme.borderColor),
         ),
         child: Text(label, style: const TextStyle(fontSize: 22)),
+      ),
+    );
+  }
+}
+
+class _ErrorNotice extends StatelessWidget {
+  const _ErrorNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(scale.sm),
+      decoration: BoxDecoration(
+        color: AppTheme.dangerSurface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.dangerBorder),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.error_outline_rounded,
+            size: 18,
+            color: AppTheme.dangerText,
+          ),
+          SizedBox(width: scale.xs),
+          Expanded(
+            child: Text(
+              message,
+              style: AppTheme.text(size: 13, color: AppTheme.dangerText),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -832,6 +822,7 @@ class ClassSubmissionReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final feedback = message.data['feedback'] as String?;
     final score = message.data['score'] as int?;
     final passed = message.data['passed'] as bool?;
@@ -840,12 +831,12 @@ class ClassSubmissionReviewCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+      padding: EdgeInsets.fromLTRB(scale.lg, scale.md, scale.lg, scale.lg),
       decoration: BoxDecoration(
-        color: failed ? const Color(0xFFFFF1EF) : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: failed ? AppTheme.dangerSurface : AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
-          color: failed ? const Color(0xFFF3C4BE) : const Color(0xFFE0E2EA),
+          color: failed ? AppTheme.dangerBorder : AppTheme.borderColor,
         ),
       ),
       child: Column(
@@ -860,62 +851,60 @@ class ClassSubmissionReviewCard extends StatelessWidget {
                   size: 18,
                   color: AppTheme.dangerText,
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: scale.xs),
               ],
               Expanded(
                 child: Text(
                   text,
-                  style: GoogleFonts.inter(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                  style: AppTheme.text(
+                    size: 17,
+                    weight: FontWeight.w700,
                     height: 1.3,
                     color: failed ? AppTheme.dangerText : AppTheme.textColor,
                   ),
                 ),
               ),
-              if (score != null)
+              if (score != null) ...[
+                SizedBox(width: scale.xs),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: scale.sm,
+                    vertical: scale.xs,
                   ),
                   decoration: BoxDecoration(
-                    color: failed
-                        ? const Color(0xFFF9D9D3)
-                        : const Color(0xFFE7F7EE),
-                    borderRadius: BorderRadius.circular(999),
+                    color: failed ? AppTheme.dangerChip : AppTheme.successSurface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusPill),
                   ),
                   child: Text(
                     'Score: $score',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: failed
-                          ? AppTheme.dangerText
-                          : AppTheme.successText,
+                    style: AppTheme.text(
+                      size: 13,
+                      weight: FontWeight.w800,
+                      color: failed ? AppTheme.dangerText : AppTheme.successText,
                     ),
                   ),
                 ),
+              ],
             ],
           ),
           if (feedback != null && feedback.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            SizedBox(height: scale.sm),
             Text(
               feedback,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                height: 1.45,
+              style: AppTheme.text(
+                size: 15,
+                height: 1.5,
                 color: failed ? AppTheme.dangerText : AppTheme.subheadingColor,
               ),
             ),
           ],
           if (failed) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: scale.xs),
             Text(
               'No submission points were added for this attempt.',
-              style: GoogleFonts.inter(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+              style: AppTheme.text(
+                size: 12,
+                weight: FontWeight.w600,
                 color: AppTheme.dangerText,
               ),
             ),
@@ -938,20 +927,21 @@ class ClassSubmissionRewardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final studentName = message.data['studentName'] as String? ?? 'Champ';
     final points = (message.data['points'] as num?)?.toInt() ?? 0;
 
     return Container(
-      width: 300,
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+      width: 320,
+      padding: EdgeInsets.fromLTRB(scale.md, scale.md, scale.md, scale.lg),
       decoration: BoxDecoration(
         color: AppTheme.classroomMessageSurface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Align(
+          const Align(
             alignment: Alignment.topRight,
             child: Icon(
               Icons.volume_up_rounded,
@@ -960,52 +950,49 @@ class ClassSubmissionRewardCard extends StatelessWidget {
             ),
           ),
           Image.asset(
-            'assets/class-screen/Skill Passport 1.png',
+            'assets/images/classroom/Skill_Passport_1.png',
             height: 235,
             fit: BoxFit.contain,
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: scale.xs),
           Text(
             'Congratulations $studentName!!!🥳',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
+            style: AppTheme.text(
+              size: 20,
+              weight: FontWeight.w900,
               color: AppTheme.textColor,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: scale.sm),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: scale.md, vertical: scale.xs + 2),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3A72C),
-              borderRadius: BorderRadius.circular(999),
+              color: AppTheme.rewardGold,
+              borderRadius: BorderRadius.circular(AppTheme.radiusPill),
             ),
             child: Text(
               '⊙ +$points pts',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
+              style: AppTheme.text(
+                size: 14,
+                weight: FontWeight.w800,
                 color: AppTheme.textColor,
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: scale.md),
           Text(
             'You have won $points points🪙😍\nYou did a great job champion!',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 15,
-              height: 1.35,
-              color: AppTheme.textColor,
-            ),
+            style: AppTheme.text(size: 15, height: 1.4, color: AppTheme.textColor),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: scale.lg),
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: scale.buttonHeight - 2,
             child: ElevatedButton(
               onPressed: controller.continueAfterSubmissionReward,
+              style: AppTheme.primaryButtonStyle(),
               child: const Text('Continue'),
             ),
           ),

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/chat_turn.dart';
-import '../../../core/localization/language_provider.dart';
-import '../../profile/providers/profile_providers.dart';
-import '../providers/tap_buddy_context_provider.dart';
-import '../providers/tap_buddy_providers.dart';
+import 'package:tapapp/features/tap_buddy/models/chat_turn.dart';
+import 'package:tapapp/core/localization/language_provider.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/features/tap_buddy/providers/tap_buddy_context_provider.dart';
+import 'package:tapapp/features/tap_buddy/providers/tap_buddy_providers.dart';
 
 class TapBuddyPanel extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -204,7 +204,11 @@ class _PanelHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           children: [
-            Image.asset('assets/onboarding/TAP-bot.png', width: 28, height: 28),
+            Image.asset(
+              'assets/images/branding/tap_buddy_pp.png',
+              width: 28,
+              height: 28,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Column(

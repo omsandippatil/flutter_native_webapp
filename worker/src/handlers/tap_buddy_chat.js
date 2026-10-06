@@ -55,7 +55,7 @@ function contextLinesFromLearnerContext(context) {
   return lines;
 }
 
-export async function handleTapbuddyChat(request, env) {
+export async function handleTapBuddyChat(request, env) {
   let body;
   try {
     body = await request.json();

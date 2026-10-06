@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_theme.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
 
 enum ClassSectionCheckpointKind { video, submission, quiz, finalWin, generic }
 
@@ -23,57 +23,47 @@ class ClassSectionCheckpoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final compact = MediaQuery.sizeOf(context).width < 640;
+    final scale = AppSpacing.of(context);
 
     final content = Container(
       width: double.infinity,
       color: AppTheme.classroomBackground,
       padding: EdgeInsets.fromLTRB(
-        compact ? 20 : 32,
-        compact ? 44 : 64,
-        compact ? 20 : 32,
-        40,
+        scale.pageGutter,
+        scale.section,
+        scale.pageGutter,
+        scale.section,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 740),
+          constraints: BoxConstraints(maxWidth: scale.checkpointMaxWidth),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const ClassTapBuddySpeakingOrb(size: 160),
-              const SizedBox(height: 18),
+              ClassTapBuddySpeakingOrb(size: scale.orbSize),
+              SizedBox(height: scale.lg),
               const _HearAgainPill(),
-              const SizedBox(height: 18),
+              SizedBox(height: scale.lg),
               Text(
                 text,
                 textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  fontSize: compact ? 18 : 20,
-                  height: 1.28,
-                  fontWeight: FontWeight.w500,
+                style: AppTheme.text(
+                  size: scale.isCompact ? 18 : 20,
+                  weight: FontWeight.w500,
+                  height: 1.3,
                   color: AppTheme.textColor,
                 ),
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: scale.xl),
               SizedBox(
-                width: compact ? double.infinity : 292,
-                height: 54,
+                width: scale.isCompact ? double.infinity : 292,
+                height: scale.buttonHeight + 4,
                 child: ElevatedButton(
                   onPressed: onPressed,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.buttonColor,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
+                  style: AppTheme.primaryButtonStyle(),
                   child: Text(
                     buttonLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: AppTheme.text(size: 14, weight: FontWeight.w800, color: Colors.white),
                   ),
                 ),
               ),
@@ -94,12 +84,13 @@ class _HearAgainPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     return Container(
       height: 34,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: scale.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0EDFF),
-        borderRadius: BorderRadius.circular(999),
+        color: AppTheme.chipLavender,
+        borderRadius: BorderRadius.circular(AppTheme.radiusPill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -109,12 +100,12 @@ class _HearAgainPill extends StatelessWidget {
             size: 15,
             color: AppTheme.buttonColor,
           ),
-          const SizedBox(width: 7),
+          SizedBox(width: scale.xs - 1),
           Text(
             'Hear again',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            style: AppTheme.text(
+              size: 12,
+              weight: FontWeight.w700,
               color: AppTheme.buttonColor,
             ),
           ),
@@ -125,9 +116,9 @@ class _HearAgainPill extends StatelessWidget {
 }
 
 class ClassTapBuddySpeakingOrb extends StatefulWidget {
-  const ClassTapBuddySpeakingOrb({super.key, this.size = 136});
+  const ClassTapBuddySpeakingOrb({super.key, this.size});
 
-  final double size;
+  final double? size;
 
   @override
   State<ClassTapBuddySpeakingOrb> createState() =>
@@ -155,9 +146,10 @@ class _ClassTapBuddySpeakingOrbState extends State<ClassTapBuddySpeakingOrb>
 
   @override
   Widget build(BuildContext context) {
-    final size = widget.size;
+    final size = widget.size ?? AppSpacing.of(context).orbSize;
     final middle = size * 0.85;
     final inner = size * 0.69;
+
     return SizedBox(
       width: size,
       height: size,
@@ -187,7 +179,7 @@ class _ClassTapBuddySpeakingOrbState extends State<ClassTapBuddySpeakingOrb>
                   width: size,
                   height: size,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFB9AAFF).withValues(alpha: 0.52),
+                    color: AppTheme.orbHalo.withValues(alpha: 0.52),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -198,7 +190,7 @@ class _ClassTapBuddySpeakingOrbState extends State<ClassTapBuddySpeakingOrb>
                   width: middle,
                   height: middle,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF8F80FF).withValues(alpha: 0.42),
+                    color: AppTheme.orbMid.withValues(alpha: 0.42),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -207,7 +199,7 @@ class _ClassTapBuddySpeakingOrbState extends State<ClassTapBuddySpeakingOrb>
                 width: inner,
                 height: inner,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF292930),
+                  color: AppTheme.orbCore,
                   shape: BoxShape.circle,
                 ),
                 child: Column(
@@ -217,31 +209,31 @@ class _ClassTapBuddySpeakingOrbState extends State<ClassTapBuddySpeakingOrb>
                       width: size * 0.34,
                       height: size * 0.34,
                       decoration: const BoxDecoration(
-                        color: Color(0xFFE9FFE9),
+                        color: AppTheme.orbFace,
                         shape: BoxShape.circle,
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.asset(
-                        'assets/class-screen/tap_buddy_ai.png',
+                        'assets/images/branding/tap_buddy_ai.png',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.smart_toy_rounded, size: 18),
                       ),
                     ),
-                    const SizedBox(height: 5),
+                    SizedBox(height: size * 0.035),
                     Text(
                       'TAP Buddy',
-                      style: GoogleFonts.inter(
-                        fontSize: size * 0.066,
-                        fontWeight: FontWeight.w700,
+                      style: AppTheme.text(
+                        size: size * 0.066,
+                        weight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
                     Text(
                       'Speaking',
-                      style: GoogleFonts.inter(
-                        fontSize: size * 0.058,
-                        fontWeight: FontWeight.w500,
+                      style: AppTheme.text(
+                        size: size * 0.058,
+                        weight: FontWeight.w500,
                         color: Colors.white70,
                       ),
                     ),

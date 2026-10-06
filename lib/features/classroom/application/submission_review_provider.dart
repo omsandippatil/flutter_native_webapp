@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/submission_review_repository.dart';
-import '../../../providers/http_client_provider.dart';
-import '../../../providers/local_cache_provider.dart';
+import 'package:tapapp/features/classroom/data/submission_review_repository.dart';
+import 'package:tapapp/providers/http_client_provider.dart';
+import 'package:tapapp/providers/local_cache_provider.dart';
 
 final submissionReviewRepositoryProvider =
     FutureProvider<SubmissionReviewRepository>((ref) async {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../models/onboarding_message.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_message.dart';
 
 class OnboardingMessageTile extends StatelessWidget {
   const OnboardingMessageTile({
@@ -147,7 +147,7 @@ class _BotAvatar extends StatelessWidget {
       backgroundColor: AppTheme.imageBgColor,
       child: ClipOval(
         child: Image.asset(
-          'assets/onboarding/TAP-bot.png',
+          'assets/images/branding/tap_buddy_pp.png',
           fit: BoxFit.cover,
           errorBuilder: (_, error, stackTrace) =>
               const Icon(Icons.android, color: AppTheme.buttonColor),

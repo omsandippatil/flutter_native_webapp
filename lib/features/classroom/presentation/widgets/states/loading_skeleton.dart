@@ -1,83 +1,92 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/app_theme.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
 
 class ClassLoadingSkeleton extends StatelessWidget {
   const ClassLoadingSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: AppTheme.appBackground,
-      child: Column(
-        children: [
-          const _SkeletonHeader(),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final showRail = constraints.maxWidth >= 760;
-                return Center(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = AppSpacingScale.fromWidth(constraints.maxWidth);
+        return Container(
+          color: AppTheme.appBackground,
+          child: Column(
+            children: [
+              _SkeletonHeader(scale: scale),
+              Expanded(
+                child: Center(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1060),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Center(
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 760),
-                              child: const Padding(
-                                padding: EdgeInsets.fromLTRB(24, 24, 24, 28),
-                                child: _ChatSkeletonCard(),
+                    constraints: BoxConstraints(maxWidth: scale.contentMaxWidth),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: scale.pageGutter,
+                        vertical: scale.xl,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: scale.chatMaxWidth,
+                                ),
+                                child: _ChatSkeletonCard(scale: scale),
                               ),
                             ),
                           ),
-                        ),
-                        if (showRail)
-                          const SizedBox(
-                            width: 230,
-                            child: Padding(
-                              padding: EdgeInsets.fromLTRB(0, 24, 20, 24),
-                              child: _RevealRailSkeleton(),
+                          if (scale.showsSideRail)
+                            SizedBox(
+                              width: scale.railWidth + scale.xl,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: scale.xl),
+                                child: _RevealRailSkeleton(scale: scale),
+                              ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              ),
+              _InputSkeleton(scale: scale),
+            ],
           ),
-          const _InputSkeleton(),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _SkeletonHeader extends StatelessWidget {
-  const _SkeletonHeader();
+  const _SkeletonHeader({required this.scale});
+
+  final AppSpacingScale scale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 78,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      height: 72 * scale.factor,
+      padding: EdgeInsets.symmetric(horizontal: scale.pageGutter),
       decoration: const BoxDecoration(
         color: AppTheme.cardBackground,
         border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
       ),
       child: Row(
         children: [
-          const _CircleSkeleton(size: 40),
-          const SizedBox(width: 22),
-          const Expanded(child: _BarSkeleton(height: 24)),
-          const SizedBox(width: 48),
-          const _BarSkeleton(width: 64, height: 28),
-          const SizedBox(width: 14),
-          const _BarSkeleton(width: 128, height: 28),
-          const SizedBox(width: 14),
-          const _BarSkeleton(width: 92, height: 28),
+          _CircleSkeleton(size: 40 * scale.factor),
+          SizedBox(width: scale.md),
+          Expanded(child: _BarSkeleton(height: 22 * scale.factor)),
+          SizedBox(width: scale.xl),
+          _BarSkeleton(width: 64 * scale.factor, height: 26 * scale.factor),
+          SizedBox(width: scale.xs),
+          _BarSkeleton(width: 120 * scale.factor, height: 26 * scale.factor),
+          SizedBox(width: scale.xs),
+          _BarSkeleton(width: 88 * scale.factor, height: 26 * scale.factor),
         ],
       ),
     );
@@ -85,38 +94,41 @@ class _SkeletonHeader extends StatelessWidget {
 }
 
 class _ChatSkeletonCard extends StatelessWidget {
-  const _ChatSkeletonCard();
+  const _ChatSkeletonCard({required this.scale});
+
+  final AppSpacingScale scale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 22, 24, 18),
-      color: AppTheme.cardBackground,
+      padding: EdgeInsets.all(scale.md),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _BarSkeleton(width: 320, height: 32),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 168),
-          SizedBox(height: 14),
-          _BarSkeleton(width: double.infinity, height: 32),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 32),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 32),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 32),
-          SizedBox(height: 18),
+        children: [
+          _BarSkeleton(width: 280, height: 28),
+          SizedBox(height: scale.sm),
+          _BarSkeleton(width: double.infinity, height: 160),
+          SizedBox(height: scale.md),
+          _BarSkeleton(width: double.infinity, height: 30),
+          SizedBox(height: scale.sm),
+          _BarSkeleton(width: double.infinity, height: 30),
+          SizedBox(height: scale.sm),
+          _BarSkeleton(width: double.infinity, height: 30),
+          SizedBox(height: scale.lg),
           Align(
             alignment: Alignment.centerRight,
             child: _BarSkeleton(
-              width: 300,
-              height: 32,
+              width: 260,
+              height: 30,
               color: AppTheme.successBubble,
             ),
           ),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 32),
+          SizedBox(height: scale.sm),
+          _BarSkeleton(width: double.infinity, height: 30),
         ],
       ),
     );
@@ -124,21 +136,26 @@ class _ChatSkeletonCard extends StatelessWidget {
 }
 
 class _RevealRailSkeleton extends StatelessWidget {
-  const _RevealRailSkeleton();
+  const _RevealRailSkeleton({required this.scale});
+
+  final AppSpacingScale scale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
-      color: AppTheme.cardBackground,
-      child: const Column(
+      padding: EdgeInsets.all(scale.md),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _BarSkeleton(width: 120, height: 22),
-          SizedBox(height: 12),
-          _BarSkeleton(width: double.infinity, height: 82),
-          SizedBox(height: 14),
-          _BarSkeleton(width: double.infinity, height: 138),
+          const _BarSkeleton(width: 120, height: 22),
+          SizedBox(height: scale.sm),
+          const _BarSkeleton(width: double.infinity, height: 82),
+          SizedBox(height: scale.md),
+          const _BarSkeleton(width: double.infinity, height: 150),
         ],
       ),
     );
@@ -146,25 +163,32 @@ class _RevealRailSkeleton extends StatelessWidget {
 }
 
 class _InputSkeleton extends StatelessWidget {
-  const _InputSkeleton();
+  const _InputSkeleton({required this.scale});
+
+  final AppSpacingScale scale;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 58,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: EdgeInsets.symmetric(
+        horizontal: scale.pageGutter,
+        vertical: scale.sm,
+      ),
       decoration: const BoxDecoration(
         color: AppTheme.cardBackground,
         border: Border(top: BorderSide(color: AppTheme.borderColor)),
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
+          constraints: BoxConstraints(maxWidth: scale.chatMaxWidth),
           child: Row(
-            children: const [
-              Expanded(child: _BarSkeleton(height: 34)),
-              SizedBox(width: 10),
-              _CircleSkeleton(size: 38, color: AppTheme.buttonColor),
+            children: [
+              const Expanded(child: _BarSkeleton(height: 40)),
+              SizedBox(width: scale.xs),
+              _CircleSkeleton(
+                size: 40 * scale.factor,
+                color: AppTheme.buttonColor,
+              ),
             ],
           ),
         ),
@@ -191,7 +215,7 @@ class _BarSkeleton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: AppTheme.borderColor),
       ),
     );

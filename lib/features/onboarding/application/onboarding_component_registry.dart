@@ -1,11 +1,11 @@
 import 'package:flutter/widgets.dart';
 
-import '../../profile/models/active_profile.dart';
-import '../../learner/models/learner_state.dart';
-import '../../course_content/models/course_index_entry.dart';
-import '../models/onboarding_flow_step.dart';
-import '../presentation/widgets/onboarding_chat_widgets.dart';
-import '../presentation/widgets/onboarding_flow_widgets.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_index_entry.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_flow_step.dart';
+import 'package:tapapp/features/onboarding/presentation/widgets/onboarding_chat_widgets.dart';
+import 'package:tapapp/features/onboarding/presentation/widgets/onboarding_flow_widgets.dart';
 
 class OnboardingResolvedContent {
   const OnboardingResolvedContent({required this.text, this.content});

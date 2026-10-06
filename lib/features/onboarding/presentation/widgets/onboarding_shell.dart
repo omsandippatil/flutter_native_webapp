@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/widgets/app_header.dart';
-import '../../models/onboarding_message.dart';
-import 'onboarding_chat_widgets.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/shared/widgets/app_header.dart';
+import 'package:tapapp/features/onboarding/models/onboarding_message.dart';
+import 'package:tapapp/features/onboarding/presentation/widgets/onboarding_chat_widgets.dart';
 
 class OnboardingShell extends StatelessWidget {
   const OnboardingShell({

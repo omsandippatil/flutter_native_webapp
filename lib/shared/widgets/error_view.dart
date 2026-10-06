@@ -20,7 +20,7 @@ class ErrorView extends StatefulWidget {
     required this.buttonText,
     this.desktopButtonText,
     required this.onRetry,
-    this.imagePath = 'assets/error-screen-assets/sad_girl_error.png',
+    this.imagePath = 'assets/images/error/sad_girl_error.png',
   });
 
   @override
@@ -76,7 +76,6 @@ class _ErrorViewState extends State<ErrorView> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   width: isDesktop ? 280 : 260,

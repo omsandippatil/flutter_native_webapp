@@ -1,8 +1,8 @@
-import '../storage/cache_keys.dart';
-import '../storage/local_cache.dart';
-import '../../core/constants/app_constants.dart';
-import '../assets/asset_loader.dart';
-import 'flow_manifest.dart';
+import 'package:tapapp/core/storage/cache_keys.dart';
+import 'package:tapapp/core/storage/local_cache.dart';
+import 'package:tapapp/core/constants/app_constants.dart';
+import 'package:tapapp/core/assets/asset_loader.dart';
+import 'package:tapapp/core/flows/flow_manifest.dart';
 
 class FlowManifestRepository {
   FlowManifestRepository(this._assetLoader, this._localCache);

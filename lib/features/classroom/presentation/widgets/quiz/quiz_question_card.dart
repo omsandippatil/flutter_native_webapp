@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../../core/theme/app_theme.dart';
-import '../../../models/classroom_message.dart';
-import '../../../application/classroom_session_controller.dart';
-import '../states/card_shell.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/states/card_shell.dart';
 
 class ClassQuizQuestionCard extends StatefulWidget {
   const ClassQuizQuestionCard({
@@ -26,6 +26,7 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final questionIndex = widget.message.data['questionIndex'] as int? ?? 0;
     final totalQuestions = widget.message.data['totalQuestions'] as int? ?? 0;
     final question = widget.message.data['question'] as String? ?? '';
@@ -34,13 +35,14 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
         const {};
     final answerKey = widget.message.data['answerKey'] as String?;
     final optionEntries = options.entries.toList();
+    final canAnswer = widget.controller.isAwaitingInput && !_confirmed;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(scale.md),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppTheme.cardBackground,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: AppTheme.borderColor),
       ),
       child: Column(
@@ -48,30 +50,26 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
         children: [
           Text(
             'Q${questionIndex + 1}. $question',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              height: 1.3,
-            ),
+            style: AppTheme.text(size: 16, weight: FontWeight.w700, height: 1.35),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: scale.xxs),
           Text(
             'Question ${questionIndex + 1} of $totalQuestions',
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
+            style: AppTheme.text(
+              size: 11,
+              weight: FontWeight.w600,
               color: AppTheme.imagePlaceholder,
             ),
           ),
-          const SizedBox(height: 14),
+          SizedBox(height: scale.md),
           ...optionEntries.map((option) {
             final selected = _selectedKey == option.key;
             final isCorrectOption =
                 answerKey != null && option.key == answerKey;
 
-            Color fillColor = Colors.white;
-            Color borderColor = AppTheme.borderColor;
-            Color textColor = AppTheme.textColor;
+            var fillColor = AppTheme.cardBackground;
+            var borderColor = AppTheme.borderColor;
+            var textColor = AppTheme.textColor;
 
             if (_confirmed) {
               if (isCorrectOption) {
@@ -79,8 +77,8 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
                 borderColor = AppTheme.buttonColor;
                 textColor = Colors.white;
               } else if (selected) {
-                fillColor = const Color(0xFFFBECEA);
-                borderColor = const Color(0xFFD98F86);
+                fillColor = AppTheme.wrongAnswerSurface;
+                borderColor = AppTheme.wrongAnswerBorder;
                 textColor = AppTheme.dangerText;
               }
             } else if (selected) {
@@ -88,21 +86,21 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
             }
 
             return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: EdgeInsets.only(bottom: scale.xs),
               child: InkWell(
-                onTap: (widget.controller.isAwaitingInput && !_confirmed)
+                onTap: canAnswer
                     ? () => setState(() => _selectedKey = option.key)
                     : null,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppTheme.radiusPill),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 13,
-                    horizontal: 16,
+                  padding: EdgeInsets.symmetric(
+                    vertical: scale.sm,
+                    horizontal: scale.md,
                   ),
                   decoration: BoxDecoration(
                     color: fillColor,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusPill),
                     border: Border.all(
                       color: borderColor,
                       width: selected || (_confirmed && isCorrectOption)
@@ -115,9 +113,9 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
                       Expanded(
                         child: Text(
                           option.value,
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                          style: AppTheme.text(
+                            size: 14,
+                            weight: FontWeight.w600,
                             color: textColor,
                           ),
                         ),
@@ -140,27 +138,19 @@ class _ClassQuizQuestionCardState extends State<ClassQuizQuestionCard> {
               ),
             );
           }),
-          const SizedBox(height: 4),
+          SizedBox(height: scale.xs),
           SizedBox(
             width: double.infinity,
-            height: 48,
+            height: scale.buttonHeight - 2,
             child: ElevatedButton(
-              onPressed:
-                  (widget.controller.isAwaitingInput &&
-                      _selectedKey != null &&
-                      !_confirmed)
+              onPressed: (canAnswer && _selectedKey != null)
                   ? () {
                       setState(() => _confirmed = true);
                       widget.controller.submitQuizAnswer(_selectedKey!);
                     }
                   : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.buttonColor,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.mutedLavender,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+              style: AppTheme.primaryButtonStyle(
+                disabledColor: AppTheme.mutedLavender,
               ),
               child: const Text('Confirm'),
             ),
@@ -178,16 +168,17 @@ class ClassQuizFeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final isCorrect = message.data['isCorrect'] as bool? ?? false;
     final explanation = message.data['explanation'] as String?;
     final correctOptionText = message.data['correctOptionText'] as String?;
     final earnedPoints = message.data['earnedPoints'] as int?;
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(scale.md),
       decoration: BoxDecoration(
-        color: isCorrect ? const Color(0xFFE7F7EE) : const Color(0xFFFFF1E9),
-        borderRadius: BorderRadius.circular(16),
+        color: isCorrect ? AppTheme.successSurface : AppTheme.warningSoft,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,43 +188,38 @@ class ClassQuizFeedbackCard extends StatelessWidget {
               Icon(
                 isCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
                 size: 18,
-                color: isCorrect
-                    ? AppTheme.streakColor
-                    : const Color(0xFFE29A22),
+                color: isCorrect ? AppTheme.streakColor : AppTheme.warningIcon,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: scale.xs - 2),
               Text(
                 isCorrect
                     ? (earnedPoints != null
                           ? 'Correct! +$earnedPoints points'
                           : 'Correct!')
                     : 'Not quite',
-                style: GoogleFonts.inter(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: AppTheme.text(size: 15, weight: FontWeight.w800),
               ),
             ],
           ),
           if (!isCorrect && correctOptionText != null) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: scale.xs),
             Text(
               'Correct answer: $correctOptionText',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF4A4A55),
+              style: AppTheme.text(
+                size: 13,
+                weight: FontWeight.w600,
+                color: AppTheme.answerText,
               ),
             ),
           ],
           if (explanation != null && explanation.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: scale.xxs + 2),
             Text(
               explanation,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                height: 1.4,
-                color: const Color(0xFF4A4A55),
+              style: AppTheme.text(
+                size: 13,
+                height: 1.45,
+                color: AppTheme.answerText,
               ),
             ),
           ],
@@ -250,6 +236,7 @@ class ClassQuizSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final correct = message.data['correct'] as int? ?? 0;
     final total = message.data['total'] as int? ?? 0;
 
@@ -258,18 +245,14 @@ class ClassQuizSummaryCard extends StatelessWidget {
         children: [
           const Icon(
             Icons.emoji_events_rounded,
-            color: Color(0xFFF4AC38),
+            color: AppTheme.rewardGold,
             size: 28,
           ),
-          const SizedBox(width: 10),
+          SizedBox(width: scale.sm),
           Expanded(
             child: Text(
               '${message.text ?? 'Quiz done!'}\nYou got $correct out of $total correct.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                height: 1.4,
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTheme.text(size: 14, height: 1.45, weight: FontWeight.w600),
             ),
           ),
         ],

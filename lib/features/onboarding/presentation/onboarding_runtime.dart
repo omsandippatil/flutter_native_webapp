@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/router/app_router.dart';
-import '../../../shared/widgets/error_view.dart';
-import '../../../shared/widgets/loading_view.dart';
-import './widgets/onboarding_shell.dart';
-import '../application/onboarding_flow_controller.dart';
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/shared/widgets/error_view.dart';
+import 'package:tapapp/shared/widgets/loading_view.dart';
+import 'package:tapapp/features/onboarding/presentation/widgets/onboarding_shell.dart';
+import 'package:tapapp/features/onboarding/application/onboarding_flow_controller.dart';
 
 class OnboardingRuntime extends ConsumerStatefulWidget {
   const OnboardingRuntime({super.key});

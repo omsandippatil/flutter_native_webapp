@@ -1,15 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../profile/models/active_profile.dart';
-import '../models/learning_dashboard.dart';
-import '../../classroom/models/progress_stage.dart';
-import '../../learner/models/enrollment.dart';
-import '../../learner/models/learner_state.dart';
-import '../../course_content/models/course_detail.dart';
-import '../../classroom/application/classroom_bootstrap_provider.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import '../../profile/providers/profile_providers.dart';
-import '../../course_content/providers/course_providers.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/features/home/models/learning_dashboard.dart';
+import 'package:tapapp/features/classroom/models/progress_stage.dart';
+import 'package:tapapp/domain/learner/models/enrollment.dart';
+import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
+import 'package:tapapp/features/classroom/application/classroom_bootstrap_provider.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/domain/course/providers/course_providers.dart';
 
 class NoActiveProfileException implements Exception {
   const NoActiveProfileException();

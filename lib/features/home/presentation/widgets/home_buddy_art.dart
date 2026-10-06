@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/learning_dashboard.dart';
+import 'package:tapapp/features/home/models/learning_dashboard.dart';
 
 class HomeBuddyArt extends StatelessWidget {
   final LearningStage stage;
@@ -11,10 +11,10 @@ class HomeBuddyArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final asset = switch (stage) {
-      LearningStage.startActivity => 'assets/home-screen/home_page_img1.png',
-      LearningStage.sendProject => 'assets/home-screen/home_page_img2.png',
-      LearningStage.quizPending => 'assets/home-screen/home_page_img2.png',
-      LearningStage.completed => 'assets/onboarding/sussess_celebrate.png',
+      LearningStage.startActivity => 'assets/images/home/home_page_img1.png',
+      LearningStage.sendProject => 'assets/images/home/home_page_img2.png',
+      LearningStage.quizPending => 'assets/images/home/home_page_img2.png',
+      LearningStage.completed => 'assets/images/celebration/success_celebrate.png',
     };
 
     final cropTransparentSides = switch (stage) {

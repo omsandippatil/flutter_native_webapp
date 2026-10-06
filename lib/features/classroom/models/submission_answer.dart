@@ -1,4 +1,3 @@
-
 enum SubmissionKind { emoji, text, audio, textAudio, image, video, imageVideo }
 
 class SubmissionAnswer {

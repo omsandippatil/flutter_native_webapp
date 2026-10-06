@@ -1,14 +1,16 @@
-import '../../../core/storage/cache_keys.dart';
-import '../../../core/storage/local_cache.dart';
-import '../models/session_window.dart';
+import 'package:tapapp/core/storage/local_cache.dart';
+import 'package:tapapp/features/classroom/models/session_window.dart';
 
 class ClassSessionWindowRepository {
   ClassSessionWindowRepository(this._localCache);
 
   final LocalCache _localCache;
 
+  static String _sessionWindowKey(String learnerId) =>
+      'v2:class_session:$learnerId:window';
+
   ClassSessionWindowModel read(String learnerId) {
-    final raw = _localCache.getForeverRaw(CacheKeys.sessionWindow(learnerId));
+    final raw = _localCache.getForeverRaw(_sessionWindowKey(learnerId));
     if (raw == null) return ClassSessionWindowModel.empty(learnerId);
     return ClassSessionWindowModel.fromJson(raw);
   }
@@ -54,13 +56,13 @@ class ClassSessionWindowRepository {
     );
 
     await _localCache.setForeverRaw(
-      CacheKeys.sessionWindow(learnerId),
+      _sessionWindowKey(learnerId),
       updated.toJson(),
     );
   }
 
   Future<void> reset(String learnerId) async {
-    await _localCache.delete(CacheKeys.sessionWindow(learnerId));
+    await _localCache.delete(_sessionWindowKey(learnerId));
   }
 
   String _windowStart(String? serverWindowStart) {
@@ -68,8 +70,11 @@ class ClassSessionWindowRepository {
       return serverWindowStart;
     }
     final now = DateTime.now();
-    final monday = DateTime(now.year, now.month, now.day)
-        .subtract(Duration(days: now.weekday - DateTime.monday));
+    final monday = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - DateTime.monday));
     return '${monday.year.toString().padLeft(4, '0')}-'
         '${monday.month.toString().padLeft(2, '0')}-'
         '${monday.day.toString().padLeft(2, '0')}';

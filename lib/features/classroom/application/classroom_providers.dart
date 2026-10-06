@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'activity_flow_provider.dart';
-import 'classroom_session_controller.dart';
-import 'classroom_bootstrap_provider.dart';
-import '../../home/providers/home_dashboard_provider.dart';
-import '../../../core/localization/language_provider.dart';
-import '../../learner/providers/learner_state_providers.dart';
-import 'submission_review_provider.dart';
+import 'package:tapapp/features/classroom/application/activity_flow_provider.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/application/classroom_bootstrap_provider.dart';
+import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/core/localization/language_provider.dart';
+import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
+import 'package:tapapp/features/classroom/application/submission_review_provider.dart';
 
 class NoUnitAvailableException implements Exception {
   const NoUnitAvailableException();

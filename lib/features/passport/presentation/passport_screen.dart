@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/theme/app_theme.dart';
-import '../../home/models/learning_dashboard.dart';
-import '../../home/providers/home_dashboard_provider.dart';
-import '../../../shared/widgets/app_header.dart';
-import '../../../shared/widgets/app_shell.dart';
-import '../../../shared/widgets/loading_view.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/home/models/learning_dashboard.dart';
+import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/shared/widgets/app_header.dart';
+import 'package:tapapp/shared/widgets/app_shell.dart';
+import 'package:tapapp/shared/widgets/loading_view.dart';
 
 class PassportScreen extends ConsumerWidget {
   const PassportScreen({super.key});
@@ -699,7 +699,7 @@ class _StudentProfileCard extends StatelessWidget {
           ),
           const SizedBox(height: 26),
           Image.asset(
-            'assets/class-screen/Skill Passport 1.png',
+            'assets/images/classroom/Skill_Passport_1.png',
             height: 220,
             fit: BoxFit.contain,
           ),

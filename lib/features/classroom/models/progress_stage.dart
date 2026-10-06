@@ -1,5 +1,5 @@
-import '../../learner/models/enrollment.dart';
-import '../../course_content/models/course_detail.dart';
+import 'package:tapapp/domain/learner/models/enrollment.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
 
 enum ClassroomProgressStage {
   watchVideo,
@@ -27,7 +27,6 @@ class ClassroomProgressSnapshot {
   final bool videoDone;
   final bool submissionDone;
   final bool quizDone;
-
 }
 
 class ClassroomProgressResolver {

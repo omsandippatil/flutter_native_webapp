@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import './onboarding_runtime.dart';
+import 'package:tapapp/features/onboarding/presentation/onboarding_runtime.dart';
 
 class ConversationalOnboardingScreen extends StatelessWidget {
   const ConversationalOnboardingScreen({super.key});

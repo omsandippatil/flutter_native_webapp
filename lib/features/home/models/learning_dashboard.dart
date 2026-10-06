@@ -1,5 +1,5 @@
-import '../../course_content/models/course_detail.dart';
-import '../../classroom/models/progress_stage.dart';
+import 'package:tapapp/domain/course/models/course_detail.dart';
+import 'package:tapapp/features/classroom/models/progress_stage.dart';
 
 enum LearningStage { startActivity, sendProject, quizPending, completed }
 

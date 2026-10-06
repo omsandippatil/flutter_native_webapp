@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
-import '../../../../../core/theme/app_theme.dart';
-import '../../../models/classroom_message.dart';
-import '../../../application/classroom_session_controller.dart';
-import 'youtube_embed_stub.dart'
-    if (dart.library.html) 'youtube_embed_web.dart';
+import 'package:tapapp/core/theme/app_spacing.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
+import 'package:tapapp/features/classroom/models/classroom_message.dart';
+import 'package:tapapp/features/classroom/presentation/widgets/video/youtube_embed_stub.dart'
+    if (dart.library.html) 'package:tapapp/features/classroom/presentation/widgets/video/youtube_embed_web.dart';
 
 class ClassVideoCard extends StatefulWidget {
   const ClassVideoCard({
@@ -60,6 +60,7 @@ class _ClassVideoCardState extends State<ClassVideoCard> {
 
   @override
   Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
     final watched = widget.message.data['watched'] == true;
     final title = widget.message.data['title'] as String? ?? '';
     final points = widget.message.data['points'] as int? ?? 0;
@@ -69,24 +70,19 @@ class _ClassVideoCardState extends State<ClassVideoCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          constraints: const BoxConstraints(maxWidth: 330),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: scale.md, vertical: scale.sm),
           decoration: BoxDecoration(
             color: AppTheme.classroomMessageSurface,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Watch the video 👇',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textColor,
-                ),
+                style: AppTheme.text(size: 14, weight: FontWeight.w500),
               ),
-              const SizedBox(width: 18),
+              SizedBox(width: scale.md),
               const Icon(
                 Icons.volume_up_rounded,
                 size: 16,
@@ -95,20 +91,19 @@ class _ClassVideoCardState extends State<ClassVideoCard> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: scale.sm),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: EdgeInsets.all(scale.sm),
           decoration: BoxDecoration(
             color: AppTheme.classroomMessageSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.classroomMessageSurface),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 child: youtubeId.isEmpty
                     ? const _EmptyVideoPlaceholder()
                     : kIsWeb
@@ -125,37 +120,29 @@ class _ClassVideoCardState extends State<ClassVideoCard> {
                               ),
                       ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: scale.sm),
               Text(
                 'Watch: $title',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textColor,
-                ),
+                style: AppTheme.text(size: 14, weight: FontWeight.w500),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: scale.sm),
         SizedBox(
           width: double.infinity,
-          height: 54,
+          height: scale.buttonHeight + 4,
           child: ElevatedButton(
             onPressed: watched ? null : widget.controller.markVideoWatched,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.buttonColor,
-              foregroundColor: AppTheme.cardBackground,
-              disabledBackgroundColor: AppTheme.dividerColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+            style: AppTheme.primaryButtonStyle(
+              disabledColor: AppTheme.dividerColor,
             ),
             child: Text(
               watched ? 'Watched' : 'I watched it • +$points points',
-              style: GoogleFonts.inter(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
+              style: AppTheme.text(
+                size: 16,
+                weight: FontWeight.w800,
+                color: Colors.white,
               ),
             ),
           ),

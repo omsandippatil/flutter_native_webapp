@@ -1,0 +1,10 @@
+{
+  "flows": {
+    "activity": {
+      "activity_flow.json": { "languages": ["en"] }
+    },
+    "onboarding": {
+      "onboarding_flow.json": { "languages": ["en"] }
+    }
+  }
+}

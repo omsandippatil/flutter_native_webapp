@@ -12,6 +12,26 @@ build/
 .DS_Store
 *.log
 
+android/.gradle/
+android/app/debug
+android/app/profile
+android/app/release
+android/local.properties
+android/key.properties
+*.jks
+*.keystore
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/App.framework
+ios/Flutter/Flutter.framework
+macos/Pods/
+macos/Flutter/ephemeral/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+web/
+
 .firebase/
 *.local
 .env
@@ -19,5 +39,12 @@ build/
 !.env.example
 
 node_modules/
+worker/.wrangler/
+worker/.dev.vars
 site/
 coverage/
+
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

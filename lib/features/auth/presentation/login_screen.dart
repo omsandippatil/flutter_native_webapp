@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../core/router/app_router.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../profile/models/active_profile.dart';
-import '../providers/auth_providers.dart';
-import '../../profile/providers/profile_providers.dart';
+import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/domain/profile/models/active_profile.dart';
+import 'package:tapapp/domain/auth/providers/auth_providers.dart';
+import 'package:tapapp/domain/profile/providers/profile_providers.dart';
 
 enum _AuthStep { phone, password, createPassword }
 
@@ -463,13 +463,13 @@ class _Logos extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Image.asset(
-          'assets/logos/gov-logo.png',
+          'assets/images/branding/gov-logo.png',
           height: isDesktop ? 48 : 40,
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
         const SizedBox(width: 12),
         Image.asset(
-          'assets/logos/tap_logo.png',
+          'assets/images/branding/tap_logo.png',
           height: isDesktop ? 38 : 32,
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),

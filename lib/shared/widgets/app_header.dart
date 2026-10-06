@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/theme/app_theme.dart';
-import 'app_shell.dart';
+import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/shared/widgets/app_shell.dart';
 
 class AppHeader extends StatelessWidget {
   final String title;
@@ -268,10 +268,10 @@ class _PostOnboardingBrand extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Image.asset('assets/logos/gov-logo.png', height: compact ? 26 : 30),
+        Image.asset('assets/images/branding/gov-logo.png', height: compact ? 26 : 30),
         SizedBox(width: compact ? 12 : 9),
         Image.asset(
-          'assets/logos/tap-otherLogo.png',
+          'assets/images/branding/tap-otherLogo.png',
           height: compact ? 26 : 30,
         ),
       ],
