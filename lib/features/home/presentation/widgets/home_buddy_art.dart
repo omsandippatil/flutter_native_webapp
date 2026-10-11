@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'package:tapapp/features/home/models/learning_dashboard.dart';
+import 'package:tapapp/features/home/home.dart';
 
 class HomeBuddyArt extends StatelessWidget {
   final LearningStage stage;

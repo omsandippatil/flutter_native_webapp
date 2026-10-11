@@ -1,12 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:tapapp/features/tap_buddy/models/chat_turn.dart';
-import 'package:tapapp/core/localization/language_provider.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
-import 'package:tapapp/features/tap_buddy/providers/tap_buddy_context_provider.dart';
-import 'package:tapapp/features/tap_buddy/providers/tap_buddy_providers.dart';
+import 'package:tapapp/chat/chat.dart';
+import 'package:tapapp/core/localization/language.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/providers.dart';
+import 'package:tapapp/features/tap_buddy/tap_buddy.dart';
 
 class TapBuddyPanel extends ConsumerStatefulWidget {
   final VoidCallback onClose;
@@ -20,12 +20,14 @@ class TapBuddyPanel extends ConsumerStatefulWidget {
 class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final ChatAudioPlaybackController _audioController;
 
   final List<ChatTurnModel> _messages = [];
   bool _historyLoaded = false;
   bool _isSending = false;
   String? _pendingRetryMessage;
   String? _errorText;
+  int _seq = 0;
 
   String? _phone;
   String? _learnerId;
@@ -33,6 +35,7 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
   @override
   void initState() {
     super.initState();
+    _audioController = ChatAudioPlaybackController();
     WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrap());
   }
 
@@ -40,13 +43,17 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
+    _audioController.dispose();
     super.dispose();
   }
 
   Future<void> _bootstrap() async {
+    final phone = await ref.read(secureTokenStoreProvider).readPhone();
+    if (phone == null) return;
+
     final activeProfile = await ref
         .read(profileRepositoryProvider.future)
-        .then((repository) => repository.readActiveProfile());
+        .then((repository) => repository.readActiveProfile(phone));
     if (!mounted || activeProfile == null) return;
 
     final repository = await ref.read(tapbuddyChatRepositoryProvider.future);
@@ -63,19 +70,62 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
       _messages.addAll(transcript);
       _historyLoaded = true;
     });
-    _scrollToBottom();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    });
+  String _nextId() => 'tapbuddy:${_seq++}';
+
+  // Maps TAP Buddy's plain {role, content} transcript onto the same
+  // ChatItem model every other surface (onboarding/classroom) renders,
+  // so bubbles, avatar, spacing and audio affordance all come from the
+  // one shared block registry instead of a bespoke implementation here.
+  List<ChatItem> _buildItems() {
+    final items = <ChatItem>[
+      for (final turn in _messages)
+        TextItem(
+          id: _nextId(),
+          stepId: 'tapbuddy',
+          sender: turn.role == 'user' ? ChatSender.user : ChatSender.bot,
+          text: turn.content,
+        ),
+      if (_messages.isEmpty) ...[
+        TextItem(
+          id: _nextId(),
+          stepId: 'tapbuddy',
+          sender: ChatSender.bot,
+          text: 'Hey there Champ!\nHow may I help you?',
+        ),
+        TextItem(
+          id: _nextId(),
+          stepId: 'tapbuddy',
+          sender: ChatSender.bot,
+          text: "Type your question below and I'll help you out.",
+        ),
+      ],
+      if (_isSending)
+        LoadingItem(id: _nextId(), stepId: 'tapbuddy'),
+      if (_errorText != null)
+        ErrorItem(
+          id: _nextId(),
+          stepId: 'tapbuddy',
+          message: _errorText!,
+          retryAction: ChatAction.retrySubmission.name,
+        ),
+    ];
+    return items;
   }
+
+  ChatRenderContext _renderContext() => ChatRenderContext(
+    onAction: (action, {data}) {
+      if (action == ChatAction.retrySubmission) {
+        unawaited(_send(_pendingRetryMessage));
+      }
+    },
+    onOptionSelected: (_, _) {},
+    onSubmissionAnswer: (_, _) {},
+    onRetry: (_) => unawaited(_send(_pendingRetryMessage)),
+    audioController: _audioController,
+    isAwaitingInput: !_isSending,
+  );
 
   Future<void> _send([String? retryText]) async {
     final text = (retryText ?? _inputController.text).trim();
@@ -123,6 +173,17 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
     }
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -150,37 +211,20 @@ class _TapBuddyPanelState extends ConsumerState<TapBuddyPanel> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         )
-                      : ListView(
-                          controller: _scrollController,
+                      : ChatListView(
+                          items: _buildItems(),
+                          renderContext: _renderContext(),
+                          scrollController: _scrollController,
                           padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
-                          children: [
-                            const Center(child: _DatePill()),
-                            const SizedBox(height: 10),
-                            if (_messages.isEmpty) ...const [
-                              _BuddyMessage(
-                                'Hey there Champ!\nHow may I help you?',
-                              ),
-                              _BuddyMessage(
-                                'Type your question below and I\'ll help you out.',
-                              ),
-                            ],
-                            for (final turn in _messages)
-                              turn.role == 'user'
-                                  ? _UserMessage(turn.content)
-                                  : _BuddyMessage(turn.content),
-                            if (_isSending) const _TypingBubble(),
-                            if (_errorText != null)
-                              _ErrorRetryBubble(
-                                text: _errorText!,
-                                onRetry: () => _send(_pendingRetryMessage),
-                              ),
-                          ],
                         ),
                 ),
-                _InputBar(
-                  controller: _inputController,
+                ChatInputBar(
+                  mode: (_historyLoaded && !_isSending)
+                      ? ChatInputMode.text
+                      : ChatInputMode.none,
                   enabled: _historyLoaded && !_isSending,
-                  onSend: () => _send(),
+                  hintText: 'Type here...',
+                  onSubmitText: (_) => _send(),
                 ),
               ],
             ),
@@ -246,299 +290,6 @@ class _PanelHeader extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _DatePill extends StatelessWidget {
-  const _DatePill();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE4E4EA)),
-      ),
-      child: Text(
-        'Today',
-        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600),
-      ),
-    );
-  }
-}
-
-class _BuddyMessage extends StatelessWidget {
-  final String text;
-
-  const _BuddyMessage(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 240),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(11, 9, 9, 9),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEFEFF4),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(
-              child: Text(
-                text,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  height: 1.35,
-                  color: const Color(0xFF1C1C21),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            const Icon(
-              Icons.volume_up_rounded,
-              size: 14,
-              color: Color(0xFF5B5BD6),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _UserMessage extends StatelessWidget {
-  final String text;
-
-  const _UserMessage(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 230),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE0F2E6),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Flexible(
-              child: Text(
-                text,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  height: 1.35,
-                  color: const Color(0xFF1C1C21),
-                ),
-              ),
-            ),
-            const SizedBox(width: 7),
-            const Icon(Icons.done_rounded, size: 13, color: Color(0xFF58B77D)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TypingBubble extends StatelessWidget {
-  const _TypingBubble();
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFEFEFF4),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const SizedBox(width: 28, height: 12, child: _TypingDots()),
-      ),
-    );
-  }
-}
-
-class _TypingDots extends StatefulWidget {
-  const _TypingDots();
-
-  @override
-  State<_TypingDots> createState() => _TypingDotsState();
-}
-
-class _TypingDotsState extends State<_TypingDots>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(3, (i) {
-            final t = (_controller.value + (i * 0.2)) % 1.0;
-            final scale = 0.6 + 0.4 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
-            return Transform.scale(
-              scale: scale,
-              child: const CircleAvatar(
-                radius: 2.6,
-                backgroundColor: Color(0xFF9C9DAB),
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-}
-
-class _ErrorRetryBubble extends StatelessWidget {
-  final String text;
-  final VoidCallback onRetry;
-
-  const _ErrorRetryBubble({required this.text, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 240),
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFDEDEB),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFEBAFA6)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              text,
-              style: GoogleFonts.inter(
-                fontSize: 11,
-                height: 1.35,
-                color: const Color(0xFFD34B40),
-              ),
-            ),
-            const SizedBox(height: 6),
-            InkWell(
-              onTap: onRetry,
-              child: Text(
-                'Retry',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFD34B40),
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _InputBar extends StatelessWidget {
-  final TextEditingController controller;
-  final bool enabled;
-  final VoidCallback onSend;
-
-  const _InputBar({
-    required this.controller,
-    required this.enabled,
-    required this.onSend,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F1F5),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: TextField(
-                controller: controller,
-                enabled: enabled,
-                onSubmitted: (_) => onSend(),
-                textInputAction: TextInputAction.send,
-                decoration: InputDecoration(
-                  hintText: 'Type here...',
-                  hintStyle: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: const Color(0xFF9A9BA8),
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: enabled ? onSend : null,
-            borderRadius: BorderRadius.circular(999),
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: const Color(0xFF5B5BD6),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.send_rounded,
-                size: 17,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

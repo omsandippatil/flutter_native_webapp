@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:tapapp/features/home/presentation/widgets/reward_item.dart';
 import 'package:tapapp/features/home/presentation/widgets/card_deck_wrapper.dart';
+import 'package:tapapp/features/home/presentation/widgets/reward_item.dart';
 
 class StartActivityCard extends StatelessWidget {
   final String courseDisplay;

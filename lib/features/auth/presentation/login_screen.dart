@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:tapapp/core/router/app_router.dart';
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/profile/models/active_profile.dart';
-import 'package:tapapp/domain/auth/providers/auth_providers.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/core/router/router.dart';
+import 'package:tapapp/core/theme/theme.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/auth/auth.dart';
 
 enum _AuthStep { phone, password, createPassword }
 

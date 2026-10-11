@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/profile/models/active_profile.dart';
-import 'package:tapapp/domain/learner/models/learner_state.dart';
-import 'package:tapapp/domain/profile/models/profile_summary.dart';
-import 'package:tapapp/providers/http_client_provider.dart';
-import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
-import 'package:tapapp/features/profile_settings/application/profile_form_controller.dart';
-import 'package:tapapp/features/profile_settings/models/profile_tab.dart';
-import 'package:tapapp/features/profile_settings/application/about_tap_loader.dart';
-import 'package:tapapp/features/profile_settings/application/profile_settings_actions.dart';
+import 'package:tapapp/core/learner/learner.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/providers.dart';
+import 'package:tapapp/core/theme/theme.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/about_tap_view.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/profile_details_view.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/profile_settings_shell.dart';
-import 'package:tapapp/features/profile_settings/presentation/widgets/switch_profile_bar.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/settings_tab_view.dart';
+import 'package:tapapp/features/profile_settings/presentation/widgets/switch_profile_bar.dart';
+import 'package:tapapp/features/profile_settings/profile_settings.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});

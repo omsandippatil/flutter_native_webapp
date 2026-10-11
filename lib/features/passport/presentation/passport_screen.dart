@@ -1,15 +1,13 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/features/home/models/learning_dashboard.dart';
-import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/core/theme/theme.dart';
+import 'package:tapapp/features/home/home.dart';
 import 'package:tapapp/shared/widgets/app_header.dart';
 import 'package:tapapp/shared/widgets/app_shell.dart';
 import 'package:tapapp/shared/widgets/loading_view.dart';
+
+import 'dart:math' as math;
 
 class PassportScreen extends ConsumerWidget {
   const PassportScreen({super.key});
@@ -57,7 +55,7 @@ class _PassportDashboard extends StatelessWidget {
               color: AppTheme.cardBackground,
               child: Column(
                 children: [
-                  AppHeader(
+                  AppHeaderHome(
                     title: 'Passport',
                     studentName: progress.studentName,
                     subtitle: 'Have a look at your progress',

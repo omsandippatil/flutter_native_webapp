@@ -1,6 +1,6 @@
 {
   "flow_id": "onboarding_flow",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "language": "en",
   "steps": [
     {
@@ -286,12 +286,17 @@
         {
           "label": "Start Learning",
           "value": "start_learning",
-          "next_flow": "activity_flow",
-          "next_step": "AF-001"
+          "next_step": "OF-008-ENTER-ACTIVITY"
         }
       ],
       "back_step": null,
       "fallback_guide": "Tap 'Start Learning' and let's go! 💪"
+    },
+    {
+      "step_id": "OF-008-ENTER-ACTIVITY",
+      "type": "action",
+      "sender": "bot",
+      "action": "completeOnboarding"
     }
   ]
 }

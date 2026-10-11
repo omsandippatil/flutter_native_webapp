@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'package:tapapp/core/theme/app_spacing.dart';
-import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/core/theme/theme.dart';
 
 class ClassLoadingSkeleton extends StatelessWidget {
   const ClassLoadingSkeleton({super.key});

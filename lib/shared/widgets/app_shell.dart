@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:tapapp/core/router/app_router.dart';
-import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/core/router/router.dart';
+import 'package:tapapp/core/theme/theme.dart';
 import 'package:tapapp/features/tap_buddy/presentation/tap_buddy_panel.dart';
 
 class AppNav extends StatefulWidget {

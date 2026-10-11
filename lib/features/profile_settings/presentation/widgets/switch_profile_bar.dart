@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/profile/models/profile_summary.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/theme/theme.dart';
 
 class SwitchProfileBar extends StatelessWidget {
   const SwitchProfileBar({

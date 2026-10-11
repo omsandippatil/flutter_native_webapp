@@ -1,23 +1,16 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:tapapp/core/router/app_router.dart';
-import 'package:tapapp/core/theme/app_spacing.dart';
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/learner/providers/learner_state_providers.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
-import 'package:tapapp/features/classroom/application/classroom_bootstrap_provider.dart';
-import 'package:tapapp/features/classroom/application/classroom_providers.dart';
-import 'package:tapapp/features/classroom/application/classroom_session_controller.dart';
-import 'package:tapapp/features/classroom/models/classroom_message.dart';
-import 'package:tapapp/features/classroom/presentation/widgets/chat/chat_bubble_row.dart';
-import 'package:tapapp/features/classroom/presentation/widgets/chat/message_content.dart';
-import 'package:tapapp/features/classroom/presentation/widgets/reveal/reveal_rail.dart';
+import 'package:tapapp/chat/chat.dart';
+import 'package:tapapp/core/learner/learner.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/router/router.dart';
+import 'package:tapapp/core/theme/theme.dart';
+import 'package:tapapp/features/classroom/classroom.dart';
 import 'package:tapapp/features/classroom/presentation/widgets/states/loading_skeleton.dart';
-import 'package:tapapp/features/home/providers/home_dashboard_provider.dart';
+import 'package:tapapp/features/classroom/reveal/reveal.dart';
+import 'package:tapapp/features/home/home.dart';
 import 'package:tapapp/shared/widgets/app_header.dart';
 
 class ClassScreen extends ConsumerStatefulWidget {
@@ -41,6 +34,8 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
     setState(() => _attempt++);
   }
 
+  void _goHome() => context.go(AppRoutes.home);
+
   @override
   Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(learningDashboardProvider);
@@ -51,10 +46,7 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
       data: (dashboard) {
         if (dashboard.hasReachedWeeklyCap) {
           return _scaffold(
-            ClassWeeklyCapRevealBody(
-              unitIndex: 0,
-              onHome: () => context.go(AppRoutes.home),
-            ),
+            ClassWeeklyCapRevealBody(unitIndex: 0, onHome: _goHome),
           );
         }
         if (dashboard.showCompletionCelebration && dashboard.unit != null) {
@@ -62,7 +54,7 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
             ClassPendingActivityChoiceBody(
               unit: dashboard.unit!,
               onStart: _startNextActivity,
-              onMaybeLater: () => context.go(AppRoutes.home),
+              onMaybeLater: _goHome,
             ),
           );
         }
@@ -72,25 +64,20 @@ class _ClassScreenState extends ConsumerState<ClassScreen> {
   }
 
   Widget _buildClassSession() {
-    final controllerAsync = ref.watch(classChatControllerProvider(_attempt));
+    final depsAsync = ref.watch(classroomChatDepsProvider(_attempt));
 
     return _scaffold(
-      controllerAsync.when(
+      depsAsync.when(
         loading: () => const ClassLoadingSkeleton(),
         error: (error, _) {
           if (error is NoUnitAvailableException) {
-            return ClassWeeklyCapRevealBody(
-              unitIndex: 0,
-              onHome: () => context.go(AppRoutes.home),
-            );
+            return ClassWeeklyCapRevealBody(unitIndex: 0, onHome: _goHome);
           }
-          return _ErrorBody(
-            error: error,
-            onBack: () => context.go(AppRoutes.home),
-          );
+          return _ErrorBody(error: error, onBack: _goHome);
         },
-        data: (controller) => _ClassChatView(
-          controller: controller,
+        data: (deps) => _ClassChatView(
+          key: ValueKey('classroom_session_$_attempt'),
+          deps: deps,
           onStartNextActivity: _startNextActivity,
         ),
       ),
@@ -148,11 +135,12 @@ class _ErrorBody extends StatelessWidget {
 
 class _ClassChatView extends ConsumerStatefulWidget {
   const _ClassChatView({
-    required this.controller,
+    super.key,
+    required this.deps,
     required this.onStartNextActivity,
   });
 
-  final ClassChatController controller;
+  final ClassroomChatDeps deps;
   final VoidCallback onStartNextActivity;
 
   @override
@@ -160,62 +148,98 @@ class _ClassChatView extends ConsumerStatefulWidget {
 }
 
 class _ClassChatViewState extends ConsumerState<_ClassChatView> {
-  final ScrollController _scrollController = ScrollController();
-  int _lastMessageCount = 0;
-  int _lastQuizToastId = 0;
-  OverlayEntry? _quizToastOverlay;
-  Timer? _quizToastTimer;
+  OverlayEntry? _toastOverlay;
+  Timer? _toastTimer;
+  late final ChatSessionKey _sessionKey;
+  late final ProviderContainer _container;
 
   @override
   void initState() {
     super.initState();
-    widget.controller.addListener(_onControllerChanged);
-  }
-
-  @override
-  void didUpdateWidget(covariant _ClassChatView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_onControllerChanged);
-      widget.controller.addListener(_onControllerChanged);
-      _lastMessageCount = 0;
-      _lastQuizToastId = 0;
-      _removeQuizToast();
+    _container = ProviderScope.containerOf(context, listen: false);
+    _sessionKey = widget.deps.key;
+    final superseded = ChatSessionDepsRegistry.lookup(_sessionKey) != null;
+    ChatSessionDepsRegistry.register(
+      _sessionKey,
+      ChatSessionDeps(
+        actionHandler: widget.deps.handler,
+        templateContext: widget.deps.templateContext,
+        contentSource: widget.deps.contentSource,
+      ),
+    );
+    if (superseded) {
+      final container = _container;
+      final key = _sessionKey;
+      Future.microtask(() => container.invalidate(chatSessionProvider(key)));
     }
+    widget.deps.handler.addListener(_onHandlerChanged);
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_onControllerChanged);
-    _removeQuizToast();
-    _scrollController.dispose();
+    widget.deps.handler.removeListener(_onHandlerChanged);
+    final registered = ChatSessionDepsRegistry.lookup(_sessionKey);
+    if (registered != null &&
+        identical(registered.actionHandler, widget.deps.handler)) {
+      ChatSessionDepsRegistry.unregister(_sessionKey);
+      final container = _container;
+      final key = _sessionKey;
+      Future.microtask(() => container.invalidate(chatSessionProvider(key)));
+    }
+    _removeToast();
     super.dispose();
   }
 
-  void _onControllerChanged() {
-    final quizToast = widget.controller.quizToast;
-    if (quizToast != null && quizToast.id != _lastQuizToastId) {
-      _lastQuizToastId = quizToast.id;
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _showQuizToast(quizToast),
-      );
-    }
-    if (widget.controller.messages.length != _lastMessageCount) {
-      _lastMessageCount = widget.controller.messages.length;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+  void _onHandlerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _goHome() {
+    ref.invalidate(learnerStateDataProvider(widget.deps.learnerId));
+    context.go(AppRoutes.home);
+  }
+
+  Future<void> _onFooterAction(ChatAction action) async {
+    await widget.deps.handler.handle(action);
+    if (!mounted) return;
+    switch (action) {
+      case ChatAction.watchAnother:
+        widget.onStartNextActivity();
+      case ChatAction.maybeLater:
+      case ChatAction.openHome:
+        _goHome();
+      default:
+        break;
     }
   }
 
-  void _showQuizToast(ClassQuizToast toast) {
+  NextActivityItem _nextActivityItem() {
+    final next = widget.deps.nextUnit;
+    return NextActivityItem(
+      id: 'next_activity',
+      stepId: 'NEXT-ACTIVITY',
+      courseDisplay: widget.deps.courseDisplay,
+      unitName: next?.name ?? widget.deps.unit.name,
+      points: next?.xp ?? 0,
+      streak: 1,
+      gems: 1,
+      hasNextUnit: next != null,
+    );
+  }
+
+  void _showQuizToast(ChatQuizFeedback feedback) {
     if (!mounted) return;
-    _removeQuizToast();
+    _removeToast();
 
     final media = MediaQuery.of(context);
     final scale = AppSpacing.of(context);
     final isWide = scale.showsSideRail;
+    final message = feedback.isCorrect
+        ? 'Correct Answer!  +${feedback.points} points'
+        : 'Not quite. Correct answer: ${feedback.correctAnswerLabel ?? ''}';
 
-    _quizToastOverlay = OverlayEntry(
-      builder: (overlayContext) => Positioned(
+    _toastOverlay = OverlayEntry(
+      builder: (_) => Positioned(
         top: media.padding.top + (isWide ? scale.section + scale.md : scale.sm),
         right: isWide ? scale.xl : scale.sm,
         left: isWide ? null : scale.sm,
@@ -229,7 +253,7 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
                 vertical: scale.md,
               ),
               decoration: BoxDecoration(
-                color: toast.isCorrect
+                color: feedback.isCorrect
                     ? AppTheme.successToast
                     : AppTheme.errorToast,
                 borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -238,15 +262,13 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
               child: Row(
                 children: [
                   Text(
-                    toast.isCorrect ? '🎉' : '💡',
+                    feedback.isCorrect ? '🎉' : '💡',
                     style: const TextStyle(fontSize: 20),
                   ),
                   SizedBox(width: scale.sm),
                   Expanded(
                     child: Text(
-                      toast.isCorrect
-                          ? 'Correct Answer!  +${toast.points} points'
-                          : 'Not quite. Correct answer: ${toast.correctAnswer ?? ''}',
+                      message,
                       style: AppTheme.text(
                         size: 14,
                         weight: FontWeight.w700,
@@ -261,192 +283,126 @@ class _ClassChatViewState extends ConsumerState<_ClassChatView> {
         ),
       ),
     );
-    Overlay.of(context).insert(_quizToastOverlay!);
-    _quizToastTimer = Timer(
-      Duration(milliseconds: toast.isCorrect ? 1400 : 2300),
-      _removeQuizToast,
+    Overlay.of(context).insert(_toastOverlay!);
+    _toastTimer = Timer(
+      Duration(milliseconds: feedback.isCorrect ? 1400 : 2300),
+      _removeToast,
     );
   }
 
-  void _removeQuizToast() {
-    _quizToastTimer?.cancel();
-    _quizToastTimer = null;
-    _quizToastOverlay?.remove();
-    _quizToastOverlay = null;
-  }
-
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) return;
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOut,
-    );
+  void _removeToast() {
+    _toastTimer?.cancel();
+    _toastTimer = null;
+    _toastOverlay?.remove();
+    _toastOverlay = null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.controller,
-      builder: (context, _) {
-        final controller = widget.controller;
+    final handler = widget.deps.handler;
+    final sessionKey = _sessionKey;
 
-        if (controller.outcome == ClassSessionOutcome.weeklyCapReached) {
-          return ClassWeeklyCapRevealBody(
-            unitIndex: controller.unitIndex,
-            onHome: () => context.go(AppRoutes.home),
-          );
-        }
+    ref.listen<ChatSessionState>(chatSessionProvider(sessionKey), (
+      previous,
+      next,
+    ) {
+      final feedback = next.lastFeedback;
+      if (feedback == null || identical(feedback, previous?.lastFeedback)) {
+        return;
+      }
+      handler.recordQuizFeedback(feedback);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _showQuizToast(feedback),
+      );
+    });
 
-        final showChoiceReveal =
-            controller.outcome == ClassSessionOutcome.choice;
-        final isVideoStartCheckpoint =
-            controller.messages.length == 1 &&
-            controller.messages.first.contentType ==
-                ClassChatContentType.checkpoint &&
-            controller.messages.first.data['action'] == 'video';
+    if (handler.outcome == ClassSessionOutcome.weeklyCapReached) {
+      return ClassWeeklyCapRevealBody(
+        unitIndex: widget.deps.unitIndex,
+        onHome: _goHome,
+      );
+    }
 
-        return Column(
-          children: [
-            AppHeader(
-              title: controller.unitName,
-              points: controller.displayedTotalPoints,
-              showBack: true,
-              showPoints: true,
-              showAskBuddy: true,
-              onBack: () => context.go(AppRoutes.home),
-            ),
-            Expanded(
-              child: Container(
-                color: AppTheme.appBackground,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final scale = AppSpacingScale.fromWidth(
-                      constraints.maxWidth,
-                    );
+    final sessionState = ref.watch(chatSessionProvider(sessionKey));
+    if (sessionState.failed) {
+      return _ErrorBody(
+        error: sessionState.errorMessage ?? 'Chat failed to load.',
+        onBack: _goHome,
+      );
+    }
+    if (!sessionState.ready) return const ClassLoadingSkeleton();
 
-                    if (isVideoStartCheckpoint) {
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: scale.contentMaxWidth,
-                          ),
-                          child: ClassCheckpointCard(
-                            message: controller.messages.first,
-                            controller: controller,
-                            fillAvailableHeight: true,
-                          ),
-                        ),
-                      );
-                    }
+    final notifier = ref.read(chatSessionProvider(sessionKey).notifier);
+    final ctx = notifier.renderContext(
+      studentName: widget.deps.studentName,
+      courseDisplay: widget.deps.courseDisplay,
+    );
 
-                    final chatList = ListView.builder(
-                      controller: _scrollController,
-                      padding: EdgeInsets.fromLTRB(
-                        scale.md,
-                        scale.lg,
-                        scale.md,
-                        scale.xxl,
-                      ),
-                      itemCount:
-                          controller.messages.length +
-                          (showChoiceReveal ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < controller.messages.length) {
-                          final message = controller.messages[index];
-                          return ClassChatBubbleRow(
-                            key: ValueKey(message.id),
-                            message: message,
-                            controller: controller,
-                          );
-                        }
-                        return ClassNextActivityInlineCard(
-                          controller: controller,
-                          onStartNextActivity: widget.onStartNextActivity,
-                        );
-                      },
-                    );
+    final items = sessionState.items;
+    final first = items.isEmpty ? null : items.first;
+    final isVideoStart =
+        items.length == 1 && first is CheckpointItem && first.action == 'video';
+    final showChoice = handler.outcome == ClassSessionOutcome.choice;
+    final revealProgress = showChoice ? 1.0 : handler.revealProgress;
 
-                    if (!scale.showsSideRail) {
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: scale.chatMaxWidth,
-                          ),
-                          child: Container(
-                            color: AppTheme.classroomBackground,
-                            child: chatList,
-                          ),
-                        ),
-                      );
-                    }
-
-                    return Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: scale.contentMaxWidth,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: scale.pageGutter,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: scale.sm,
-                                  ),
-                                  child: Align(
-                                    alignment: Alignment.topCenter,
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        maxWidth: scale.chatMaxWidth,
-                                      ),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: AppTheme.classroomBackground,
-                                          borderRadius: BorderRadius.circular(
-                                            AppTheme.radiusXl,
-                                          ),
-                                        ),
-                                        clipBehavior: Clip.antiAlias,
-                                        child: chatList,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: scale.railWidth + scale.xl,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: scale.xl,
-                                    top: scale.lg,
-                                    bottom: scale.lg,
-                                  ),
-                                  child: ClassRevealRail(
-                                    unitIndex: controller.unitIndex,
-                                    revealProgress: showChoiceReveal
-                                        ? 1
-                                        : controller.revealProgress,
-                                    studentName: controller.studentName,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+    final footer = showChoice
+        ? ChatItemRowFooter(
+            child: NextActivityBlock(
+              item: _nextActivityItem(),
+              ctx: ctx.copyWith(
+                onAction: (action, {data}) {
+                  unawaited(_onFooterAction(action));
+                },
               ),
             ),
-          ],
-        );
-      },
+          )
+        : null;
+
+    final chatList = ChatListView(
+      items: items,
+      renderContext: ctx,
+      footer: footer,
+    );
+
+    return Column(
+      children: [
+        AppHeaderHome(
+          title: handler.unitName,
+          points: handler.displayedTotalPoints,
+          showAskBuddy: true,
+        ),
+        Expanded(
+          child: Container(
+            color: AppTheme.appBackground,
+            child: ChatLayout.resolve(
+              context: context,
+              mode: isVideoStart
+                  ? ChatLayoutMode.centeredSingle
+                  : ChatLayoutMode.columnWithRail,
+              chatList: chatList,
+              sideRail: ClassroomRevealSlot(
+                unitIndex: widget.deps.unitIndex,
+                revealProgress: revealProgress,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class ChatItemRowFooter extends StatelessWidget {
+  const ChatItemRowFooter({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = AppSpacing.of(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: scale.sm),
+      child: child,
     );
   }
 }

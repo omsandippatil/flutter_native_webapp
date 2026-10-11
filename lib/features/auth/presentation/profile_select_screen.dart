@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:tapapp/core/router/app_router.dart';
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/profile/models/active_profile.dart';
-import 'package:tapapp/domain/profile/models/profile_summary.dart';
-import 'package:tapapp/domain/profile/providers/profile_providers.dart';
+import 'package:tapapp/core/router/router.dart';
+import 'package:tapapp/core/theme/theme.dart';
+import 'package:tapapp/core/profile/profile.dart';
 
 class ProfileSelectScreen extends ConsumerStatefulWidget {
   const ProfileSelectScreen({super.key, required this.phone});

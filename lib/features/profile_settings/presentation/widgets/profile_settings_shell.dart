@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/shared/widgets/app_shell.dart';
-import 'package:tapapp/features/profile_settings/models/profile_tab.dart';
+import 'package:tapapp/core/theme/theme.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/profile_side_nav.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/switch_profile_bar.dart';
+import 'package:tapapp/features/profile_settings/profile_settings.dart';
+import 'package:tapapp/shared/widgets/app_shell.dart';
 
 class ProfileSettingsShell extends StatelessWidget {
   const ProfileSettingsShell({

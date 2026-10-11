@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/core/theme/theme.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/profile_surface.dart';
 
 class SettingsTabView extends StatelessWidget {

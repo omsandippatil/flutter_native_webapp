@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
+import 'package:tapapp/core/theme/theme.dart';
 
 class ProfileWhiteCard extends StatelessWidget {
   const ProfileWhiteCard({

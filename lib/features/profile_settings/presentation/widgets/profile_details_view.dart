@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import 'package:tapapp/core/theme/app_theme.dart';
-import 'package:tapapp/domain/profile/models/active_profile.dart';
-import 'package:tapapp/domain/learner/models/learner_state.dart';
+import 'package:tapapp/core/learner/learner.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/core/theme/theme.dart';
 import 'package:tapapp/features/profile_settings/presentation/widgets/profile_surface.dart';
 
 class ProfileDetailsView extends StatelessWidget {

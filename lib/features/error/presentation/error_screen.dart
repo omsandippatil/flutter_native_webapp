@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tapapp/core/router/app_router.dart';
+import 'package:tapapp/core/router/router.dart';
 import 'package:tapapp/shared/widgets/error_view.dart';
 
 class ErrorScreen extends StatelessWidget {
