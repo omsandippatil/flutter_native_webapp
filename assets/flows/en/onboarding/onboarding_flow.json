@@ -1,6 +1,6 @@
 {
   "flow_id": "onboarding_flow",
-  "version": "4.1.0",
+  "version": "4.3.0",
   "language": "en",
   "steps": [
     {
@@ -11,6 +11,7 @@
       "audio_id": "aud_of_001",
       "display_text": "Hi {{name}} 👋 Great to have you here — let's get you set up!",
       "voice_text": "Hi {{name}}! Great to have you here. Let's get you set up!",
+      "typing_delay_ms": 500,
       "next_step": "OF-002",
       "back_step": null
     },
@@ -23,6 +24,7 @@
       "audio_id": "aud_of_002",
       "display_text": "What do you want to learn? Pick a track below 👇",
       "voice_text": "So, what do you want to learn? Take a look below and pick whichever track feels right.",
+      "pace": "await",
       "cache_fields": ["selected_vertical"],
       "back_step": "OF-001",
       "fallback_guide": "Hey {{name}}, just tap one of the track cards above — that's all you need to do! 😊"
@@ -36,6 +38,7 @@
       "audio_id": "aud_of_002_course",
       "display_text": "Nice pick! Now choose a course in {{vertical_display}} 👇",
       "voice_text": "Nice pick! Now choose a course in {{vertical_display}}.",
+      "pace": "await",
       "cache_fields": ["selected_course"],
       "back_step": "OF-002",
       "fallback_guide": "Tap one of the course cards above — that's all you need to do! 😊"
@@ -48,6 +51,7 @@
       "audio_id": "aud_of_003",
       "display_text": "Ayyyy {{course_display}}?! That's amazing 🎉 Are you sure you want to lock in {{course_display}}? Just so you know, your course can't be changed once you confirm.",
       "voice_text": "Ooooh, {{course_display}}? That's amazing — I love it! Just double checking though, once you lock this in, it's staying locked. So, are you sure?",
+      "pace": "await",
       "options": [
         {
           "label": "✅ Yes, I'm sure!",
@@ -71,6 +75,7 @@
       "audio_id": "aud_of_004",
       "display_text": "[confetti] Woohoo! You're officially enrolled in {{course_display}} 🎉 Let's make it count.",
       "voice_text": "Woohoo! You're officially enrolled — let's make it count!",
+      "typing_delay_ms": 500,
       "next_step": "OF-005",
       "back_step": null
     },
@@ -83,6 +88,7 @@
       "audio_id": "aud_of_005",
       "display_text": "Let's just confirm your details are correct ✅",
       "voice_text": "Alright, let's just double check your details are correct.",
+      "pace": "await",
       "content_ref": {
         "source": "student_profile",
         "fields": ["name", "phone", "language", "school", "class", "subject"]
@@ -110,6 +116,7 @@
       "audio_id": "aud_of_005_edit",
       "display_text": "No worries! Which detail should we fix?",
       "voice_text": "No worries at all, happens to everyone. Which detail should we fix?",
+      "pace": "await",
       "options": [
         {
           "label": "Name",
@@ -143,6 +150,7 @@
       "audio_id": "aud_of_005_edit_name",
       "display_text": "What should I call you instead? Just type the correct name below 😊",
       "voice_text": "What should I call you instead? Go ahead and type the correct name below.",
+      "pace": "await",
       "cache_fields": ["name"],
       "next_step": "OF-005",
       "back_step": "OF-005-EDIT",
@@ -156,6 +164,7 @@
       "audio_id": "aud_of_005_edit_phone",
       "display_text": "What's the correct phone number?",
       "voice_text": "What's the correct phone number?",
+      "pace": "await",
       "validation": "phone",
       "cache_fields": ["phone"],
       "next_step": "OF-005",
@@ -170,6 +179,7 @@
       "audio_id": "aud_of_005_edit_lang",
       "display_text": "Pick your preferred language 🌐",
       "voice_text": "Pick your preferred language from the options below.",
+      "pace": "await",
       "options": [
         {
           "label": "English",
@@ -209,6 +219,7 @@
       "audio_id": "aud_of_005_edit_academic",
       "display_text": "Update whichever of these need fixing 🚀",
       "voice_text": "Go ahead and update whichever of these need fixing.",
+      "pace": "await",
       "form_fields": [
         {
           "key": "school",
@@ -245,6 +256,7 @@
       "audio_id": "aud_of_006",
       "display_text": "Do you have a sibling? 👫",
       "voice_text": "Quick question — do you have a sibling?",
+      "pace": "await",
       "options": [
         {
           "label": "Yes",
@@ -270,6 +282,7 @@
       "audio_id": "aud_of_007",
       "display_text": "",
       "voice_text": "Congratulations! You just earned five hundred points for completing your profile. You're crushing it already!",
+      "typing_delay_ms": 800,
       "points_awarded": 500,
       "next_step": "OF-008",
       "back_step": null
@@ -282,6 +295,7 @@
       "audio_id": "aud_of_008",
       "display_text": "Check out your points from the “Passport” tab|Click start learning 👇",
       "voice_text": "Check out your points from the Passport tab. Click start learning.",
+      "pace": "await",
       "options": [
         {
           "label": "Start Learning",

@@ -1,6 +1,6 @@
 {
   "flow_id": "activity_flow",
-  "version": "5.0.0",
+  "version": "5.2.0",
   "language": "en",
   "steps": [
     {
@@ -9,6 +9,7 @@
       "audio_id": "aud_af_001",
       "display_text": "Good {{part_of_day}}, {{name}} ☀️",
       "voice_text": "Good day to you! Hope you're feeling good and ready to learn.",
+      "typing_delay_ms": 500,
       "next_step": "AF-002"
     },
     {
@@ -17,6 +18,7 @@
       "audio_id": "aud_af_002",
       "display_text": "Today we'll be learning {{unit_name}} from your {{course_display}} course. Exciting stuff ahead 🔥",
       "voice_text": "Today we've got a brand new topic lined up for you, and trust me, it's a good one. Let's dive in!",
+      "typing_delay_ms": 700,
       "next_step": "AF-003"
     },
     {
@@ -25,12 +27,14 @@
       "audio_id": "aud_af_003",
       "display_text": "Let's start with a video. In this video you'll learn: \"{{video_description}}\" 🎬",
       "voice_text": "Let's kick things off with a short video — it's going to make this whole topic click for you.",
+      "typing_delay_ms": 700,
       "next_step": "AF-004"
     },
     {
       "step_id": "AF-004",
       "type": "dynamic",
       "component": "VideoPlayer",
+      "pace": "await",
       "next_step": "AF-005",
       "fallback_guide": "Watch the video above to continue — it's worth it, I promise! 🎬"
     },
@@ -49,12 +53,14 @@
       "audio_id": "aud_af_006",
       "display_text": "Now it's time to earn some more points 💰 Send in your submission below!",
       "voice_text": "Alright, time to earn even more points — go ahead and send in your submission below.",
+      "typing_delay_ms": 600,
       "next_step": "AF-007"
     },
     {
       "step_id": "AF-007",
       "type": "dynamic",
       "component": "SubmissionCard",
+      "pace": "await",
       "next_step_rule": {
         "when": "condition",
         "if": "passed",
@@ -69,6 +75,7 @@
       "component": "SubmissionReward",
       "audio_id": "aud_af_008",
       "voice_text": "I am so, so proud of you right now — well earned. That's exactly the spirit!",
+      "pace": "await",
       "next_step": "AF-009"
     },
     {
@@ -77,6 +84,7 @@
       "audio_id": "aud_af_009",
       "display_text": "Now let's test what you've learnt 🧠 Quiz time — let's go!",
       "voice_text": "Now let's see what stuck — quiz time, let's go!",
+      "typing_delay_ms": 500,
       "next_step": "AF-010"
     },
     {
@@ -85,12 +93,14 @@
       "audio_id": "aud_af_010",
       "display_text": "We've got {{quiz_question_count}} questions coming your way. Take your time — think, then tap! 💡",
       "voice_text": "A few questions coming your way. No rush at all — just think it through, then tap your answer.",
+      "typing_delay_ms": 700,
       "next_step": "AF-QUIZ-QUESTION"
     },
     {
       "step_id": "AF-QUIZ-QUESTION",
       "type": "dynamic",
       "component": "QuizQuestion",
+      "pace": "await",
       "on_correct": "AF-QUIZ-CORRECT",
       "on_wrong": "AF-QUIZ-WRONG",
       "fallback_guide": "Tap one of the answer options above — just trust your gut! 💭"
@@ -128,6 +138,7 @@
       "action": "totals",
       "button_label": "See my score",
       "display_text": "That was the last question! Let's see how you did 🎯",
+      "pace": "await",
       "next_step": "AF-011"
     },
     {
@@ -137,6 +148,7 @@
       "audio_id": "aud_af_011",
       "display_text": "Quiz done! Here's how you did 🕐",
       "voice_text": "Quiz's all done. Here's how you did.",
+      "typing_delay_ms": 500,
       "next_step": "AF-FINISH"
     },
     {
@@ -145,7 +157,8 @@
       "mode": "prompt",
       "action": "finish",
       "button_label": "Finish activity",
-      "display_text": "All done, {{name}}! Tap below to save your progress 🎉"
+      "display_text": "All done, {{name}}! Tap below to save your progress 🎉",
+      "pace": "await"
     },
     {
       "step_id": "AF-DONE",

@@ -21,6 +21,8 @@ class FlowNode {
     this.fallbackGuide,
     this.passthrough = false,
     this.data = const {},
+    this.pace = PaceMode.auto,
+    this.typingDelayMs,
   });
 
   final String stepId;
@@ -36,12 +38,16 @@ class FlowNode {
   final String? fallbackGuide;
   final bool passthrough;
   final Map<String, dynamic> data;
+  final PaceMode pace;
+  final int? typingDelayMs;
 
   FlowNode copyWith({
     String? nextStep,
     Map<String, dynamic>? nextRule,
     bool? passthrough,
     Map<String, dynamic>? data,
+    PaceMode? pace,
+    int? typingDelayMs,
   }) => FlowNode(
     stepId: stepId,
     type: type,
@@ -56,6 +62,8 @@ class FlowNode {
     fallbackGuide: fallbackGuide,
     passthrough: passthrough ?? this.passthrough,
     data: data ?? this.data,
+    pace: pace ?? this.pace,
+    typingDelayMs: typingDelayMs ?? this.typingDelayMs,
   );
 
   factory FlowNode.fromJson(Map<String, dynamic> json) {
@@ -81,12 +89,17 @@ class FlowNode {
       'opts',
       'fallback_guide',
       'passthrough',
+      'pace',
+      'typing_delay_ms',
     };
 
     final data = <String, dynamic>{
       for (final entry in json.entries)
         if (!knownKeys.contains(entry.key)) entry.key: entry.value,
     };
+
+    final rawPace = json['pace'] as String?;
+    final pace = rawPace == 'await' ? PaceMode.await_ : PaceMode.auto;
 
     return FlowNode(
       stepId: rawStepId?.toString() ?? '',
@@ -102,6 +115,8 @@ class FlowNode {
       fallbackGuide: json['fallback_guide'] as String?,
       passthrough: json['passthrough'] as bool? ?? false,
       data: data,
+      pace: pace,
+      typingDelayMs: (json['typing_delay_ms'] as num?)?.toInt(),
     );
   }
 
@@ -565,9 +580,10 @@ class ChatItemBuilder {
     final kind = kindFor(node);
     final data = node.data;
     final text = _fill(node.displayText, ctx, vars);
+    final pace = node.pace;
 
     return switch (kind) {
-      ChatItemKind.text => _text(node, id, text, audio),
+      ChatItemKind.text => _text(node, id, text, audio, pace),
       ChatItemKind.image => ImageItem(
         id: id,
         stepId: node.stepId,
@@ -576,12 +592,14 @@ class ChatItemBuilder {
         caption: text,
         alt: _str(data['alt']),
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.divider => DividerItem(
         id: id,
         stepId: node.stepId,
         label: text ?? '',
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.choice => ChoiceItem(
         id: id,
@@ -590,6 +608,7 @@ class ChatItemBuilder {
         options: node.options,
         text: text,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.form => FormItem(
         id: id,
@@ -597,6 +616,7 @@ class ChatItemBuilder {
         fields: _formFieldsFor(node),
         text: text,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.profileVerify => ProfileVerifyItem(
         id: id,
@@ -605,6 +625,7 @@ class ChatItemBuilder {
         editable: _bool(data['editable']),
         text: text,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.scorecard => ScorecardItem(
         id: id,
@@ -613,6 +634,7 @@ class ChatItemBuilder {
         total: _str(data['total']),
         text: text,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.checkpoint => checkpoint(
         id: id,
@@ -624,6 +646,7 @@ class ChatItemBuilder {
         text: text,
         sectionKind: _str(data['section_kind']) ?? 'generic',
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.quizSummary => quizSummary(
         id: id,
@@ -634,6 +657,7 @@ class ChatItemBuilder {
         ctx: ctx,
         vars: vars,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.submissionReward => reward(
         id: id,
@@ -641,6 +665,7 @@ class ChatItemBuilder {
         studentName: ctx.studentName,
         points: ctx.submissionPoints,
         audio: audio,
+        pace: pace,
       ),
       ChatItemKind.loading => LoadingItem(id: id, stepId: node.stepId),
       _ => error(
@@ -648,6 +673,7 @@ class ChatItemBuilder {
         stepId: node.stepId,
         message: text ?? 'Unsupported step: ${node.type}',
         audio: audio,
+        pace: pace,
       ),
     };
   }
@@ -674,6 +700,7 @@ class ChatItemBuilder {
           text: parts[i],
           audio: i == 0 ? item.audio : null,
           meta: i == 0 ? item.meta : const {},
+          pace: item.pace,
         ),
     ];
   }
@@ -688,6 +715,7 @@ class ChatItemBuilder {
     String? text,
     String sectionKind = 'generic',
     ChatAudioRef? audio,
+    PaceMode pace = PaceMode.auto,
   }) => CheckpointItem(
     id: id,
     stepId: stepId,
@@ -698,6 +726,7 @@ class ChatItemBuilder {
     sectionKind: sectionKind,
     text: text,
     audio: audio,
+    pace: pace,
   );
 
   static QuizSummaryItem quizSummary({
@@ -709,6 +738,7 @@ class ChatItemBuilder {
     TemplateContext? ctx,
     Map<String, Object?> vars = const {},
     ChatAudioRef? audio,
+    PaceMode pace = PaceMode.auto,
   }) => QuizSummaryItem(
     id: id,
     stepId: stepId,
@@ -720,6 +750,7 @@ class ChatItemBuilder {
               ? template
               : TemplateResolver.fill(template, ctx, extra: vars)),
     audio: audio,
+    pace: pace,
   );
 
   static SubmissionReviewItem review({
@@ -747,12 +778,14 @@ class ChatItemBuilder {
     required String studentName,
     required int points,
     ChatAudioRef? audio,
+    PaceMode pace = PaceMode.auto,
   }) => SubmissionRewardItem(
     id: id,
     stepId: stepId,
     studentName: studentName,
     points: points,
     audio: audio,
+    pace: pace,
   );
 
   static LoadingItem loading({required String id, required String stepId}) =>
@@ -764,12 +797,14 @@ class ChatItemBuilder {
     required String message,
     String? retryAction,
     ChatAudioRef? audio,
+    PaceMode pace = PaceMode.auto,
   }) => ErrorItem(
     id: id,
     stepId: stepId,
     message: message,
     retryAction: retryAction,
     audio: audio,
+    pace: pace,
   );
 
   static TextItem _text(
@@ -777,6 +812,7 @@ class ChatItemBuilder {
     String id,
     String? text,
     ChatAudioRef? audio,
+    PaceMode pace,
   ) {
     final stripped = _stripEffects(text ?? '');
     return TextItem(
@@ -788,6 +824,7 @@ class ChatItemBuilder {
       meta: stripped.effects.isEmpty
           ? const {}
           : <String, Object?>{'effects': stripped.effects},
+      pace: pace,
     );
   }
 

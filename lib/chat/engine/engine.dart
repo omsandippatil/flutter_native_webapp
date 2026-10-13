@@ -123,6 +123,7 @@ class ChatSession {
   bool _failed = false;
   String? _errorMessage;
   int _seq = 0;
+  int _enterToken = 0;
   ChatQuizFeedback? _lastFeedback;
 
   bool get ready => _currentStepId != null || _failed;
@@ -177,13 +178,24 @@ class ChatSession {
       return;
     }
 
+    final token = ++_enterToken;
     _currentStepId = stepId;
     if (recordHistory) _history.add(stepId);
     _awaitingInput = false;
+    _emit();
 
     if (node.type == 'action') {
-      await _runActionStep(node);
+      await _runActionStep(node, token);
       return;
+    }
+
+    if (node.typingDelayMs != null && node.typingDelayMs! > 0) {
+      final loadingId = _nextId('loading');
+      _items.add(LoadingItem(id: loadingId, stepId: stepId));
+      _emit();
+      await Future.delayed(Duration(milliseconds: node.typingDelayMs!));
+      if (_disposed || token != _enterToken) return;
+      _items.removeWhere((item) => item.id == loadingId);
     }
 
     ChatItem item;
@@ -195,6 +207,8 @@ class ChatSession {
         ChatBindContext(id: _nextId(stepId), variables: _variables),
       );
     }
+
+    if (_disposed || token != _enterToken) return;
 
     if (bound != null) {
       item = bound;
@@ -210,20 +224,24 @@ class ChatSession {
     final split = ChatItemBuilder.split(node, item, () => _nextId(stepId));
     _items.addAll(split);
 
-    _awaitingInput = true;
+    final shouldAutoAdvance =
+        node.autoAdvanceMs != null || _isNonInteractive(node);
+
+    _awaitingInput = !shouldAutoAdvance;
     _emit();
 
     if (node.autoAdvanceMs != null) {
-      _schedule(node.autoAdvanceMs!, stepId);
+      _schedule(node.autoAdvanceMs!, stepId, token);
     } else if (_isNonInteractive(node)) {
-      _schedule(0, stepId);
+      _schedule(0, stepId, token);
     }
   }
 
   bool _isNonInteractive(FlowNode node) {
+    if (node.pace == PaceMode.await_) return false;
     if (node.options.isNotEmpty) return false;
-    if (node.nextRule != null) return false;
-    if (node.nextStep == null || node.nextStep!.isEmpty) return false;
+    if (ChatItemBuilder.needsBinding(node)) return false;
+
     final kind = ChatItemBuilder.kindFor(node);
     const interactiveKinds = {
       ChatItemKind.choice,
@@ -232,11 +250,20 @@ class ChatSession {
       ChatItemKind.quiz,
       ChatItemKind.checkpoint,
       ChatItemKind.profileVerify,
+      ChatItemKind.video,
+      ChatItemKind.submissionReward,
     };
-    return !interactiveKinds.contains(kind);
+    if (interactiveKinds.contains(kind)) return false;
+
+    final rule = node.nextRule;
+    if (rule != null && rule['when'] != 'condition') return false;
+    if (rule == null && (node.nextStep == null || node.nextStep!.isEmpty)) {
+      return false;
+    }
+    return true;
   }
 
-  Future<void> _runActionStep(FlowNode node) async {
+  Future<void> _runActionStep(FlowNode node, int token) async {
     final actionName = node.data['action']?.toString();
     final action = _resolveAction(actionName);
     if (action == null) {
@@ -250,6 +277,8 @@ class ChatSession {
       action,
       data: {'stepId': node.stepId, ..._variables.toMap()},
     );
+
+    if (_disposed || token != _enterToken) return;
 
     if (!result.success) {
       _items.add(
@@ -284,39 +313,105 @@ class ChatSession {
     return null;
   }
 
-  void _schedule(int ms, String stepId) {
+  void _schedule(int ms, String stepId, int token) {
     final timer = Timer(Duration(milliseconds: ms), () {
-      if (_disposed || _currentStepId != stepId) return;
+      if (_disposed || _currentStepId != stepId || token != _enterToken) return;
       _advance(node: flow[stepId]);
     });
     _timers.add(timer);
   }
 
-  void _advance({FlowNode? node, String? target}) {
-    final next = target ?? node?.nextStep;
+  String? _resolveTarget(FlowNode? node, Map<String, Object?>? payload) {
+    if (node == null) return null;
+    final rule = node.nextRule;
+    if (rule == null) return node.nextStep;
+    if (rule['when'] != 'condition') return node.nextStep;
+
+    final condition = rule['if']?.toString() ?? '';
+    final thenTarget = rule['then'] as String?;
+    final otherwiseTarget = rule['otherwise'] as String?;
+
+    bool conditionMet;
+    switch (condition) {
+      case 'passed':
+        conditionMet = payload?['passed'] == true;
+        break;
+      case 'more_questions':
+        final total = (payload?['quizTotal'] ?? _variables['quizTotal']) as num?;
+        conditionMet = _variables.quizIndex < (total?.toInt() ?? 0);
+        break;
+      default:
+        if (condition.startsWith('var:')) {
+          conditionMet = _variables[condition.substring(4)] == true;
+        } else {
+          conditionMet = false;
+        }
+    }
+
+    return conditionMet ? thenTarget : otherwiseTarget;
+  }
+
+  void _advance({FlowNode? node, String? target, Map<String, Object?>? payload}) {
+    final next = target ?? _resolveTarget(node, payload);
     if (next == null || next.isEmpty) return;
     if (next == 'activity_flow' || next.startsWith('AF-')) {
-      _crossFlowController.add((
-        category: 'activity',
-        fileName: 'activity_flow.json',
-        entryStepId: next,
-      ));
-      return;
+      final isCrossFlow = node != null && next != node.stepId && !flow.containsKey(next);
+      if (isCrossFlow) {
+        _crossFlowController.add((
+          category: 'activity',
+          fileName: 'activity_flow.json',
+          entryStepId: next,
+        ));
+        return;
+      }
     }
     unawaited(_enter(next));
+  }
+
+  QuizItem? _quizItemFor(String stepId) {
+    for (final existing in _items.reversed) {
+      if (existing is QuizItem && existing.stepId == stepId) return existing;
+    }
+    return null;
   }
 
   Future<void> onOptionSelected(String stepId, String optionKey) async {
     final node = flow[stepId];
     if (node == null) return;
     _awaitingInput = false;
+    _emit();
 
     if (node.type == 'quiz' || node.component == 'QuizQuestion') {
       final isCorrect = optionKey == 'correct';
+      final quizItem = _quizItemFor(stepId);
+
+      String? correctLabel;
+      String? explanation;
+      if (quizItem != null) {
+        for (final option in quizItem.options) {
+          if (option.key == quizItem.answerKey) {
+            correctLabel = option.label;
+            break;
+          }
+        }
+        explanation = quizItem.explanation;
+      }
+
       _lastFeedback = ChatQuizFeedback(
         isCorrect: isCorrect,
         points: isCorrect ? kClassroomQuizPointsPerCorrectAnswer : 0,
+        correctAnswerLabel: correctLabel,
       );
+
+      _variables['quiz_answer_label'] = correctLabel ?? '';
+      _variables['quiz_explanation'] = explanation ?? '';
+
+      if (isCorrect) {
+        final correctSoFar = (_variables['quizCorrectCount'] as num?)?.toInt() ?? 0;
+        _variables['quizCorrectCount'] = correctSoFar + 1;
+      }
+
+      _variables.quizIndex = _variables.quizIndex + 1;
     }
 
     final selectedLabel = _optionLabelFor(node, optionKey);
@@ -380,6 +475,12 @@ class ChatSession {
     final node = flow[stepId];
     if (node == null) return;
     _awaitingInput = false;
+    _emit();
+
+    Map<String, Object?>? payload;
+    if (answer is Map) {
+      payload = Map<String, Object?>.from(answer);
+    }
 
     if (node.type == 'static' &&
         answer is Map &&
@@ -404,9 +505,37 @@ class ChatSession {
           );
         }
       }
+    } else {
+      final result = await deps.actionHandler.handle(
+        ChatAction.submitAnswer,
+        data: {'stepId': node.stepId, 'answer': answer, ..._variables.toMap()},
+      );
+      if (result.payload != null) {
+        payload = {...?payload, ...result.payload!};
+        _variables.addAll(result.payload!);
+      }
+      if (!result.success) {
+        _items.add(
+          ChatItemBuilder.error(
+            id: _nextId('error'),
+            stepId: node.stepId,
+            message: result.errorMessage ?? 'Something went wrong.',
+            retryAction: node.stepId,
+          ),
+        );
+        _awaitingInput = true;
+        _emit();
+        return;
+      }
     }
 
-    _advance(node: node);
+    if (payload?['passed'] == false) {
+      _awaitingInput = true;
+      _emit();
+      return;
+    }
+
+    _advance(node: node, payload: payload);
   }
 
   Future<void> onRetry(String? retryAction) async {
@@ -434,7 +563,7 @@ class ChatSession {
     if (result.payload != null) _variables.addAll(result.payload!);
 
     final node = _currentStepId == null ? null : flow[_currentStepId!];
-    if (node != null) _advance(node: node);
+    if (node != null) _advance(node: node, payload: result.payload);
   }
 
   void _emit() {

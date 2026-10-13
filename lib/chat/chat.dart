@@ -25,4 +25,4 @@ export 'package:tapapp/chat/blocks/form_block.dart';
 export 'package:tapapp/chat/blocks/profile_verify_block.dart';
 export 'package:tapapp/chat/blocks/typing_indicator_block.dart';
 export 'package:tapapp/chat/blocks/submission_chip.dart';
-export 'package:tapapp/chat/blocks/submission_help_dialog.dart';
+export 'package:tapapp/chat/blocks/submission_help_dialog.dart'; 

@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 
 enum ChatSender { bot, user }
 
+enum PaceMode { auto, await_ }
+
 enum ChatItemKind {
   text,
   image,
@@ -129,6 +131,7 @@ sealed class ChatItem {
     this.audio,
     this.isMuted = false,
     this.meta = const {},
+    this.pace = PaceMode.auto,
   });
 
   final String id;
@@ -139,6 +142,7 @@ sealed class ChatItem {
   final ChatAudioRef? audio;
   final bool isMuted;
   final Map<String, Object?> meta;
+  final PaceMode pace;
 }
 
 class TextItem extends ChatItem {
@@ -150,6 +154,7 @@ class TextItem extends ChatItem {
     super.audio,
     super.isMuted,
     super.meta,
+    super.pace,
   }) : super(kind: ChatItemKind.text);
 }
 
@@ -163,6 +168,7 @@ class ImageItem extends ChatItem {
     this.alt,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(kind: ChatItemKind.image, text: caption);
 
   final String src;
@@ -177,6 +183,7 @@ class DividerItem extends ChatItem {
     required this.label,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.divider,
          sender: ChatSender.bot,
@@ -200,6 +207,7 @@ class QuizItem extends ChatItem {
     this.points = 0,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.quiz,
          sender: ChatSender.bot,
@@ -225,6 +233,7 @@ class QuizSummaryItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.quizSummary,
          sender: ChatSender.bot,
@@ -250,6 +259,7 @@ class SubmissionItem extends ChatItem {
     required this.stepTotal,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.submission,
          sender: ChatSender.bot,
@@ -282,6 +292,7 @@ class SubmissionReviewItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.submissionReview,
          sender: ChatSender.bot,
@@ -305,6 +316,7 @@ class SubmissionRewardItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.submissionReward,
          sender: ChatSender.bot,
@@ -326,6 +338,7 @@ class VideoItem extends ChatItem {
     this.watched = false,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.video,
          sender: ChatSender.bot,
@@ -349,6 +362,7 @@ class VideoItem extends ChatItem {
     watched: watched ?? this.watched,
     audio: audio,
     meta: meta,
+    pace: pace,
   );
 }
 
@@ -361,6 +375,7 @@ class ChoiceItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.choice,
          sender: ChatSender.bot,
@@ -394,6 +409,7 @@ class FormItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.form,
          sender: ChatSender.bot,
@@ -411,6 +427,7 @@ class ProfileVerifyItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.profileVerify,
          sender: ChatSender.bot,
@@ -432,6 +449,7 @@ class CheckpointItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.checkpoint,
          sender: ChatSender.bot,
@@ -461,6 +479,7 @@ class ScorecardItem extends ChatItem {
     super.text,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.scorecard,
          sender: ChatSender.bot,
@@ -482,6 +501,7 @@ class NextActivityItem extends ChatItem {
     required this.hasNextUnit,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.nextActivity,
          sender: ChatSender.bot,
@@ -511,6 +531,7 @@ class ErrorItem extends ChatItem {
     this.retryAction,
     super.audio,
     super.meta,
+    super.pace,
   }) : super(
          kind: ChatItemKind.error,
          sender: ChatSender.bot,

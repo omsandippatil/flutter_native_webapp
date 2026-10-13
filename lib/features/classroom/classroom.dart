@@ -682,7 +682,7 @@ const String _saveFailedFinish =
     'We could not save your progress. Please check your connection.';
 const String _unknownFinish = 'Something went wrong saving your progress.';
 const String _pendingReviewText =
-    'Your submission is pending review. We will let you know once it has been checked.';
+    'Got it! Your submission is in — great work.';
 
 class ClassroomChatActionHandler extends ChangeNotifier
     implements ChatActionHandler {
@@ -863,8 +863,8 @@ class ClassroomChatActionHandler extends ChangeNotifier
     if (isMedia) {
       return _recordSubmission({
         'text': _pendingReviewText,
-        'passed': false,
-        'is_final_step': false,
+        'passed': true,
+        'is_final_step': true,
       });
     }
 

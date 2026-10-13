@@ -40,6 +40,11 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
     super.initState();
     _kind = SubmissionKindResolver.fromWire(widget.item.submissionKind);
     _contentFuture = _fetchContent();
+    _textController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -59,6 +64,7 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     _textController.dispose();
     super.dispose();
   }
@@ -75,6 +81,7 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
   }
 
   void _send(Map<String, Object?> payload) {
+    if (_submitted) return;
     setState(() => _submitted = true);
     widget.ctx.onSubmissionAnswer(widget.item.stepId, payload);
   }
@@ -282,11 +289,25 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
             const _InlineNotice(message: "We couldn't load that file. Please try picking it again."),
             const SizedBox(height: 12),
           ],
+          if (_submitted) ...[
+            _SubmittingNotice(
+              label: _submittingLabelFor(_kind),
+            ),
+            const SizedBox(height: 4),
+          ],
           _buildInputForKind(content, canInteract),
         ],
       ),
     );
   }
+
+  String _submittingLabelFor(SubmissionKind kind) => switch (kind) {
+    SubmissionKind.text || SubmissionKind.textAudio || SubmissionKind.audio =>
+      'Checking your answer...',
+    SubmissionKind.image || SubmissionKind.video || SubmissionKind.imageVideo =>
+      'Sending your submission...',
+    SubmissionKind.emoji => 'Sending...',
+  };
 
   void _showHelpDialog(SubmissionContent content, String kindLabel) {
     showDialog<void>(
@@ -447,6 +468,7 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
     required String hintText,
     required VoidCallback onSubmit,
   }) {
+    final hasText = _textController.text.trim().isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -466,7 +488,7 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
           ),
         ),
         const SizedBox(height: 16),
-        _submitRow(onPressed: canInteract ? onSubmit : null),
+        _submitRow(onPressed: (canInteract && hasText) ? onSubmit : null),
       ],
     );
   }
@@ -519,14 +541,19 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
         ],
         _submitRow(
           primaryLabel: hasMedia ? 'Share submission' : 'Submit',
-          isLoading: _isPicking,
           onPressed: !canInteract || _isPicking ? null : (hasMedia ? onSubmit : openPicker),
+          isPickingSpinner: _isPicking,
         ),
       ],
     );
   }
 
-  Widget _submitRow({required VoidCallback? onPressed, String primaryLabel = 'Submit', bool isLoading = false}) {
+  Widget _submitRow({
+    required VoidCallback? onPressed,
+    String primaryLabel = 'Submit',
+    bool isPickingSpinner = false,
+  }) {
+    final showSpinner = isPickingSpinner || _submitted;
     return Row(
       children: [
         Expanded(
@@ -535,13 +562,13 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
             child: ElevatedButton(
               onPressed: onPressed,
               style: AppTheme.primaryButtonStyle(disabledColor: AppTheme.dividerColor),
-              child: isLoading
+              child: showSpinner
                   ? const SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : Text(_submitted ? 'Sent' : primaryLabel),
+                  : Text(primaryLabel),
             ),
           ),
         ),
@@ -549,13 +576,15 @@ class _SubmissionBlockState extends State<SubmissionBlock> {
         SizedBox(
           height: 44,
           child: OutlinedButton(
-            onPressed: () => _contentFuture.then((content) {
-              if (!mounted) return;
-              _showHelpDialog(
-                content,
-                content.display.label.isNotEmpty ? content.display.label : _kind.wireValue,
-              );
-            }),
+            onPressed: _submitted
+                ? null
+                : () => _contentFuture.then((content) {
+                      if (!mounted) return;
+                      _showHelpDialog(
+                        content,
+                        content.display.label.isNotEmpty ? content.display.label : _kind.wireValue,
+                      );
+                    }),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.subheadingColor,
               side: const BorderSide(color: AppTheme.dividerColor),
@@ -603,6 +632,23 @@ class _ContentLoadingRow extends StatelessWidget {
           Text('Loading examples...', style: AppTheme.text(size: 12, color: AppTheme.subheadingColor)),
         ],
       ),
+    );
+  }
+}
+
+class _SubmittingNotice extends StatelessWidget {
+  const _SubmittingNotice({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+        const SizedBox(width: 8),
+        Text(label, style: AppTheme.text(size: 12, color: AppTheme.subheadingColor)),
+      ],
     );
   }
 }
@@ -710,7 +756,4 @@ class _FriendExamplesRow extends StatelessWidget {
       }).toList(),
     );
   }
-} 
-
-
-
+}
