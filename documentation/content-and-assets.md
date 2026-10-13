@@ -51,7 +51,7 @@ Flutter code uses logical paths:
 
 ```dart
 rootBundle.loadString('assets/flows/en/onboarding/student_onboarding.json');
-Image.asset('assets/images/reveal/1.webp');
+Image.asset('assets/reveal/1.webp');
 ```
 
 Flutter Web requests these as `/assets/assets/...`; the doubled browser path is normal. A 404 means the logical file was not included in the asset manifest, the path/case is wrong, or a newly added asset requires a full restart/rebuild. Hot reload does not reliably update the web asset manifest.
