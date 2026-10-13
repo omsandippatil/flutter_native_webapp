@@ -1,116 +1,164 @@
-{
-  "courses": [
-    {
-      "id": "Adult-Finance-financial-literacy-C12267",
-      "nm": "Adult Finance",
-      "lvl": "Level 3AK",
-      "vrt": "financial-literacy",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Advanced-Art-Techniques-arts-C7982",
-      "nm": "Advanced Art Techniques",
-      "lvl": "Level 3AK",
-      "vrt": "arts",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Advanced-Electronics-Kit-Less-science-lab-C5125",
-      "nm": "Advanced Electronics Kit-Less",
-      "lvl": "Level 3AK",
-      "vrt": "science-lab",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Advanced-Electronics-science-lab-C4178",
-      "nm": "Advanced Electronics",
-      "lvl": "Level 3AK",
-      "vrt": "science-lab",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Basic-Art-Skills-arts-C6083",
-      "nm": "Basic Art Skills",
-      "lvl": "Level 3AK",
-      "vrt": "arts",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Basic-Electonics-Kit-less-science-lab-C3217",
-      "nm": "Basic Electonics Kit-less",
-      "lvl": "Level 3AK",
-      "vrt": "science-lab",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Basic-Electronics-science-lab-C2258",
-      "nm": "Basic Electronics",
-      "lvl": "Level 3AK",
-      "vrt": "science-lab",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Intermediate-Art-arts-C7031",
-      "nm": "Intermediate Art",
-      "lvl": "Level 3AK",
-      "vrt": "arts",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Master-Art-&-Expression-arts-C8933",
-      "nm": "Master Art & Expression",
-      "lvl": "Level 3AK",
-      "vrt": "arts",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Money-Basics-financial-literacy-C9881",
-      "nm": "Money Basics",
-      "lvl": "Level 3AK",
-      "vrt": "financial-literacy",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "OctoStudio-coding-C1567",
-      "nm": "OctoStudio",
-      "lvl": "Level 3AK",
-      "vrt": "coding",
-      "kit_less": false,
-      "units_count": 7
-    },
-    {
-      "id": "Real-Life-Money-financial-literacy-C11761",
-      "nm": "Real-Life Money",
-      "lvl": "Level 3AK",
-      "vrt": "financial-literacy",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Scratch-Jr-coding-C0078",
-      "nm": "Scratch Jr",
-      "lvl": "Level 3AK",
-      "vrt": "coding",
-      "kit_less": false,
-      "units_count": 10
-    },
-    {
-      "id": "Smart-Savings-financial-literacy-C10813",
-      "nm": "Smart Savings",
-      "lvl": "Level 3AK",
-      "vrt": "financial-literacy",
-      "kit_less": false,
-      "units_count": 10
-    }
-  ]
-}
+[
+  {
+    "id": "CAFFL4",
+    "nm": "✦ Money Mastery",
+    "vrt": "financial-literacy",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAFFL4.json"
+  },
+  {
+    "id": "CAATA3",
+    "nm": "❀ Next-Level Art",
+    "vrt": "arts",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAATA3.json"
+  },
+  {
+    "id": "CAEKL4K",
+    "nm": "π Smart Circuits App",
+    "vrt": "science-lab",
+    "lvl": "4K",
+    "kit_less": true,
+    "units_count": 10,
+    "file": "CAEKL4K.json"
+  },
+  {
+    "id": "CAESL4",
+    "nm": "∑ Smart Circuits",
+    "vrt": "science-lab",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CAESL4.json"
+  },
+  {
+    "id": "CASSL2",
+    "nm": "◆ Science Challenges",
+    "vrt": "science-lab",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CASSL2.json"
+  },
+  {
+    "id": "CBASA1",
+    "nm": "✎ Art Starters",
+    "vrt": "arts",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBASA1.json"
+  },
+  {
+    "id": "CBEKL3K",
+    "nm": "∞ Circuit Basics App",
+    "vrt": "science-lab",
+    "lvl": "3K",
+    "kit_less": true,
+    "units_count": 10,
+    "file": "CBEKL3K.json"
+  },
+  {
+    "id": "CBESL3",
+    "nm": "Ω Circuit Basics",
+    "vrt": "science-lab",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBESL3.json"
+  },
+  {
+    "id": "CBSSL1",
+    "nm": "∆ Science Starters",
+    "vrt": "science-lab",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CBSSL1.json"
+  },
+  {
+    "id": "CIAA2",
+    "nm": "✿ Creative Art",
+    "vrt": "arts",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CIAA2.json"
+  },
+  {
+    "id": "CMAEA4",
+    "nm": "✺ Art & Self-Expression",
+    "vrt": "arts",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMAEA4.json"
+  },
+  {
+    "id": "CMBC3",
+    "nm": "◇ Micro:bit Makers",
+    "vrt": "coding",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMBC3.json"
+  },
+  {
+    "id": "CMBFL1",
+    "nm": "₹ Money Starters",
+    "vrt": "financial-literacy",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CMBFL1.json"
+  },
+  {
+    "id": "COC2",
+    "nm": "✱ OctoStudio Apps",
+    "vrt": "coding",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "COC2.json"
+  },
+  {
+    "id": "CPC4",
+    "nm": "❯ Coding with Python",
+    "vrt": "coding",
+    "lvl": "4",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CPC4.json"
+  },
+  {
+    "id": "CRLMF3",
+    "nm": "❖ Real-Life Money",
+    "vrt": "financial-literacy",
+    "lvl": "3",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CRLMF3.json"
+  },
+  {
+    "id": "CSJC1",
+    "nm": "♫ Scratch Jr Fun",
+    "vrt": "coding",
+    "lvl": "1",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CSJC1.json"
+  },
+  {
+    "id": "CSSFL2",
+    "nm": "◈ Smart Savings",
+    "vrt": "financial-literacy",
+    "lvl": "2",
+    "kit_less": false,
+    "units_count": 10,
+    "file": "CSSFL2.json"
+  }
+]

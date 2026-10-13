@@ -2,17 +2,17 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../screens/splash/splash_screen.dart';
-import '../../screens/error/error_screen.dart';
-import '../../screens/auth/auth_screen.dart';
-import '../../screens/auth/profile_select/profile_select_screen.dart';
-import '../../screens/auth/onboarding/onboarding_screen.dart';
-import '../../screens/home/home_screen.dart';
-import '../../screens/class/class_screen.dart';
-import '../../screens/passport/passport_screen.dart';
-import '../../screens/settings/settings_screen.dart';
-import '../../screens/welcome/welcome_screen.dart';
-import '../../providers/profile_provider.dart';
+import 'package:tapapp/core/profile/profile.dart';
+import 'package:tapapp/features/auth/presentation/login_screen.dart';
+import 'package:tapapp/features/auth/presentation/profile_select_screen.dart';
+import 'package:tapapp/features/classroom/presentation/classroom_screen.dart';
+import 'package:tapapp/features/error/presentation/error_screen.dart';
+import 'package:tapapp/features/home/presentation/home_screen.dart';
+import 'package:tapapp/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:tapapp/features/passport/presentation/passport_screen.dart';
+import 'package:tapapp/features/profile_settings/presentation/settings_screen.dart';
+import 'package:tapapp/features/splash/presentation/splash_screen.dart';
+import 'package:tapapp/features/welcome/presentation/welcome_screen.dart';
 
 class AppRoutes {
   AppRoutes._();
@@ -39,6 +39,9 @@ class _AuthRefreshListenable extends ChangeNotifier {
     ) {
       if (next.hasValue || next.hasError) {
         hasResolvedOnce = true;
+      }
+      if (previous?.value?.learnerId != next.value?.learnerId) {
+        _ref.read(_welcomeGateProvider.notifier).state = false;
       }
       notifyListeners();
     }, fireImmediately: false);
@@ -107,7 +110,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final profile = activeProfileAsync.value;
       final loggedIn = profile != null;
-      final onboarded = loggedIn && (profile.onboardingCompleted == true);
+      final onboarded = profile != null && profile.onboardingCompleted;
 
       if (!loggedIn) {
         if (target != AppRoutes.splash && _publicRoutes.contains(target)) {
@@ -167,7 +170,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
-
       GoRoute(
         path: AppRoutes.home,
         pageBuilder: (context, state) => AppRoutes.page(const HomeScreen()),
